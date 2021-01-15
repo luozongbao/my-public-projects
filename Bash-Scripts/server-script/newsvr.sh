@@ -13,7 +13,7 @@ function display
     echo "$HLINE"
     echo "$EMPTYLINE"
     echo "$EMPTYLINE"
-    echo "               $MESSAGE                   "
+    echo "*               $MESSAGE                   "
     echo "$EMPTYLINE"
     echo "$EMPTYLINE"
     echo "$HLINE"
@@ -58,7 +58,7 @@ function UpdateUpgrade
         case $UP in 
             [yY]|[yY][eE][sS])
                 apt update
-                apt Upgrade -y
+                apt upgrade -y
                 echo "Update, Upgrade Done"
                 echo "Update, Upgrade Done" >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
@@ -355,7 +355,7 @@ function InstallCron
 function SelectVirtualHostServer
 {
     clear
-    Message="Select Vertual Host Server Type"
+    MESSAGE="Select Vertual Host Server Type"
     display
     while true;
     do
@@ -386,7 +386,7 @@ function SelectVirtualHostServer
 function InstallWebServer
 {
     clear
-    Message="Install Web Server"
+    MESSAGE="Install Web Server"
     display
     while true;
     do
@@ -412,9 +412,14 @@ ConfigTimeZone
 ConfigHostName
 InstallZipUnzip
 InstallWebServer
-
+clear
 echo
 echo
-MESSAGE="ALL DONE!  LOOK THE RESULT SUMMARY BELOW"
+MESSAGE="ALL DONE! "
+display
+read -p "Press Enter to continue: " ENTER
+MESSAGE="SEE RESULT SUMMARY BELOW"
 display
 cat $RESULTFILE
+echo "***************** WP INFO *****************"
+wp --info

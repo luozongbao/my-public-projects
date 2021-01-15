@@ -8,7 +8,7 @@ CURDIR=$PWD
 MESSAGE=""
 function display
 {
-    HLINE=     "********************************************************************************"
+    HLINE="********************************************************************************"
     EMPTYLINE="*                                                                              *"
     echo $HLINE
     echo $EMPTYLINE
@@ -50,7 +50,7 @@ function installswap
 function UpdateUpgrade
 {
     clear
-    MESSAGE= "Install Swap"
+    MESSAGE="Install Swap"
     display
     while true;
     do
@@ -139,7 +139,7 @@ function ConfigTimeZone
 function InstallZipUnzip
 {
     clear
-    MESSAGE= "Install Zip/Unzip"
+    MESSAGE="Install Zip/Unzip"
     display
     while true;
     do
@@ -324,7 +324,7 @@ function InstallOpenLiteSpeed
 function InstallCron
 {
     clear
-    MESSAGE= "Install Server Cron Schedule"
+    MESSAGE="Install Server Cron Schedule"
     display
     while true;
     do
@@ -386,7 +386,7 @@ function SelectVirtualHostServer
 function InstallWebServer
 {
     clear
-    Message= "Install Web Server"
+    Message="Install Web Server"
     display
     while true;
     do

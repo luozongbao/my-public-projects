@@ -3,11 +3,7 @@ if (( $EUID != 0 )); then
     echo "Please run as root"
     exit
 fi
-UpdateUpgrade
-installswap
-ConfigTimeZone
-InstallZipUnzip
-InstallWebServer
+RESULTFILE="result.txt"
 
 function installswap
 {
@@ -26,6 +22,7 @@ function installswap
                 swapon /swapfile
                 echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
                 mount -a
+                echo "Swap is setted to $SWAPSIZE GB" >> $RESULTFILE
                 echo "Swap is setted to $SWAPSIZE GB"
                 read -p "Press Enter to continue: " ENTER
                 break
@@ -50,6 +47,7 @@ function UpdateUpgrade
                 apt update
                 apt Upgrade -y
                 echo "Update, Upgrade Done"
+                echo "Update, Upgrade Done" >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -72,8 +70,10 @@ function ConfigTimeZone
         read -p "Congfigure Timezone?" TZ
         case $TZ in 
             [yY]|[yY][eE][sS])
-                timedatectl set-timezone Asia/Bangkok
-                echo "Timezone Setted"
+                $TIMEZONE="Asia/Bangkok"
+                timedatectl set-timezone $TIMEZONE
+                echo "Timezone Setted to $TIMEZONE"
+                echo "Timezone Setted to $TIMEZONE" >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -98,7 +98,8 @@ function InstallZipUnzip
             [yY]|[yY][eE][sS])
                 echo "Install Zip"
                 apt install -y zip unzip
-                echo "Done"
+                echo "Zip/Unzip Installed" >> $RESULTFILE
+                echo "Zip/Unzip Installed"
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -124,6 +125,7 @@ function InstallMariadb
                 apt install -y mariadb-server 
                 mysql_secure_installation
                 echo "MariaDB installed"
+                echo "MariaDB installed" >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -155,8 +157,9 @@ function InstallWordpressApache
                 rm latest.zip
                 curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
                 chmod +x wp-cli.phar
-                mv wp-cli.phar /uer/local/bin/wp
-                echo 'Wordpress and wp-cli Installed'
+                mv wp-cli.phar /usr/local/bin/wp
+                echo "Wordpress and wp-cli Installed"
+                echo "Wordpress and wp-cli Installed" >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -182,6 +185,7 @@ function InstallApache
                 InstallMariadb
                 apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc
                 echo "Apache installed"
+                echo "Apache installed" >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
                 InstallWordpressApache
                 break
@@ -214,9 +218,10 @@ function InstallWordpressOLS
                 rm latest.zip
                 curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
                 chmod +x wp-cli.phar
-                mv wp-cli.phar /uer/local/bin/wp
+                mv wp-cli.phar /usr/local/bin/wp
                 cp /usr/local/lsws/lsphp74/bin/php /usr/bin/
-                echo 'Wordpress and wp-cli Installed'
+                echo "Wordpress and wp-cli Installed" >> $RESULTFILE
+                echo "Wordpress and wp-cli Installed"
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -242,7 +247,10 @@ function InstallOpenLiteSpeed
                 InstallMariadb
                 wget --no-check-certificate https://raw.githubusercontent.com/litespeedtech/ols1clk/master/ols1clk.sh && bash ols1clk.sh
                 apt-get install -y lsphp73 lsphp73-curl lsphp73-imap lsphp73-mysql lsphp73-intl lsphp73-pgsql lsphp73-sqlite3 lsphp73-tidy lsphp73-snmp lsphp73-json lsphp73-common lsphp73-ioncube
+                rm ols1clk.sh
                 echo "OpenLiteSpeed installed"
+                echo "OpenLiteSpeed installed" >> $RESULTFILE
+                cat /usr/local/lsws/password >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
                 InstallWordpressOLS
                 break
@@ -272,6 +280,7 @@ function InstallCron
                 #install new cron file
                 crontab mycron
                 rm mycron
+                echo "Cron Installed" >> $RESULTFILE
                 echo "Cron Installed"
                 read -p "Press Enter to continue: " ENTER
                 break
@@ -337,3 +346,9 @@ function InstallWebServer
         esac
     done
 }
+
+UpdateUpgrade
+installswap
+ConfigTimeZone
+InstallZipUnzip
+InstallWebServer

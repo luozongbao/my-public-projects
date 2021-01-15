@@ -105,7 +105,7 @@ mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" #>> error.txt
 echo "update file and database done."
 echo "Modified Result as below:"
 mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTDB" #>> error.txt
-if [ ! $FILEDIR -eq $ORIGINALDIR ] || [ ! $ORIGINALDB -eq $DBNAME ]
+if [ ! "$FILEDIR" == "$ORIGINALDIR" ] || [ ! "$ORIGINALDB" == "$DBNAME" ]
 then
         echo "Moving Site or Relocate Site detected"
         while true;

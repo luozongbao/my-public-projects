@@ -3,8 +3,14 @@ if (( $EUID != 0 )); then
     echo "Please run as root"
     exit
 fi
+UpdateUpgrade
+installswap
+ConfigTimeZone
+InstallZipUnzip
+InstallWebServer
 
-function installswap{
+function installswap
+{
     clear
     while true;
     do
@@ -31,7 +37,8 @@ function installswap{
     done
 }
 
-function UpdateUpgrade{
+function UpdateUpgrade
+{
     clear
     echo "Update and Upgrade Server"
     while true;
@@ -56,7 +63,8 @@ function UpdateUpgrade{
     done
 }
 
-function ConfigTimeZone{
+function ConfigTimeZone
+{
     clear
     echo "Configure TimeZone"
     while true;
@@ -79,7 +87,8 @@ function ConfigTimeZone{
     done
 }
 
-function InstallZipUnzip{
+function InstallZipUnzip
+{
     clear
     echo "Install Zip/Unzip"
     while true;
@@ -103,7 +112,8 @@ function InstallZipUnzip{
     done
 }
 
-function InstallMariadb{
+function InstallMariadb
+{
     clear
     echo "Install Mariadb"
     while true;
@@ -127,7 +137,8 @@ function InstallMariadb{
     done
 }
 
-function InstallWordpressApache{
+function InstallWordpressApache
+{
     clear
     echo "Wordpress for Apache Server"
     echo "This will install Following"
@@ -159,7 +170,8 @@ function InstallWordpressApache{
     done
 }
 
-function InstallApache{
+function InstallApache
+{
     clear
     echo "Install Apache Web Server"
     while true;
@@ -167,9 +179,11 @@ function InstallApache{
         read -p "Install Apache Web Server Now?" APCHE
         case $APCHE in 
             [yY]|[yY][eE][sS])
+                InstallMariadb
                 apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc
                 echo "Apache installed"
                 read -p "Press Enter to continue: " ENTER
+                InstallWordpressApache
                 break
                 ;;
             [nN]|[nN][oO])
@@ -182,7 +196,8 @@ function InstallApache{
     done
 }
 
-function InstallWordpressOLS{
+function InstallWordpressOLS
+{
     clear
     echo "Wordpress OpenLitespeed Server"
     echo "This will install Following"
@@ -215,7 +230,8 @@ function InstallWordpressOLS{
     done
 }
 
-function InstallOpenLiteSpeed{
+function InstallOpenLiteSpeed
+{
     clear
     echo "Install OpenLiteSpeed Web Server"
     while true;
@@ -223,10 +239,12 @@ function InstallOpenLiteSpeed{
         read -p "Install OpenLiteSpeed Web Server Now?" OLS
         case $OLS in 
             [yY]|[yY][eE][sS])
+                InstallMariadb
                 wget --no-check-certificate https://raw.githubusercontent.com/litespeedtech/ols1clk/master/ols1clk.sh && bash ols1clk.sh
                 apt-get install -y lsphp73 lsphp73-curl lsphp73-imap lsphp73-mysql lsphp73-intl lsphp73-pgsql lsphp73-sqlite3 lsphp73-tidy lsphp73-snmp lsphp73-json lsphp73-common lsphp73-ioncube
                 echo "OpenLiteSpeed installed"
                 read -p "Press Enter to continue: " ENTER
+                InstallWordpressOLS
                 break
                 ;;
             [nN]|[nN][oO])
@@ -239,7 +257,8 @@ function InstallOpenLiteSpeed{
     done
 }
 
-function InstallCron{
+function InstallCron
+{
     clear
     echo "Install Server Cron Schedule"
     while true;
@@ -267,17 +286,46 @@ function InstallCron{
     done
 }
 
-function InstallWebServer{
+function SelectVirtualHostServer
+{
     clear
-    echo "Web OpenLitespeed Server"
+    echo "Select Vertual Host Server Type"
+    while true;
+    do
+        read -p "Install Apache Or OpenLiteSpeed?" AOC
+        case $AOC in 
+            [aA]|[aA][pP][aA][cC][hH][eE])
+                InstallApache
+                InstallCron
+                break
+                ;;
+            [oO]|[oO][pP][eE][nN][lL][iI][tT][eE][sS][pP][eE][eE][dD])
+                InstallOpenLiteSpeed
+                InstallCron
+                break
+                ;;
+            [cC]|[cC][aA][nN][cC][eE][lL])
+                    echo "Canceled"
+                break
+                ;;
+            *) 
+                echo "Please, answer Apache or OpenLiteSpeed or Cancel"
+            ;;
+        esac
+    done
+}
+
+
+function InstallWebServer
+{
+    clear
+    echo "Install Web Server"
     while true;
     do
         read -p "Install Web Server Now?" WS
         case $WS in 
             [yY]|[yY][eE][sS])
-
-                echo 'Websserver Installed'
-                read -p "Press Enter to continue: " ENTER
+                SelectVirtualHostServer
                 break
                 ;;
             [nN]|[nN][oO])

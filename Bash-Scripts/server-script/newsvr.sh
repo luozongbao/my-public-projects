@@ -50,7 +50,7 @@ function installswap
 function UpdateUpgrade
 {
     clear
-    MESSAGE="Install Swap"
+    MESSAGE="Update and Upgrade Server"
     display
     while true;
     do

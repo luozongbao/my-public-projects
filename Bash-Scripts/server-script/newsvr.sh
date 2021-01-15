@@ -4,6 +4,7 @@ if (( $EUID != 0 )); then
     exit
 fi
 RESULTFILE="result.txt"
+CURDIR=$PWD
 
 function installswap
 {
@@ -70,7 +71,7 @@ function ConfigTimeZone
         read -p "Congfigure Timezone?" TZ
         case $TZ in 
             [yY]|[yY][eE][sS])
-                $TIMEZONE="Asia/Bangkok"
+                TIMEZONE=Asia/Bangkok
                 timedatectl set-timezone $TIMEZONE
                 echo "Timezone Setted to $TIMEZONE"
                 echo "Timezone Setted to $TIMEZONE" >> $RESULTFILE
@@ -151,6 +152,9 @@ function InstallWordpressApache
         read -p "Install Wordpress Now?" WS
         case $WS in 
             [yY]|[yY][eE][sS])
+                SITELOC=/var/www/html
+                mkdir $SITELOC
+                cd $SITELOC
                 wget https://wordpress.org/latest.zip
                 unzip latest.zip
                 chown -R www-data:www-data wordpress
@@ -158,6 +162,7 @@ function InstallWordpressApache
                 curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
                 chmod +x wp-cli.phar
                 mv wp-cli.phar /usr/local/bin/wp
+                cd $CURDIR
                 echo "Wordpress and wp-cli Installed"
                 echo "Wordpress and wp-cli Installed" >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
@@ -212,6 +217,9 @@ function InstallWordpressOLS
         read -p "Install Wordpress Now?" WS
         case $WS in 
             [yY]|[yY][eE][sS])
+                SITELOC=/usr/local/lsws/sites
+                mkdir $SITELOC
+                cd $SITELOC
                 wget https://wordpress.org/latest.zip
                 unzip latest.zip
                 chown -R nobody:nogroup wordpress
@@ -220,6 +228,7 @@ function InstallWordpressOLS
                 chmod +x wp-cli.phar
                 mv wp-cli.phar /usr/local/bin/wp
                 cp /usr/local/lsws/lsphp74/bin/php /usr/bin/
+                cd $CURDIR
                 echo "Wordpress and wp-cli Installed" >> $RESULTFILE
                 echo "Wordpress and wp-cli Installed"
                 read -p "Press Enter to continue: " ENTER

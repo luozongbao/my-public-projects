@@ -11,11 +11,9 @@ function installswap
     clear
     while true;
     do
-        echo "Installing Swap"
-        echo 
-        read -p "Install Swap Size in GB" SWAPSIZE
+        read -p "Install Swap Size in GB: " SWAPSIZE
         case $SWAPSIZE in [1]|[2]|[3]|[4]|[5]|[6]|[7]|[8]|[9])
-                echo "Install Swap"
+                echo "Installing Swap ..."
                 fallocate -l ${SWAPSIZE}G /swapfile
                 dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE))
                 chmod 600 /swapfile
@@ -38,10 +36,9 @@ function installswap
 function UpdateUpgrade
 {
     clear
-    echo "Update and Upgrade Server"
     while true;
     do
-        read -p "Unpdate and Upgrade Server Now?" UP
+        read -p "Unpdate and Upgrade Server Now? (Y/N): " UP
         case $UP in 
             [yY]|[yY][eE][sS])
                 echo "Install Swap"
@@ -62,16 +59,42 @@ function UpdateUpgrade
     done
 }
 
+function ConfigHostName
+{
+    clear
+    while true;
+    do
+        read -p "Congfigure HostName? (Y/N): " HN
+        case $HN in 
+            [yY]|[yY][eE][sS])
+                read -p "What is your Host Name (HostName): " HOSTNAME
+                if [ -z $HOSTNAME ] then HOSTNAME=HostName fi
+                hostnamectl set-hostname $HOSTNAME
+                echo "Host Name Setted to $HOSTNAME"
+                echo "Host Name Setted to $HOSTNAME" >> $RESULTFILE
+                read -p "Press Enter to continue: " ENTER
+                break
+                ;;
+            [nN]|[nN][oO])
+                break
+                ;;
+            *) 
+                echo "Please, answer Yes or No"
+            ;;
+        esac
+    done
+}
+
 function ConfigTimeZone
 {
     clear
-    echo "Configure TimeZone"
     while true;
     do
-        read -p "Congfigure Timezone?" TZ
+        read -p "Congfigure Timezone? (Y/N): " TZ
         case $TZ in 
             [yY]|[yY][eE][sS])
-                TIMEZONE=Asia/Bangkok
+                read -p "What Time Zone (Asia/Bangkok): " TIMEZONE
+                if [ -z $TIMEZONE ] then TIMEZONE=Asia/Bangkok fi
                 timedatectl set-timezone $TIMEZONE
                 echo "Timezone Setted to $TIMEZONE"
                 echo "Timezone Setted to $TIMEZONE" >> $RESULTFILE
@@ -91,10 +114,9 @@ function ConfigTimeZone
 function InstallZipUnzip
 {
     clear
-    echo "Install Zip/Unzip"
     while true;
     do
-        read -p "Install Zip and Unzip Now?" ZIP
+        read -p "Install Zip and Unzip Now? (Y/N): " ZIP
         case $ZIP in 
             [yY]|[yY][eE][sS])
                 echo "Install Zip"
@@ -117,10 +139,9 @@ function InstallZipUnzip
 function InstallMariadb
 {
     clear
-    echo "Install Mariadb"
     while true;
     do
-        read -p "Mariadb Server Now?" MDB
+        read -p "Install Mariadb Server Now? (Y/N): " MDB
         case $MDB in 
             [yY]|[yY][eE][sS])
                 apt install -y mariadb-server 
@@ -147,10 +168,11 @@ function InstallWordpressApache
     echo "This will install Following"
     echo "   - wordpress"
     echo "   - wp-cli"
+    echo
     while true;
     do
-        read -p "Install Wordpress Now?" WS
-        case $WS in 
+        read -p "Install Wordpress Now? (Y/N): " WPAPCHE
+        case $WPAPCHE in 
             [yY]|[yY][eE][sS])
                 SITELOC=/var/www/html
                 mkdir $SITELOC
@@ -181,10 +203,9 @@ function InstallWordpressApache
 function InstallApache
 {
     clear
-    echo "Install Apache Web Server"
     while true;
     do
-        read -p "Install Apache Web Server Now?" APCHE
+        read -p "Install Apache Web Server Now? (Y/N): " APCHE
         case $APCHE in 
             [yY]|[yY][eE][sS])
                 InstallMariadb
@@ -212,10 +233,11 @@ function InstallWordpressOLS
     echo "This will install Following"
     echo "   - wordpress"
     echo "   - wp-cli"
+    echo
     while true;
     do
-        read -p "Install Wordpress Now?" WS
-        case $WS in 
+        read -p "Install Wordpress Now? (Y/N): " WPOLS
+        case $WPOLS in 
             [yY]|[yY][eE][sS])
                 SITELOC=/usr/local/lsws/sites
                 mkdir $SITELOC
@@ -247,10 +269,9 @@ function InstallWordpressOLS
 function InstallOpenLiteSpeed
 {
     clear
-    echo "Install OpenLiteSpeed Web Server"
     while true;
     do
-        read -p "Install OpenLiteSpeed Web Server Now?" OLS
+        read -p "Install OpenLiteSpeed Web Server Now? (Y/N): " OLS
         case $OLS in 
             [yY]|[yY][eE][sS])
                 InstallMariadb
@@ -280,7 +301,7 @@ function InstallCron
     echo "Install Server Cron Schedule"
     while true;
     do
-        read -p "Install reset cron Now?" CRON
+        read -p "Install reset cron schedule Now? (Y/N): " CRON
         case $CRON in 
             [yY]|[yY][eE][sS])
                 crontab -l > mycron
@@ -310,7 +331,7 @@ function SelectVirtualHostServer
     echo "Select Vertual Host Server Type"
     while true;
     do
-        read -p "Install Apache Or OpenLiteSpeed?" AOC
+        read -p "Select your virtual host server 'Apache' Or 'OpenLiteSpeed'? (A/O/C)" AOC
         case $AOC in 
             [aA]|[aA][pP][aA][cC][hH][eE])
                 InstallApache
@@ -340,7 +361,7 @@ function InstallWebServer
     echo "Install Web Server"
     while true;
     do
-        read -p "Install Web Server Now?" WS
+        read -p "Do you want to install Web Server Now? (Y/N): " WS
         case $WS in 
             [yY]|[yY][eE][sS])
                 SelectVirtualHostServer
@@ -359,5 +380,6 @@ function InstallWebServer
 UpdateUpgrade
 installswap
 ConfigTimeZone
+ConfigHostName
 InstallZipUnzip
 InstallWebServer

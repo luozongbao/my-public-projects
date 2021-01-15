@@ -192,7 +192,7 @@ function InstallMariadb
 function InstallWordpressApache
 {
     clear
-    MESSAGE=" Wordpress for Apache Server \n This will install Following \n    - wordpress \n     - wp-cli"
+    MESSAGE=$'Wordpress for Apache Server \n This will install Following \n    - wordpress \n     - wp-cli'
     display
     while true;
     do
@@ -210,8 +210,8 @@ function InstallWordpressApache
                 chmod +x wp-cli.phar
                 mv wp-cli.phar /usr/local/bin/wp
                 cd $CURDIR
-                echo "Wordpress and wp-cli Installed"
-                echo "Wordpress and wp-cli Installed" >> $RESULTFILE
+                echo "Wordpress and wp-cli Installed at $SITELOC"
+                echo "Wordpress and wp-cli Installed at $SITELOC" >> $RESULTFILE
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -256,7 +256,7 @@ function InstallApache
 function InstallWordpressOLS
 {
     clear
-    MESSAGE=" Wordpress for OpenLiteSpeed Server \n This will install Following \n    - wordpress \n     - wp-cli"
+    MESSAGE=$' Wordpress for OpenLiteSpeed Server \n This will install Following \n    - wordpress \n     - wp-cli'
     display
     while true;
     do
@@ -275,8 +275,8 @@ function InstallWordpressOLS
                 mv wp-cli.phar /usr/local/bin/wp
                 cp /usr/local/lsws/lsphp74/bin/php /usr/bin/
                 cd $CURDIR
-                echo "Wordpress and wp-cli Installed" >> $RESULTFILE
-                echo "Wordpress and wp-cli Installed"
+                echo "Wordpress and wp-cli Installed at $SITELOC" >> $RESULTFILE
+                echo "Wordpress and wp-cli Installed at $SITELOC"
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;

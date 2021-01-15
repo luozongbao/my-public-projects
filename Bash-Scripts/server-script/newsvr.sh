@@ -10,13 +10,13 @@ function display
 {
     HLINE="********************************************************************************"
     EMPTYLINE="*                                                                              *"
-    echo $HLINE
-    echo $EMPTYLINE
-    echo $EMPTYLINE
+    echo "$HLINE"
+    echo "$EMPTYLINE"
+    echo "$EMPTYLINE"
     echo "               $MESSAGE                   "
-    echo $EMPTYLINE
-    echo $EMPTYLINE
-    echo $HLINE
+    echo "$EMPTYLINE"
+    echo "$EMPTYLINE"
+    echo "$HLINE"
 }
 function installswap
 {

@@ -85,7 +85,10 @@ function ConfigHostName
         case $HN in 
             [yY]|[yY][eE][sS])
                 read -p "What is your Host Name (HostName): " HOSTNAME
-                if [ -z $HOSTNAME ] then HOSTNAME=HostName fi
+                if [ -z $HOSTNAME ] 
+                then 
+                    HOSTNAME=HostName 
+                fi
                 hostnamectl set-hostname $HOSTNAME
                 echo "Host Name Setted to $HOSTNAME"
                 echo "Host Name Setted to $HOSTNAME" >> $RESULTFILE
@@ -113,7 +116,10 @@ function ConfigTimeZone
         case $TZ in 
             [yY]|[yY][eE][sS])
                 read -p "What Time Zone (Asia/Bangkok): " TIMEZONE
-                if [ -z $TIMEZONE ] then TIMEZONE=Asia/Bangkok fi
+                if [ -z $TIMEZONE ] 
+                then 
+                    TIMEZONE=Asia/Bangkok 
+                fi
                 timedatectl set-timezone $TIMEZONE
                 echo "Timezone Setted to $TIMEZONE"
                 echo "Timezone Setted to $TIMEZONE" >> $RESULTFILE

@@ -9,7 +9,7 @@ read -p "Please, input original database name: " ORIGINALDB
 read -p "Please, input target database name: " DBNAME
 read -p "Please, input database username: " DBUSER
 read -p "Please, input database password for '$DBUSER': " DBPASS
-read -p "Please, input new website URL: " URL
+read -p "Please, input new website URL with http/https: " URL
 FILELOC=/usr/local/lsws/sites
 CURDIR=$PWD
 FINAL=latest.$ORIGINALDIR.zip
@@ -105,6 +105,35 @@ mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" #>> error.txt
 echo "update file and database done."
 echo "Modified Result as below:"
 mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTDB" #>> error.txt
+if [ ! $FILEDIR -eq $ORIGINALDIR ] || [ ! $ORIGINALDB -eq $DBNAME ]
+then
+        echo "Moving Site or Relocate Site detected"
+        while true;
+        do
+                clear
+                read -p "Do you want to update the site URL? (Y/N): " YN
+                case $YN in
+                        [yY]|[yY][eE][sS])
+                                cd $FILELOC/$FILEDIR
+                                echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
+                                echo "*** Please check and recheck before press ENTER" 
+                                read -p "Please input your original website url with http/https: " ORIGINALURL
+                                wp search-replace $ORIGINALURL $URL --all-tables
+                                cd $CURDIR
+                                break
+                                ;;
+                        [nN]|[nN][oO])
+                                break
+                                ;;
+                        *)
+                                echo "please answer yes or no"
+                                ;;
+                esac
+        done
+fi
+
+
+
 echo "All DONE" >> error.txt
 echo "All Done"
 

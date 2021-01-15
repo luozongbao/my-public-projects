@@ -118,7 +118,7 @@ then
                                 echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
                                 echo "*** Please check and recheck before press ENTER" 
                                 read -p "Please input your original website url with http/https: " ORIGINALURL
-                                wp search-replace $ORIGINALURL $URL --all-tables
+                                sudo -u root wp search-replace $ORIGINALURL $URL --all-tables --allow-root
                                 cd $CURDIR
                                 break
                                 ;;

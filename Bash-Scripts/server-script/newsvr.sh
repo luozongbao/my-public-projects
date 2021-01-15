@@ -5,15 +5,29 @@ if (( $EUID != 0 )); then
 fi
 RESULTFILE="result.txt"
 CURDIR=$PWD
-
+MESSAGE=""
+function display
+{
+    HLINE=     "********************************************************************************"
+    EMPTYLINE="*                                                                              *"
+    echo $HLINE
+    echo $EMPTYLINE
+    echo $EMPTYLINE
+    echo "               $MESSAGE                   "
+    echo $EMPTYLINE
+    echo $EMPTYLINE
+    echo $HLINE
+}
 function installswap
 {
     clear
+    MESSAGE="Installing Swap ..."
+    display
     while true;
     do
         read -p "Install Swap Size in GB: " SWAPSIZE
         case $SWAPSIZE in [1]|[2]|[3]|[4]|[5]|[6]|[7]|[8]|[9])
-                echo "Installing Swap ..."
+                echo "Configuring Swap ..."
                 fallocate -l ${SWAPSIZE}G /swapfile
                 dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE))
                 chmod 600 /swapfile
@@ -36,12 +50,13 @@ function installswap
 function UpdateUpgrade
 {
     clear
+    MESSAGE= "Install Swap"
+    display
     while true;
     do
         read -p "Unpdate and Upgrade Server Now? (Y/N): " UP
         case $UP in 
             [yY]|[yY][eE][sS])
-                echo "Install Swap"
                 apt update
                 apt Upgrade -y
                 echo "Update, Upgrade Done"
@@ -62,6 +77,8 @@ function UpdateUpgrade
 function ConfigHostName
 {
     clear
+    MESSAGE="Set Host name"
+    display
     while true;
     do
         read -p "Congfigure HostName? (Y/N): " HN
@@ -88,6 +105,8 @@ function ConfigHostName
 function ConfigTimeZone
 {
     clear
+    MESSAGE="Configure Time Zone"
+    display
     while true;
     do
         read -p "Congfigure Timezone? (Y/N): " TZ
@@ -114,12 +133,13 @@ function ConfigTimeZone
 function InstallZipUnzip
 {
     clear
+    MESSAGE= "Install Zip/Unzip"
+    display
     while true;
     do
         read -p "Install Zip and Unzip Now? (Y/N): " ZIP
         case $ZIP in 
             [yY]|[yY][eE][sS])
-                echo "Install Zip"
                 apt install -y zip unzip
                 echo "Zip/Unzip Installed" >> $RESULTFILE
                 echo "Zip/Unzip Installed"
@@ -139,6 +159,8 @@ function InstallZipUnzip
 function InstallMariadb
 {
     clear
+    MESSAGE="Install MariaDB"
+    display
     while true;
     do
         read -p "Install Mariadb Server Now? (Y/N): " MDB
@@ -164,11 +186,8 @@ function InstallMariadb
 function InstallWordpressApache
 {
     clear
-    echo "Wordpress for Apache Server"
-    echo "This will install Following"
-    echo "   - wordpress"
-    echo "   - wp-cli"
-    echo
+    MESSAGE=" Wordpress for Apache Server \n This will install Following \n    - wordpress \n     - wp-cli"
+    display
     while true;
     do
         read -p "Install Wordpress Now? (Y/N): " WPAPCHE
@@ -203,6 +222,8 @@ function InstallWordpressApache
 function InstallApache
 {
     clear
+    MESSAGE="Install Apache Virtual Server"
+    display
     while true;
     do
         read -p "Install Apache Web Server Now? (Y/N): " APCHE
@@ -229,11 +250,8 @@ function InstallApache
 function InstallWordpressOLS
 {
     clear
-    echo "Wordpress OpenLitespeed Server"
-    echo "This will install Following"
-    echo "   - wordpress"
-    echo "   - wp-cli"
-    echo
+    MESSAGE=" Wordpress for OpenLiteSpeed Server \n This will install Following \n    - wordpress \n     - wp-cli"
+    display
     while true;
     do
         read -p "Install Wordpress Now? (Y/N): " WPOLS
@@ -269,6 +287,8 @@ function InstallWordpressOLS
 function InstallOpenLiteSpeed
 {
     clear
+    MESSAGE="Installing OpenLiteSpeed Virtual Server"
+    display
     while true;
     do
         read -p "Install OpenLiteSpeed Web Server Now? (Y/N): " OLS
@@ -298,7 +318,8 @@ function InstallOpenLiteSpeed
 function InstallCron
 {
     clear
-    echo "Install Server Cron Schedule"
+    MESSAGE= "Install Server Cron Schedule"
+    display
     while true;
     do
         read -p "Install reset cron schedule Now? (Y/N): " CRON
@@ -328,7 +349,8 @@ function InstallCron
 function SelectVirtualHostServer
 {
     clear
-    echo "Select Vertual Host Server Type"
+    Message="Select Vertual Host Server Type"
+    display
     while true;
     do
         read -p "Select your virtual host server 'Apache' Or 'OpenLiteSpeed'? (A/O/C)" AOC
@@ -358,7 +380,8 @@ function SelectVirtualHostServer
 function InstallWebServer
 {
     clear
-    echo "Install Web Server"
+    Message= "Install Web Server"
+    display
     while true;
     do
         read -p "Do you want to install Web Server Now? (Y/N): " WS
@@ -383,3 +406,9 @@ ConfigTimeZone
 ConfigHostName
 InstallZipUnzip
 InstallWebServer
+
+echo
+echo
+MESSAGE="ALL DONE!  LOOK THE RESULT SUMMARY BELOW"
+display
+cat $RESULTFILE

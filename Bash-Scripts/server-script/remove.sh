@@ -15,8 +15,8 @@ fi
 FILELOC=/usr/local/lsws/sites
 read -p "Please input the website File Directory: " FILEDIR
 read -p "Please input the website database name: " DBNAME
-RESULTFILE="result.txt"
-ERRORFILE="error.txt"
+RESULTFILE="$CURDIR/result.txt"
+ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 

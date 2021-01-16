@@ -29,8 +29,8 @@ DBFILE=$ORIGINALDB.sql
 TEMPDIR=tempdirKK
 WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
 
-RESULTFILE="result.txt"
-ERRORFILE="error.txt"
+RESULTFILE="$CURDIR/result.txt"
+ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 

@@ -14,8 +14,8 @@ if (( $EUID != 0 )); then
 fi
 CURDIR=$PWD
 
-RESULTFILE="result.txt"
-ERRORFILE="error.txt"
+RESULTFILE="$CURDIR/result.txt"
+ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 

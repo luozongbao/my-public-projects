@@ -25,8 +25,8 @@ BKFILE=$FILEDIR.zip
 BKFINAL=old.$FILEDIR.zip
 
 
-RESULTFILE="result.txt"
-ERRORFILE="error.txt"
+RESULTFILE="$CURDIR/result.txt"
+ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 

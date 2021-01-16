@@ -50,9 +50,9 @@ function display
 function showresult
 {
     HLINE="********************************************************************************"
-    echo $HLINE
+    echo "$HLINE"
     echo "*               $1                   "
-    echo $HLINE
+    echo "$HLINE"
     echo 
     echo $1 >> $RESULTFILE
 }

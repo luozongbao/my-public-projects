@@ -1,8 +1,17 @@
 #! /bin/bash
+###################################################################
+#Script Name	: Recover website from backup file                                                                                             
+#Description	: to be run on wordpress server to recover website                                                                      
+#Args         	:                                                                                           
+#Author       	: Atipat Lorwongam                                           
+#Email         	: asecondsun@outlook.com                               
+###################################################################
 if (( $EUID != 0 )); then
     echo "Please run as root"
     exit
 fi
+
+FILELOC=/usr/local/lsws/sites
 read -p "Please, input original backup folder name: " ORIGINALDIR
 read -p "Please, input target directory: " FILEDIR
 read -p "Please, input original database name: " ORIGINALDB
@@ -10,13 +19,18 @@ read -p "Please, input target database name: " DBNAME
 read -p "Please, input database username: " DBUSER
 read -p "Please, input database password for '$DBUSER': " DBPASS
 read -p "Please, input new website URL with http/https: " URL
-FILELOC=/usr/local/lsws/sites
+
 CURDIR=$PWD
 FINAL=latest.$ORIGINALDIR.zip
 BKFILE=$ORIGINALDIR.zip
 DBFILE=$ORIGINALDB.sql
 TEMPDIR=tempdirKK
-RESULTFILE=result.txt
+RESULTFILE="result.txt"
+
+echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
+
+
+
 clear
 
 if [ -z $DBUSER ] || [ -z $FILEDIR ] || [ -z $DBUSER ] || [ -z $DBNAME ] || [ -z $ORIGINALDB ] || [ -z $URL ]

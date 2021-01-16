@@ -1,11 +1,22 @@
 #! /bin/bash
+###################################################################
+#Script Name	: Remove Website                                                                                             
+#Description	: Used to Remove website on server                                                                      
+#Args         	:                                                                                           
+#Author       	: Atipat Lorwongam                                           
+#Email         	: asecondsun@outlook.com                               
+###################################################################
 if (( $EUID != 0 )); then
     echo "Please run as root"
     exit
 fi
+FILELOC=/usr/local/lsws/sites
 read -p "Please input the website File Directory: " FILEDIR
 read -p "Please input the website database name: " DBNAME
-FILELOC=/usr/local/lsws/sites
+RESULTFILE="result.txt"
+
+echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
+
 
 if [ -z $FILEDIR ] || [ -z $DBNAME ]
 then

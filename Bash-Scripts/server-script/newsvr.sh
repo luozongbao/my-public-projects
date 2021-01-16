@@ -79,7 +79,7 @@ function installswap
 function UpdateUpgrade
 {
     clear
-    display"Update and Upgrade Server"
+    display "Update and Upgrade Server"
     while true;
     do
         read -p "Unpdate and Upgrade Server Now? (Y/N): " UP
@@ -133,7 +133,7 @@ function ConfigHostName
 function ConfigTimeZone
 {
     clear
-    display"Configure Time Zone"
+    display "Configure Time Zone"
     while true;
     do
         read -p "Congfigure Timezone? (Y/N): " TZ

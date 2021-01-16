@@ -432,6 +432,7 @@ display
 read -p "Press Enter to continue: " ENTER
 MESSAGE="SEE RESULT SUMMARY BELOW"
 display
+echo " ----==== ALL DONE ====----" >> $RESULTFILE
 cat $RESULTFILE
 echo "***************** WP INFO *****************"
 wp --info

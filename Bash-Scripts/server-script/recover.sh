@@ -158,7 +158,8 @@ then
                 esac
         done
 fi
+echo " ----==== ALL DONE ====----" >> $RESULTFILE
 echo "============ RESULT ============"
 cat $RESULTFILE
-echo "All Done"
+
 

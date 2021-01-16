@@ -135,8 +135,9 @@ do
 esac
 done	
 echo
-echo " ----==== ALL DONE ====----" >> RESULTFILE
+echo " ----==== ALL DONE ====----" >> $RESULTFILE
 echo "ALL DONE"
+cat $RESULTFILE
 
 
 

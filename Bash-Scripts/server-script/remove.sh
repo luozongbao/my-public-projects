@@ -40,6 +40,7 @@ then
                                 ;;
                         [nN]|[nN][oO])
                                 echo "skipped removing $FILELOC/$FILEDIR"
+                                echo "skipped removing $FILELOC/$FILEDIR" >> $RESULTFILE
                                 break
                                 ;;
                         *)
@@ -49,6 +50,7 @@ then
         done
 else
         echo "DIrectory $FILELOC/$FILEDIR not found."
+        echo "DIrectory $FILELOC/$FILEDIR not found." >> $RESULTFILE
         exit 1
 fi
 
@@ -59,10 +61,12 @@ do
                 [yY]|[yY][eE][sS])
                         mysql -u root -e "DROP DATABASE $DBNAME;"
                         echo "$DBNAME removed"
+                        echo "$DBNAME removed" >> $RESULTFILE
                         break
                         ;;
                 [nN]|[nN][oO])
                         echo "skipping remove database $DBNAME"
+                        echo "skipping remove database $DBNAME" >> $RESULTFILE
                         break
                         ;;
                 *)
@@ -70,3 +74,7 @@ do
                         ;;
         esac
 done
+clear
+echo " ----==== ALL DONE ====----" >> $RESULTFILE
+echo " ----==== ALL DONE ====----" 
+cat $RESULTFILE

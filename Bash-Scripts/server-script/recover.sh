@@ -1,10 +1,12 @@
 #! /bin/bash
 ###################################################################
-#Script Name	: Recover website from backup file                                                                                             
-#Description	: to be run on wordpress server to recover website                                                                      
-#Args         	:                                                                                           
-#Author       	: Atipat Lorwongam                                           
-#Email         	: asecondsun@outlook.com                               
+# Script Name	: Recover website from backup file                                                                                             
+# Description	: to be run on wordpress server to recover website                                                                      
+# Args         	:                       
+# Date          :
+# Version       :                                                                                            
+# Author       	: Atipat Lorwongam                                           
+# Email         : asecondsun@outlook.com                               
 ###################################################################
 if (( $EUID != 0 )); then
     echo "Please run as root"

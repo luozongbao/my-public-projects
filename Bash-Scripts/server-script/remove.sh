@@ -1,10 +1,12 @@
 #! /bin/bash
 ###################################################################
-#Script Name	: Remove Website                                                                                             
-#Description	: Used to Remove website on server                                                                      
-#Args         	:                                                                                           
-#Author       	: Atipat Lorwongam                                           
-#Email         	: asecondsun@outlook.com                               
+# Script Name	: Remove Website                                                                                             
+# Description	: Used to Remove website on server                                                                      
+# Args         	:                       
+# Date          :
+# Version       :                                                                                              
+# Author       	: Atipat Lorwongam                                           
+# Email         : asecondsun@outlook.com                               
 ###################################################################
 if (( $EUID != 0 )); then
     echo "Please run as root"

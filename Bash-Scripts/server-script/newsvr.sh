@@ -1,10 +1,12 @@
 #! /bin/bash
 ###################################################################
-#Script Name	: New Server                                                                                             
-#Description	: To be run on new server                                                                      
-#Args         	:                                                                                           
-#Author       	: Atipat Lorwongam                                           
-#Email         	: asecondsun@outlook.com                               
+# Script Name	: New Server                                                                                             
+# Description	: To be run on new server                                                                      
+# Args         	:                       
+# Date          :
+# Version       :                                                                    
+# Author       	: Atipat Lorwongam                                           
+# Email         : asecondsun@outlook.com                               
 ###################################################################
 if (( $EUID != 0 )); then
     echo "Please run as root"

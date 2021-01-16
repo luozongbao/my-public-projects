@@ -27,6 +27,7 @@ FINAL=latest.$ORIGINALDIR.zip
 BKFILE=$ORIGINALDIR.zip
 DBFILE=$ORIGINALDB.sql
 TEMPDIR=tempdirKK
+WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
 
 RESULTFILE="result.txt"
 ERRORFILE="error.txt"
@@ -35,8 +36,8 @@ echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
 function display
 {
-    HLINE="********************************************************************************"
-    EMPTYLINE="*                                                                              *"
+    HLINE="****************************************************************************************************"
+    EMPTYLINE="*                                                                                                  *"
     echo "$HLINE"
     echo "$EMPTYLINE"
     echo "$EMPTYLINE"
@@ -49,7 +50,7 @@ function display
 
 function showresult
 {
-    HLINE="********************************************************************************"
+    HLINE="****************************************************************************************************"
     echo "$HLINE"
     echo "*               $1                   "
     echo "$HLINE"
@@ -136,36 +137,23 @@ showresult "Modified folder permissions"
 cd $CURDIR
 pauseandclear
 
-while true;
-do
-        echo "NOTE: "
-        echo    "1. Please, look up the file for Table for the next step"
-        echo    "2. Please, make sure the database name is set correctly"
-        echo
-        read -p "Do you want to edit wp-config.php now (Y/N)" YN
-        case $YN in
-                [yY]|[yY][eE][sS])
-                        vim $FILELOC/$FILEDIR/wp-config.php #2>> error.txt
-                        showresult "Edited $FILELOC/$FILEDIR/wp-config.php" 
-                        pauseandclear
-                        break
-                        ;;
-                [nN]|[nN][oO])
-                        break
-                        ;;
-                *)
-                        echo "please answer yes or no"
-                        ;;
-        esac
-done
+if [ ! "$ORIGINALDB" == "$DBNAME" ]
+then
+        display "Edited $WPCONFIG and configure Database"
+        sed -i 's/$ORIGINALDB/DBNAME/g"' $WPCONFIG 2>>$ERRORFILE
+        showresult "$WPCONFIG edited switch $ORIGINALDB to $DBNAME"
+fi
+
 display "Modifying HomeURL and SiteURL"
-read -p "Please input Table Prefix: " TABLEPREF
+TABLEPREF=$(cat $WPCONFIG "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
+showresult "Table prefix '$TABLEPREF' retrieved"
 DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
 SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
 mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE
 showresult "Updated homeurl/siteURL to $URL." 
 echo "update file and database done."
 echo "Modified Result as below:"
+mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
 mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
 pauseandclear
 

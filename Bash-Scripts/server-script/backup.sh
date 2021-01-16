@@ -23,8 +23,42 @@ FINAL=latest.$FILEDIR.zip
 DBFILE=$DBNAME.sql
 BKFILE=$FILEDIR.zip
 BKFINAL=old.$FILEDIR.zip
+
+
 RESULTFILE="result.txt"
-ERRFILE=error.txt
+ERRORFILE="error.txt"
+
+echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
+
+function display
+{
+    HLINE="********************************************************************************"
+    EMPTYLINE="*                                                                              *"
+    echo "$HLINE"
+    echo "$EMPTYLINE"
+    echo "$EMPTYLINE"
+    echo "*               $1                   "
+    echo "$EMPTYLINE"
+    echo "$EMPTYLINE"
+    echo "$HLINE"
+    echo
+}
+
+function showresult
+{
+    HLINE="********************************************************************************"
+    echo $HLINE
+    echo "*               $1                   "
+    echo $HLINE
+    echo 
+    echo $1 >> $RESULTFILE
+}
+
+function pauseandclear
+{
+        read -p "Press ENTER to continue" ENTER
+        clear
+}
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
@@ -32,98 +66,87 @@ clear
 # CHCEK VALID VARIABLES
 if [ -d "$DIRLOC" ];
 then
-	echo "Directory $DIRLOC CHECKED"
+	display "Directory $DIRLOC CHECKED"
 	echo "Directory $DIRLOC CHECKED" >> $RESULTFILE
 else
-	echo "$DIRLOC WRONG FILE DIRECTORY LOCATION" #>> $ERRFILE
+	display "$DIRLOC WRONG FILE DIRECTORY LOCATION"
 	exit 1
 fi
 
 if [ -z "$FILEDIR" ];
 then
-	echo "Files Directory INPUT IS EMPTY" #>> $ERRFILE
+	display "Files Directory INPUT IS EMPTY" 
+	echo "Files Directory INPUT IS EMPTY" >> $RESULTFILE
 	exit 1
 else
 	if [ -d "$DIRLOC/$FILEDIR" ];
 	then
-		echo "FILE DIRECTORY $DIRLOC/$FILEDIR CHECKED"
-		echo "File Directory $DIRLOC/$FILEDIR CHECKED" >> $RESULTFILE
+		display "FILE DIRECTORY $DIRLOC/$FILEDIR CHECKED"
 	else
-		echo "WRONG FILE DIRECTORY $DIRLOC/$FILEDIR" # >> $ERRFILE
+		display "WRONG FILE DIRECTORY $DIRLOC/$FILEDIR"
 		exit 1
 	fi
 fi
 
 if [ -z $DBNAME ];
 then
-	echo "Database Name INPUT IS EMPTY" #>> $ERRFILE
+	display "Database Name INPUT IS EMPTY"
 	exit 1
 else
-	echo "Database Name $DBNAME VARIABLE CHECKED"
-	echo "Database Name: $DBNAME " >> $RESULTFILE
+	display "Database Name $DBNAME VARIABLE CHECKED"
 fi
 
 if [ -z $DBUSER ];
 then
-	echo "Database User INPUT IS EMPTY" #>> $ERRFILE
+	display "Database User INPUT IS EMPTY" 
 	exit 1
 else
-	echo "Database User VARIABLE CHECKED"
-	echo "Database USER: $DBUSER" >> $RESULTFILE
+	display "Database User $DBUSER CHECKED"
 fi
 #ENTER TO CONTINUE
-read -p "File Check Done" ENTER
 clear
-echo "Start Backing up $DIRLOC/$FILEDIR Files"
-echo
+display "Input Information CHECKED.  Start Backing up $DIRLOC/$FILEDIR Files"
 # ENTER TO CONTINUE
 read -p "Enter to continue" ENTER
 
 # BACKUP FINAL FILE
 if [ -e $FINAL ];
 then
+	display "Found Previous Backup File '$FINAL'"
 	mv $FINAL $BKFINAL
-	echo "Backed up previous backup file $FINAL to $BKFINAL"
-	echo "Backed up previous backup file $FINAL to $BKFINAL" >> $RESULTFILE
+	display "Backed up previous backup file $FINAL to $BKFINAL"
 fi
 
 # ARCHIVING DIRECTORY
 cd $DIRLOC
-zip -r $BKFILE $FILEDIR
+zip -r $BKFILE $FILEDIR 2>>$ERRORFILE
 clear
-echo "$DIRLOC/$FILEDIR Archived"
-echo "$DIRLOC/$FILEDIR Archived" >> $RESULTFILE
+showresult "$DIRLOC/$FILEDIR Archived"
 # MOVE ARCHIVED FILE TO CURRENT DIRECTORY
-mv $BKFILE $CURDIR
+mv $BKFILE $CURDIR 2>>$ERRORFILE
 cd $CURDIR
-echo
-echo "Dumping Database $DBNAME to $DBFILE"
-echo "Dumping Database $DBNAME to $DBFILE" >> $RESULTFILE
-echo
-echo "mysql password for user $DBUSER"
+pauseandclear
+display "Dumping Database $DBNAME to $DBFILE"
 # EXPORT DATABASE
-mysqldump -u $DBUSER --pass="$DBPASS" $DBNAME > $DBFILE
-clear
-echo "Database exported to $DBFILE"
-echo "Database exported to $DBFILE" >> $RESULTFILE
-echo
-echo "Archiving ... "
-echo
+mysqldump -u $DBUSER --pass="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
+showresult "Database exported to $DBFILE"
+pauseandclear
+display "Archiving files..."
 # ARCHIVE BACKUP FILES
-zip $FINAL $BKFILE $DBFILE
-echo "Archive $BKFILE and $DBFILE to $FINAL"
-echo "Archive $BKFILE and $DBFILE to $FINAL" >> $RESULTFILE
-echo
+zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE
+showresult "Archived $BKFILE and $DBFILE to $FINAL"
+pauseandclear
 while true;
 do
-	read -p "Removed unnessessary files?" YN
+	display "Unnecessary Files"
+	read -p "Removed unnecessary files?" YN
 	case $YN in [yY]|[yY][eE][sS])
 		#REMOVE ARCHIVED FILES
-		echo "removing unnessessary files..."
+		echo "removing unnecessary files..."
 		rm $DBFILE
 		rm $BKFILE
-		echo "Removed $BKFILE and $DBFILE" >> $RESULTFILE
-		echo "Removed $BKFILE and $DBFILE"
+		showresult "Removed $BKFILE and $DBFILE"
+		pauseandclear
 		break
 		;;
 	[nN]|[nN][oO])
@@ -135,7 +158,7 @@ do
 esac
 done	
 echo
-echo " ----==== ALL DONE ====----" >> $RESULTFILE
+showresult " ----==== ALL DONE ====----" 
 echo "ALL DONE"
 cat $RESULTFILE
 

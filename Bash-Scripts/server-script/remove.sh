@@ -16,8 +16,39 @@ FILELOC=/usr/local/lsws/sites
 read -p "Please input the website File Directory: " FILEDIR
 read -p "Please input the website database name: " DBNAME
 RESULTFILE="result.txt"
+ERRORFILE="error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
+
+function display
+{
+    HLINE="********************************************************************************"
+    EMPTYLINE="*                                                                              *"
+    echo "$HLINE"
+    echo "$EMPTYLINE"
+    echo "$EMPTYLINE"
+    echo "*               $1                   "
+    echo "$EMPTYLINE"
+    echo "$EMPTYLINE"
+    echo "$HLINE"
+    echo
+}
+
+function showresult
+{
+    HLINE="********************************************************************************"
+    echo $HLINE
+    echo "*               $1                   "
+    echo $HLINE
+    echo 
+    echo $1 >> $RESULTFILE
+}
+
+function pauseandclear
+{
+        read -p "Press ENTER to continue" ENTER
+        clear
+}
 
 
 if [ -z $FILEDIR ] || [ -z $DBNAME ]
@@ -34,13 +65,12 @@ then
                 read -p " Continue (Y/N): " YN
                 case $YN in
                         [yY]|[yY][eE][sS])
-                                rm -r $FILELOC/$FILEDIR
-                                echo "$FILELOC/$FILEDIR removed."
+                                rm -r $FILELOC/$FILEDIR 2>> $ERRORFILE
+                                showresult "$FILELOC/$FILEDIR removed."
                                 break
                                 ;;
                         [nN]|[nN][oO])
-                                echo "skipped removing $FILELOC/$FILEDIR"
-                                echo "skipped removing $FILELOC/$FILEDIR" >> $RESULTFILE
+                                showresult "skipped removing $FILELOC/$FILEDIR"
                                 break
                                 ;;
                         *)
@@ -49,8 +79,7 @@ then
                 esac
         done
 else
-        echo "DIrectory $FILELOC/$FILEDIR not found."
-        echo "DIrectory $FILELOC/$FILEDIR not found." >> $RESULTFILE
+        showresult "DIrectory $FILELOC/$FILEDIR not found."
         exit 1
 fi
 
@@ -59,14 +88,12 @@ do
         read -p "This will remove database $DBNAME permanently (Y/N): " YN
         case $YN in
                 [yY]|[yY][eE][sS])
-                        mysql -u root -e "DROP DATABASE $DBNAME;"
-                        echo "$DBNAME removed"
-                        echo "$DBNAME removed" >> $RESULTFILE
+                        mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
+                        showresult "$DBNAME removed"
                         break
                         ;;
                 [nN]|[nN][oO])
-                        echo "skipping remove database $DBNAME"
-                        echo "skipping remove database $DBNAME" >> $RESULTFILE
+                        showresult "skipping remove database $DBNAME"
                         break
                         ;;
                 *)
@@ -75,6 +102,5 @@ do
         esac
 done
 clear
-echo " ----==== ALL DONE ====----" >> $RESULTFILE
-echo " ----==== ALL DONE ====----" 
+showresult " ----==== ALL DONE ====----" 
 cat $RESULTFILE

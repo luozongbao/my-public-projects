@@ -413,17 +413,20 @@ function InstallWebServer
     done
 }
 
+function Finalize
+{
+    showresult " ----==== ALL DONE ====----" 
+    cat $RESULTFILE
+    echo "***************** WP INFO *****************"
+    wp --info
+}
+
 UpdateUpgrade
 installswap
 ConfigTimeZone
 ConfigHostName
 InstallZipUnzip
 InstallWebServer
-read -p "Press Enter to continue: " ENTER
-clear
-echo
-echo
-showresult " ----==== ALL DONE ====----" 
-cat $RESULTFILE
-echo "***************** WP INFO *****************"
-wp --info
+pauseandclear
+Finalize
+

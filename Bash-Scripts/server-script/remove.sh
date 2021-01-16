@@ -50,27 +50,57 @@ function pauseandclear
         clear
 }
 
+function checkvariables
+{
+        if [ -z $FILEDIR ] || [ -z $DBNAME ]
+        then
+                echo "Input Missing"
+                exit 1
+        fi
+}
 
-if [ -z $FILEDIR ] || [ -z $DBNAME ]
-then
-        echo "Input Missing"
-        exit 1
-fi
+function RemoveFiles
+{
+        if [ -d "$FILELOC/$FILEDIR" ]
+        then
+                while true;
+                do
+                        echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
+                        read -p " Continue (Y/N): " YN
+                        case $YN in
+                                [yY]|[yY][eE][sS])
+                                        rm -r $FILELOC/$FILEDIR 2>> $ERRORFILE
+                                        showresult "$FILELOC/$FILEDIR removed."
+                                        break
+                                        ;;
+                                [nN]|[nN][oO])
+                                        showresult "skipped removing $FILELOC/$FILEDIR"
+                                        break
+                                        ;;
+                                *)
+                                        echo "Please answer Y/N"
+                                        ;;
+                        esac
+                done
+        else
+                showresult "DIrectory $FILELOC/$FILEDIR not found."
+                exit 1
+        fi
+}
 
-if [ -d "$FILELOC/$FILEDIR" ]
-then
+function RemoveDatabase
+{
         while true;
         do
-                echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
-                read -p " Continue (Y/N): " YN
+                read -p "This will remove database $DBNAME permanently (Y/N): " YN
                 case $YN in
                         [yY]|[yY][eE][sS])
-                                rm -r $FILELOC/$FILEDIR 2>> $ERRORFILE
-                                showresult "$FILELOC/$FILEDIR removed."
+                                mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
+                                showresult "$DBNAME removed"
                                 break
                                 ;;
                         [nN]|[nN][oO])
-                                showresult "skipped removing $FILELOC/$FILEDIR"
+                                showresult "skipping remove database $DBNAME"
                                 break
                                 ;;
                         *)
@@ -78,29 +108,18 @@ then
                                 ;;
                 esac
         done
-else
-        showresult "DIrectory $FILELOC/$FILEDIR not found."
-        exit 1
-fi
+}
 
-while true;
-do
-        read -p "This will remove database $DBNAME permanently (Y/N): " YN
-        case $YN in
-                [yY]|[yY][eE][sS])
-                        mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
-                        showresult "$DBNAME removed"
-                        break
-                        ;;
-                [nN]|[nN][oO])
-                        showresult "skipping remove database $DBNAME"
-                        break
-                        ;;
-                *)
-                        echo "Please answer Y/N"
-                        ;;
-        esac
-done
+function Finalize
+{
+        showresult " ----==== ALL DONE ====----" 
+        cat $RESULTFILE
+}
+
+
+
 clear
-showresult " ----==== ALL DONE ====----" 
-cat $RESULTFILE
+checkvariables
+RemoveFiles
+RemoveDatabase
+Finalize

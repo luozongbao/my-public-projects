@@ -33,8 +33,6 @@ ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
-
-
 function display
 {
     HLINE="****************************************************************************************************"
@@ -81,7 +79,6 @@ function getInformation
         WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
 }
 
-
 function checkvariables
 {
         if [ -z $DBUSER ] || [ -z $FILEDIR ] || [ -z $DBUSER ] || [ -z $DBNAME ] || [ -z $ORIGINALDB ] || [ -z $URL ]
@@ -108,7 +105,6 @@ function checkvariables
         showresult "Variables Checked"
 }
 
-
 function PrepareEnvironment
 {
         display "Moving file to $FILELOC"
@@ -118,7 +114,6 @@ function PrepareEnvironment
         unzip $FINAL 2>> $ERRORFILE
         showresult "$FINAL unpacked."
 }
-
 
 function RemoveExistedDirectory
 {
@@ -136,7 +131,6 @@ function DropDatabase
         mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
         showresult "Droped $DBNAME" 
 }
-
 
 function createDatabase
 {
@@ -168,7 +162,6 @@ function recoverFileDirectory
         cd $CURDIR 
 }
 
-
 function configurewpconfig
 {
         if [ ! "$ORIGINALDB" == "$DBNAME" ]
@@ -182,7 +175,6 @@ function configurewpconfig
         showresult "Table prefix '$TABLEPREF' retrieved"
 }
 
-
 function UpdateURL
 {
         DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
@@ -192,6 +184,53 @@ function UpdateURL
         echo "homeurl and siteurl in table ${TABLEPREF}options is shown below"
         mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
         mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
+}
+
+function discourageSearchEnging
+{
+    wp option set blog_public 0 2>> $ERRORFILE
+    showresult "Discouraged search engines from indexing the site"
+}
+
+function disablePlugins
+{
+    
+    while true;
+    do
+        echo " List Plugins and status "
+        sudo wp plugin list --allow-root
+        echo
+        read -p "type plugin name to disable.  Type DONE to exit" PLUGIN
+        if [ "$PLUGIN" == "DONE" ]
+        then
+                break
+        else
+                showresult $(wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE)
+        fi
+    done
+}
+
+function DefineTestSite
+{
+        while true;
+        do
+                read -p "Is this a test site? (Y/N): " YN
+                case $YN in
+                        [yY]|[yY][eE][sS])
+                                cd $FILELOC/$FILEDIR
+                                discourageSearchEnging
+                                disablePlugins
+                                break
+                                ;;
+                        [nN]|[nN][oO])
+                                break
+                                ;;
+                        *)
+                                echo "Please answer yes or no"
+                                ;;
+                esac
+        done
+
 }
  
 function completeURLChanged
@@ -213,6 +252,7 @@ function completeURLChanged
                                         cd $CURDIR
                                         showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
                                         pauseandclear
+                                        DefineTestSite
                                         break
                                         ;;
                                 [nN]|[nN][oO])
@@ -225,6 +265,8 @@ function completeURLChanged
                 done
         fi
 }
+
+
 
 function Finalize
 {

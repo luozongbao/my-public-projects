@@ -24,13 +24,10 @@ DBFILE=""
 BKFILE=""
 BKFINAL=""
 
-
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
-
-
 
 function display
 {
@@ -134,8 +131,6 @@ function backupbackup
 	fi
 }
 
-
-
 # ARCHIVING DIRECTORY
 function ArchiveDirectory
 {
@@ -148,8 +143,6 @@ function ArchiveDirectory
 }
 # MOVE ARCHIVED FILE TO CURRENT DIRECTORY
 
-
-
 # EXPORT DATABASE
 function exportDatabase
 {
@@ -157,8 +150,6 @@ function exportDatabase
 	mysqldump -u $DBUSER --password="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
 	showresult "Database exported to $DBFILE"
 }
-
-pauseandclear
 
 # ARCHIVE BACKUP FILES
 function ArchiveBackupFiles
@@ -192,16 +183,12 @@ function RemoveUnecessaryFiles
 	done	
 }
 
-
 function Finalize
 {
 	showresult " ----==== ALL DONE ====----" 
 	echo "ALL DONE"
 	cat $RESULTFILE
 }
-
-
-
 
 clear
 getInformation

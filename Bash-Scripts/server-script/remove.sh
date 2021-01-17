@@ -13,8 +13,9 @@ if (( $EUID != 0 )); then
     exit
 fi
 FILELOC=/usr/local/lsws/sites
-read -p "Please input the website File Directory: " FILEDIR
-read -p "Please input the website database name: " DBNAME
+CURDIR=$PWD
+FILEDIR=""
+DBNAME=""
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
@@ -48,6 +49,13 @@ function pauseandclear
 {
         read -p "Press ENTER to continue" ENTER
         clear
+}
+
+function getInformation
+{
+        display "Collect Information For Website Removal"
+        read -p "Please input the website File Directory: " FILEDIR
+        read -p "Please input the website database name: " DBNAME
 }
 
 function checkvariables
@@ -116,9 +124,8 @@ function Finalize
         cat $RESULTFILE
 }
 
-
-
 clear
+getInformation
 checkvariables
 RemoveFiles
 RemoveDatabase

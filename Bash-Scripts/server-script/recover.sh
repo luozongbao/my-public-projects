@@ -230,7 +230,7 @@ function updatePlugins
 
 }
 
-function DefineTestSite
+function ConfigureTestSite
 {
         while true;
         do
@@ -274,7 +274,7 @@ function completeURLChanged
                                         cd $CURDIR
                                         showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
                                         pauseandclear
-                                        DefineTestSite
+                                        ConfigureTestSite
                                         break
                                         ;;
                                 [nN]|[nN][oO])

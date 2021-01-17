@@ -64,12 +64,12 @@ function getInformation
 {
 	display "Collect Information for backup"
 	read -p "Please input files directory:" FILEDIR
-	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+	WPCONFIG=$DIRLOC/$FILEDIR/wp-config.php
 
 	# read -p "Please input database name:" DBNAME
 	# read -p "please input database user:" DBUSER
 	# read -p "Please input database password for '$DBUSER': " DBPASS
-	DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>ERRORFILE
+	DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
 	showresult "Retrieved Database Name '$DBNAME' from $WPCONFIG"
 	FINAL=latest.$FILEDIR.zip
 	DBFILE=$DBNAME.sql

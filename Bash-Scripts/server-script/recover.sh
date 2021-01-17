@@ -107,12 +107,17 @@ function checkvariables
 
 function PrepareEnvironment
 {
-        display "Moving file to $FILELOC"
-        cp $FINAL $FILELOC 
-        cd $FILELOC
-        display "Unpacking $FINAL ..."
-        unzip $FINAL 2>> $ERRORFILE
-        showresult "$FINAL unpacked."
+        if [ -e $FINAL ]
+        then
+                display "Moving $FINAL to $FILELOC"
+                cp $FINAL $FILELOC 
+                cd $FILELOC
+                display "Unpacking $FINAL ..."
+                unzip $FINAL 2>> $ERRORFILE
+                showresult "$FINAL unpacked."
+        else    
+                showresult "No Backup File '$FINAL' Found"
+        fi
 }
 
 function RemoveExistedDirectory
@@ -144,7 +149,7 @@ function ImportDatabase
 {
         display "importing database from $DBFILE"
         mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE
-        showresult "Imported $DBFILE to $DBNAME"
+        showresult "Imported $DBFILE to database $DBNAME"
 }
 
 function recoverFileDirectory
@@ -188,7 +193,7 @@ function UpdateURL
 
 function discourageSearchEnging
 {
-    wp option set blog_public 0 2>> $ERRORFILE
+    wp option set blog_public 0 --allow-root 2>> $ERRORFILE
     showresult "Discouraged search engines from indexing the site"
 }
 

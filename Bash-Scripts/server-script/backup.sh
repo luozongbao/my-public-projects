@@ -16,13 +16,14 @@ fi
 DIRLOC=/usr/local/lsws/sites
 FILEDIR=""
 DBNAME=""
-DBUSER=""
-DBPASS=""
+# DBUSER=""
+# DBPASS=""
 CURDIR=$PWD
 FINAL=""
 DBFILE=""
 BKFILE=""
 BKFINAL=""
+WPCONFIG=""
 
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
@@ -63,16 +64,18 @@ function getInformation
 {
 	display "Collect Information for backup"
 	read -p "Please input files directory:" FILEDIR
-	read -p "Please input database name:" DBNAME
-	read -p "please input database user:" DBUSER
-	read -p "Please input database password for '$DBUSER': " DBPASS
+	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+
+	# read -p "Please input database name:" DBNAME
+	# read -p "please input database user:" DBUSER
+	# read -p "Please input database password for '$DBUSER': " DBPASS
+	DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>ERRORFILE
+	showresult "Retrieved Database Name '$DBNAME' from $WPCONFIG"
 	FINAL=latest.$FILEDIR.zip
 	DBFILE=$DBNAME.sql
 	BKFILE=$FILEDIR.zip
 	BKFINAL=old.$FILEDIR.zip
 }
-
-echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
 # CHCEK VALID VARIABLES
 function checkvariables
@@ -101,21 +104,21 @@ function checkvariables
 		fi
 	fi
 
-	if [ -z $DBNAME ];
-	then
-		display "Database Name INPUT IS EMPTY"
-		exit 1
-	else
-		display "Database Name $DBNAME VARIABLE CHECKED"
-	fi
+	# if [ -z $DBNAME ];
+	# then
+	# 	display "Database Name INPUT IS EMPTY"
+	# 	exit 1
+	# else
+	# 	display "Database Name $DBNAME VARIABLE CHECKED"
+	# fi
 
-	if [ -z $DBUSER ];
-	then
-		display "Database User INPUT IS EMPTY" 
-		exit 1
-	else
-		display "Database User $DBUSER CHECKED"
-	fi
+	# if [ -z $DBUSER ];
+	# then
+	# 	display "Database User INPUT IS EMPTY" 
+	# 	exit 1
+	# else
+	# 	display "Database User $DBUSER CHECKED"
+	# fi
 	#ENTER TO CONTINUE
 	display "Input Information CHECKED.  Start Backing up $DIRLOC/$FILEDIR Files"
 }
@@ -125,6 +128,7 @@ function backupbackup
 	# BACKUP FINAL FILE
 	if [ -e $FINAL ];
 	then
+		pauseandclear
 		display "Found Previous Backup File '$FINAL'"
 		mv $FINAL $BKFINAL
 		showresult "Backed up previous backup file $FINAL to $BKFINAL"
@@ -147,7 +151,8 @@ function ArchiveDirectory
 function exportDatabase
 {
 	display "Dumping Database $DBNAME to $DBFILE"
-	mysqldump -u $DBUSER --password="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
+	# mysqldump -u $DBUSER --password="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
+	mysqldump -u root $DBNAME > $DBFILE 2>>$ERRORFILE
 	showresult "Database exported to $DBFILE"
 }
 
@@ -193,7 +198,6 @@ function Finalize
 clear
 getInformation
 checkvariables
-pauseandclear
 backupbackup
 pauseandclear
 ArchiveDirectory

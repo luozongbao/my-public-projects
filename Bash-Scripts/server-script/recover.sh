@@ -189,6 +189,7 @@ function UpdateURL
         SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
         mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE
         showresult "Updated homeurl/siteURL to $URL."
+        echo "homeurl and siteurl in table ${TABLEPREF}options is shown below"
         mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
         mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
 }
@@ -207,6 +208,7 @@ function completeURLChanged
                                         echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
                                         echo "*** Please check and recheck before press ENTER" 
                                         read -p "Please input your original website url with http/https: " ORIGINALURL
+                                        echo "working .."
                                         sudo -u root wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
                                         cd $CURDIR
                                         showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 

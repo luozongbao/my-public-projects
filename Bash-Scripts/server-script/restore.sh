@@ -116,7 +116,7 @@ function PrepareEnvironment
                 cp $FINAL $FILELOC 
                 cd $FILELOC
                 display "Unpacking $FINAL ..."
-                unzip $FINAL 2>> $ERRORFILE
+                unzip -o $FINAL 2>> $ERRORFILE
                 showresult "$FINAL unpacked."
         else    
                 showresult "No Backup File '$FINAL' Found"
@@ -136,21 +136,14 @@ function RemoveExistedDirectory
 function RestoringFileDirectory
 {
         display "Recover Directory from Backup"
-        unzip $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE
+        unzip -o $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE
         showresult "Recovered $BKFILE to $FILELOC/$TEMPDIR" 
         mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
         rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
         chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
         showresult "Modified folder permissions"
-        cd $CURDIR 
 }
 
-function RemoveFiles
-{
-        showresult "Moved $FILELOC/$TEMPDIR to $FILELOC/$FILEDIR" 
-        rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
-        showresult "Removed unnessary files $BKFILE $DBFILE $FINAL"
-}
 
 function configurewpconfig
 {
@@ -202,6 +195,13 @@ function ImportDatabase
         showresult "Imported $DBFILE to database $DBNAME"
 }
 
+function RemoveFiles
+{
+        showresult "Moved $FILELOC/$TEMPDIR to $FILELOC/$FILEDIR" 
+        rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
+        showresult "Removed unnessary files $BKFILE $DBFILE $FINAL"
+        cd $CURDIR 
+}
 
 function UpdateURL
 {

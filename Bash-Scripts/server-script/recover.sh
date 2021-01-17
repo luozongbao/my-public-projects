@@ -15,7 +15,6 @@ fi
 
 FILELOC=/usr/local/lsws/sites
 ORIGINALDIR=""
-ORIGINALDB=""
 FILEDIR=""
 DBNAME=""
 DBUSER=""
@@ -66,22 +65,20 @@ function pauseandclear
 function getInformation
 {
         display "Collecting information for the job"
-        read -p "Please, input original backup folder name: " ORIGINALDIR
+        read -p "Please, input backup original folder name: " ORIGINALDIR
         read -p "Please, input target directory (Blank for same as original): " FILEDIR
-        read -p "Please, input original database name: " ORIGINALDB
         read -p "Please, input target database name (Blank for same as original): " DBNAME
         read -p "Please, input target database username: " DBUSER
         read -p "Please, input target database password for '$DBUSER': " DBPASS
         read -p "Please, input new website URL with http/https: " URL
         FINAL=latest.$ORIGINALDIR.zip
         BKFILE=$ORIGINALDIR.zip
-        DBFILE=$ORIGINALDB.sql
         WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
 }
 
 function checkvariables
 {
-        if [ -z $DBUSER ] || [ -z $FILEDIR ] || [ -z $DBUSER ] || [ -z $DBNAME ] || [ -z $ORIGINALDB ] || [ -z $URL ]
+        if [ -z $DBUSER ] || [ -z $FILEDIR ] || [ -z $DBUSER ] || [ -z $DBNAME ] || [ -z $URL ]
         then
                 showresult "input error"
                 exit 1
@@ -130,6 +127,49 @@ function RemoveExistedDirectory
         fi
 }
 
+function RestoringFileDirectory
+{
+        display "Recover Directory from Backup"
+        unzip $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE
+        showresult "Recovered $BKFILE to $FILELOC/$TEMPDIR" 
+        mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
+        rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
+        showresult "Moved $FILELOC/$TEMPDIR to $FILELOC/$FILEDIR" 
+        rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
+        showresult "Removed unnessary files $BKFILE $DBFILE $FINAL"
+        chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
+        showresult "Modified folder permissions"
+        cd $CURDIR 
+}
+
+function configurewpconfig
+{
+        ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>> $ERRORFILE
+        showresult "Original Database Name '$ORIGINALDB' retrieved"
+        ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
+        showresult "Original Database User '$ORIGINALUSR' retrieved"
+        ORIGINALPASS=$(cat wp-config.php | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE
+        showresult "Original Database Password '$ORIGINALPASS' retrieved"
+        DBFILE=$ORIGINALDB.sql
+
+        if [ ! "$ORIGINALDB" == "$DBNAME" ]
+        then
+                sed -i "/DB_NAME/s/'[^']*'/'$DBNAME'/2" $WPCONFIG 2>>$ERRORFILE
+                showresult "$WPCONFIG edited switch $ORIGINALDB to $DBNAME"
+        fi
+        if [ ! "$ORIGINALUSR" == "$DBUSER" ]
+        then
+                sed -i "/DB_USER/s/'[^']*'/'$DBUSER'/2" $WPCONFIG 2>>$ERRORFILE
+                showresult "$WPCONFIG edited switch $ORIGINALUSR to $DBUSER"
+        fi
+        if [ ! "$ORIGINALPASS" == "$DBPASS" ]
+        then
+                sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG
+                showresult "$WPCONFIG edited switch $ORIGINALPASS to $DBPASS"
+        fi
+        DBFILE=$ORIGINALDB.sql
+}
+
 function DropDatabase
 {
         display "droping $DBNAME database"
@@ -152,36 +192,12 @@ function ImportDatabase
         showresult "Imported $DBFILE to database $DBNAME"
 }
 
-function recoverFileDirectory
-{
-        display "Recover Directory from Backup"
-        unzip $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE
-        showresult "Recovered $BKFILE to $FILELOC/$TEMPDIR" 
-        mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
-        rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
-        showresult "Moved $FILELOC/$TEMPDIR to $FILELOC/$FILEDIR" 
-        rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
-        showresult "Removed unnessary files $BKFILE $DBFILE $FINAL"
-        chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
-        showresult "Modified folder permissions"
-        cd $CURDIR 
-}
-
-function configurewpconfig
-{
-        if [ ! "$ORIGINALDB" == "$DBNAME" ]
-        then
-                display "Edited $WPCONFIG and configure Database"
-                sed -i "s/$ORIGINALDB/$DBNAME/g" $WPCONFIG 2>>$ERRORFILE
-                showresult "$WPCONFIG edited switch $ORIGINALDB to $DBNAME"
-        fi
-        display "Modifying HomeURL and SiteURL"
-        TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
-        showresult "Table prefix '$TABLEPREF' retrieved"
-}
 
 function UpdateURL
 {
+        display "Modifying HomeURL and SiteURL"
+        TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
+        showresult "Table prefix '$TABLEPREF' retrieved"
         DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
         SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
         mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE
@@ -202,6 +218,7 @@ function disablePlugins
     
     while true;
     do
+        echo
         echo " List Plugins and status "
         sudo wp plugin list --allow-root
         echo
@@ -219,6 +236,7 @@ function updatePlugins
 {
     while true;
     do
+        echo
         echo " List Plugins and status "
         sudo wp plugin list --allow-root
         echo
@@ -227,6 +245,7 @@ function updatePlugins
         then
                 break
         elif  [ "$PLUGIN" == "ALL" ]
+        then
                 wp plugin update --all --allow-root 2>> $ERRORFILE
         else
                 wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE
@@ -262,7 +281,7 @@ function ConfigureTestSite
  
 function completeURLChanged
 {
-        if [ ! "$FILEDIR" == "$ORIGINALDIR" ] || [ ! "$ORIGINALDB" == "$DBNAME" ]
+        if [ ! "$FILEDIR" == "$ORIGINALDIR" ] 
         then
                 echo "Moving Site or Relocate Site detected"
                 while true;
@@ -308,15 +327,15 @@ pauseandclear
 PrepareEnvironment
 RemoveExistedDirectory
 pauseandclear
-DropDatabase
-pauseandclear
-createDatabase
-pauseandclear
-ImportDatabase
-pauseandclear
-recoverFileDirectory
+RestoringFileDirectory
 pauseandclear
 configurewpconfig
+pauseandclear
+DropDatabase
+#pauseandclear
+createDatabase
+#pauseandclear
+ImportDatabase
 pauseandclear
 UpdateURL
 pauseandclear

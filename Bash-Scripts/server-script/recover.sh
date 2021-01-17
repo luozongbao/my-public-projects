@@ -200,14 +200,34 @@ function disablePlugins
         echo " List Plugins and status "
         sudo wp plugin list --allow-root
         echo
-        read -p "type plugin name to disable.  Type DONE to exit" PLUGIN
+        read -p "(Type 'DONE' to exit) Type plugin name to disable: " PLUGIN
         if [ "$PLUGIN" == "DONE" ]
         then
                 break
         else
-                showresult $(wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE)
+                wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE
         fi
     done
+}
+
+function updatePlugins
+{
+    while true;
+    do
+        echo " List Plugins and status "
+        sudo wp plugin list --allow-root
+        echo
+        read -p "Type 'DONE' to exit, Type 'ALL' update all plugins, or type plugin name to Update: " PLUGIN
+        if [ "$PLUGIN" == "DONE" ]
+        then
+                break
+        elif  [ "$PLUGIN" == "ALL" ]
+                wp plugin update --all --allow-root 2>> $ERRORFILE
+        else
+                wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE
+        fi
+    done
+
 }
 
 function DefineTestSite
@@ -220,6 +240,8 @@ function DefineTestSite
                                 cd $FILELOC/$FILEDIR
                                 discourageSearchEnging
                                 disablePlugins
+                                updatePlugins
+                                wp plugin status --allow-root
                                 break
                                 ;;
                         [nN]|[nN][oO])

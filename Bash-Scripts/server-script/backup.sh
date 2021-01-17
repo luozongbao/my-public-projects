@@ -14,21 +14,23 @@ if (( $EUID != 0 )); then
 fi
 
 DIRLOC=/usr/local/lsws/sites
-read -p "Please input files directory:" FILEDIR
-read -p "Please input database name:" DBNAME
-read -p "please input database user:" DBUSER
-read -p "Please input database password for '$DBUSER': " DBPASS
+FILEDIR=""
+DBNAME=""
+DBUSER=""
+DBPASS=""
 CURDIR=$PWD
-FINAL=latest.$FILEDIR.zip
-DBFILE=$DBNAME.sql
-BKFILE=$FILEDIR.zip
-BKFINAL=old.$FILEDIR.zip
+FINAL=""
+DBFILE=""
+BKFILE=""
+BKFINAL=""
 
 
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
+
+
 
 function display
 {
@@ -60,9 +62,21 @@ function pauseandclear
         clear
 }
 
+function getInformation
+{
+	display "Collect Information for backup"
+	read -p "Please input files directory:" FILEDIR
+	read -p "Please input database name:" DBNAME
+	read -p "please input database user:" DBUSER
+	read -p "Please input database password for '$DBUSER': " DBPASS
+	FINAL=latest.$FILEDIR.zip
+	DBFILE=$DBNAME.sql
+	BKFILE=$FILEDIR.zip
+	BKFINAL=old.$FILEDIR.zip
+}
+
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
-clear
 # CHCEK VALID VARIABLES
 function checkvariables
 {
@@ -189,7 +203,8 @@ function Finalize
 
 
 
-
+clear
+getInformation
 checkvariables
 pauseandclear
 backupbackup

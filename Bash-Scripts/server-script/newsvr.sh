@@ -13,7 +13,6 @@ if (( $EUID != 0 )); then
     exit
 fi
 CURDIR=$PWD
-
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 

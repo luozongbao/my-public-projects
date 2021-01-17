@@ -14,25 +14,26 @@ if (( $EUID != 0 )); then
 fi
 
 FILELOC=/usr/local/lsws/sites
-read -p "Please, input original backup folder name: " ORIGINALDIR
-read -p "Please, input target directory: " FILEDIR
-read -p "Please, input original database name: " ORIGINALDB
-read -p "Please, input target database name: " DBNAME
-read -p "Please, input database username: " DBUSER
-read -p "Please, input database password for '$DBUSER': " DBPASS
-read -p "Please, input new website URL with http/https: " URL
-
+ORIGINALDIR=""
+ORIGINALDB=""
+FILEDIR=""
+DBNAME=""
+DBUSER=""
+DBPASS=""
+URL=""
 CURDIR=$PWD
-FINAL=latest.$ORIGINALDIR.zip
-BKFILE=$ORIGINALDIR.zip
-DBFILE=$ORIGINALDB.sql
+FINAL=""
+BKFILE=""
+DBFILE=""
 TEMPDIR=tempdirKK
-WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+WPCONFIG=""
 
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
+
+
 
 function display
 {
@@ -64,6 +65,21 @@ function pauseandclear
         clear
 }
 
+function getInformation
+{
+        display "Collecting information for the job"
+        read -p "Please, input original backup folder name: " ORIGINALDIR
+        read -p "Please, input target directory (Blank for same as original): " FILEDIR
+        read -p "Please, input original database name: " ORIGINALDB
+        read -p "Please, input target database name (Blank for same as original): " DBNAME
+        read -p "Please, input target database username: " DBUSER
+        read -p "Please, input target database password for '$DBUSER': " DBPASS
+        read -p "Please, input new website URL with http/https: " URL
+        FINAL=latest.$ORIGINALDIR.zip
+        BKFILE=$ORIGINALDIR.zip
+        DBFILE=$ORIGINALDB.sql
+        WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+}
 
 
 function checkvariables
@@ -214,9 +230,8 @@ function Finalize
         cat $RESULTFILE
 }
 
-
-
 clear
+getInformation
 checkvariables
 pauseandclear
 PrepareEnvironment
@@ -234,4 +249,5 @@ configurewpconfig
 pauseandclear
 UpdateURL
 pauseandclear
+completeURLChanged
 Finalize

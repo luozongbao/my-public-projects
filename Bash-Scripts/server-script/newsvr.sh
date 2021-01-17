@@ -348,7 +348,6 @@ function InstallCron
                 crontab mycron 2>>$ERRORFILE
                 rm mycron 2>>$ERRORFILE
                 showresult "Cron Installed"
-                read -p "Press Enter to continue: " ENTER
                 break
                 ;;
             [nN]|[nN][oO])

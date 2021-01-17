@@ -158,11 +158,11 @@ function configurewpconfig
         if [ ! "$ORIGINALDB" == "$DBNAME" ]
         then
                 display "Edited $WPCONFIG and configure Database"
-                sed -i 's/$ORIGINALDB/DBNAME/g"' $WPCONFIG 2>>$ERRORFILE
+                sed -i "s/$ORIGINALDB/$DBNAME/g" $WPCONFIG 2>>$ERRORFILE
                 showresult "$WPCONFIG edited switch $ORIGINALDB to $DBNAME"
         fi
         display "Modifying HomeURL and SiteURL"
-        TABLEPREF=$(cat $WPCONFIG "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
+        TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
         showresult "Table prefix '$TABLEPREF' retrieved"
 }
 

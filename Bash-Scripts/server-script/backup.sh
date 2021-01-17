@@ -140,7 +140,7 @@ function ArchiveDirectory
 function exportDatabase
 {
 	display "Dumping Database $DBNAME to $DBFILE"
-	mysqldump -u $DBUSER --pass="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
+	mysqldump -u $DBUSER --password="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
 	showresult "Database exported to $DBFILE"
 }
 

@@ -169,7 +169,7 @@ function RemoveUnecessaryFiles
 	while true;
 	do
 		display "Unnecessary Files"
-		read -p "Removed unnecessary files?" YN
+		read -p "Remove unecessary files? (Y/N)" YN
 		case $YN in [yY]|[yY][eE][sS])
 			#REMOVE ARCHIVED FILES
 			echo "removing unnecessary files..."

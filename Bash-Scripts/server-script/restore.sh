@@ -67,22 +67,28 @@ function getInformation
         display "Collecting information for the job"
         read -p "Please, input backup original folder name: " ORIGINALDIR
         read -p "Please, input target directory (Blank for same as original): " FILEDIR
-        read -p "Please, input target database name (Blank for same as original): " DBNAME
+        read -p "Please, input target database name: " DBNAME
         read -p "Please, input target database username: " DBUSER
         read -p "Please, input target database password for '$DBUSER': " DBPASS
         read -p "Please, input new website URL with http/https: " URL
         FINAL=latest.$ORIGINALDIR.zip
         BKFILE=$ORIGINALDIR.zip
-        WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
 }
 
 function checkvariables
 {
-        if [ -z $DBUSER ] || [ -z $FILEDIR ] || [ -z $DBUSER ] || [ -z $DBNAME ] || [ -z $URL ]
+        if [ -z $DBUSER ] || [ -z $DBUSER ] || [ -z $DBNAME ] || [ -z $URL ]
         then
                 showresult "input error"
                 exit 1
         fi
+
+        if [ -z $FILEDIR ]
+        then
+                FILEDIR=$ORIGINALDIR
+                showresult "Recover to the same directory '$ORIGINALDIR'"
+        fi
+        WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
 
         if [ -f $FINAL ]
         then
@@ -134,12 +140,16 @@ function RestoringFileDirectory
         showresult "Recovered $BKFILE to $FILELOC/$TEMPDIR" 
         mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
         rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
-        showresult "Moved $FILELOC/$TEMPDIR to $FILELOC/$FILEDIR" 
-        rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
-        showresult "Removed unnessary files $BKFILE $DBFILE $FINAL"
         chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
         showresult "Modified folder permissions"
         cd $CURDIR 
+}
+
+function RemoveFiles
+{
+        showresult "Moved $FILELOC/$TEMPDIR to $FILELOC/$FILEDIR" 
+        rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
+        showresult "Removed unnessary files $BKFILE $DBFILE $FINAL"
 }
 
 function configurewpconfig
@@ -336,6 +346,7 @@ DropDatabase
 createDatabase
 #pauseandclear
 ImportDatabase
+RemoveFiles
 pauseandclear
 UpdateURL
 pauseandclear

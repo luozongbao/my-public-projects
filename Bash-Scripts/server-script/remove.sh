@@ -56,7 +56,7 @@ function getInformation
 {
         display "Collect Information For Website Removal"
         read -p "Please input the website File Directory: " FILEDIR
-	WPCONFIG=$DIRLOC/$FILEDIR/wp-config.php
+	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
         if [ -e $WPCONFIG ]
         then
                 DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE

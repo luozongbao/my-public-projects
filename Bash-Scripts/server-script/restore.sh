@@ -112,7 +112,7 @@ function PrepareEnvironment
 {
         if [ -e $FINAL ]
         then
-                display "Moving $FINAL to $FILELOC"
+                display "copying $FINAL to $FILELOC"
                 cp $FINAL $FILELOC 
                 cd $FILELOC
                 display "Unpacking $FINAL ..."
@@ -200,7 +200,6 @@ function RemoveFiles
         showresult "Moved $FILELOC/$TEMPDIR to $FILELOC/$FILEDIR" 
         rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
         showresult "Removed unnessary files $BKFILE $DBFILE $FINAL"
-        cd $CURDIR 
 }
 
 function UpdateURL
@@ -291,7 +290,7 @@ function ConfigureTestSite
  
 function completeURLChanged
 {
-        if [ ! "$FILEDIR" == "$ORIGINALDIR" ] 
+        if [ ! "$FILEDIR" == "$ORIGINALDIR" ] || [ ! "$ORIGINALDB" == "$DBNAME" ]
         then
                 echo "Moving Site or Relocate Site detected"
                 while true;
@@ -305,10 +304,10 @@ function completeURLChanged
                                         read -p "Please input your original website url with http/https: " ORIGINALURL
                                         echo "working .."
                                         sudo -u root wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
-                                        cd $CURDIR
                                         showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
                                         pauseandclear
                                         ConfigureTestSite
+                                        
                                         break
                                         ;;
                                 [nN]|[nN][oO])
@@ -326,6 +325,7 @@ function completeURLChanged
 
 function Finalize
 {
+        cd $CURDIR
         showresult " ----==== ALL DONE ====----" 
         cat $RESULTFILE
 }

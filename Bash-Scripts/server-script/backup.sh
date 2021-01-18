@@ -65,10 +65,6 @@ function getInformation
 	display "Collect Information for backup"
 	read -p "Please input files directory:" FILEDIR
 	WPCONFIG=$DIRLOC/$FILEDIR/wp-config.php
-
-	# read -p "Please input database name:" DBNAME
-	# read -p "please input database user:" DBUSER
-	# read -p "Please input database password for '$DBUSER': " DBPASS
 	DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
 	showresult "Retrieved Database Name '$DBNAME' from $WPCONFIG"
 	FINAL=latest.$FILEDIR.zip
@@ -104,22 +100,6 @@ function checkvariables
 		fi
 	fi
 
-	# if [ -z $DBNAME ];
-	# then
-	# 	display "Database Name INPUT IS EMPTY"
-	# 	exit 1
-	# else
-	# 	display "Database Name $DBNAME VARIABLE CHECKED"
-	# fi
-
-	# if [ -z $DBUSER ];
-	# then
-	# 	display "Database User INPUT IS EMPTY" 
-	# 	exit 1
-	# else
-	# 	display "Database User $DBUSER CHECKED"
-	# fi
-	#ENTER TO CONTINUE
 	display "Input Information CHECKED.  Start Backing up $DIRLOC/$FILEDIR Files"
 }
 

@@ -16,6 +16,7 @@ FILELOC=/usr/local/lsws/sites
 CURDIR=$PWD
 FILEDIR=""
 DBNAME=""
+WPCONFIG=""
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
@@ -55,7 +56,14 @@ function getInformation
 {
         display "Collect Information For Website Removal"
         read -p "Please input the website File Directory: " FILEDIR
-        read -p "Please input the website database name: " DBNAME
+	WPCONFIG=$DIRLOC/$FILEDIR/wp-config.php
+        if [ -e $WPCONFIG ]
+        then
+                DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
+        else
+                showresult "$DIRLOC/$FILEDIR is an invalid Wordpress Folder"
+                exit 1
+        fi
 }
 
 function checkvariables

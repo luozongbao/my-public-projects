@@ -51,28 +51,46 @@ function pauseandclear
 function installswap
 {
     clear
-    display "Installing Swap ..."
     while true;
     do
-        read -p "Install Swap Size in GB: " SWAPSIZE
-        case $SWAPSIZE in [1]|[2]|[3]|[4]|[5]|[6]|[7]|[8]|[9])
-                echo "Configuring Swap ..."
-                fallocate -l ${SWAPSIZE}G /swapfile 2>>$ERRORFILE
-                dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE)) 2>>$ERRORFILE
-                chmod 600 /swapfile 2>>$ERRORFILE
-                mkswap /swapfile 2>>$ERRORFILE
-                swapon /swapfile 2>>$ERRORFILE
-                echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
-                mount -a 2>>$ERRORFILE
-                showresult "Swap is setted to $SWAPSIZE GB" 
-                read -p "Press Enter to continue: " ENTER
+        read -p "Do you want to install swap? (Y/N): " YN
+        case $YN in 
+            [yY]|[yY][eE][sS])
+                while true;
+                do
+                    display "Install Swap"
+                    read -p "Install Swap Size in GB: " SWAPSIZE
+                    case $SWAPSIZE in [1]|[2]|[3]|[4]|[5]|[6]|[7]|[8]|[9])
+                            echo "Configuring Swap ..."
+                            fallocate -l ${SWAPSIZE}G /swapfile 2>>$ERRORFILE
+                            dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE)) 2>>$ERRORFILE
+                            chmod 600 /swapfile 2>>$ERRORFILE
+                            mkswap /swapfile 2>>$ERRORFILE
+                            swapon /swapfile 2>>$ERRORFILE
+                            echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+                            mount -a 2>>$ERRORFILE
+                            showresult "Swap is setted to $SWAPSIZE GB" 
+                            read -p "Press Enter to continue: " ENTER
+                            break
+                            ;;
+                        [0])
+                            break
+                            ;;
+                        *) 
+                            echo "Please, identify 1-9"
+                        ;;
+                    esac
+                done
+            [nN]|[nN][oO])
+                showresult "Skip Installing Swap"
                 break
                 ;;
-            *) 
-                echo "Please, identify 1-9"
-            ;;
+            *)
+                echo "Please Answer with Yes or No."
+                ;;
         esac
     done
+
 }
 
 function UpdateUpgrade

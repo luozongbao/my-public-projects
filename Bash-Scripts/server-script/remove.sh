@@ -16,6 +16,7 @@ FILELOC=/usr/local/lsws/sites
 CURDIR=$PWD
 FILEDIR=""
 DBNAME=""
+DBUSER=""
 WPCONFIG=""
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
@@ -60,6 +61,7 @@ function getInformation
         if [ -e $WPCONFIG ]
         then
                 DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
+                DBUSER=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
         else
                 showresult "$DIRLOC/$FILEDIR is an invalid Wordpress Folder"
                 exit 1
@@ -81,6 +83,7 @@ function RemoveFiles
         then
                 while true;
                 do
+                        display "Remove File Folder"
                         echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
                         read -p " Continue (Y/N): " YN
                         case $YN in
@@ -108,6 +111,7 @@ function RemoveDatabase
 {
         while true;
         do
+                display "Remove Database"
                 read -p "This will remove database $DBNAME permanently (Y/N): " YN
                 case $YN in
                         [yY]|[yY][eE][sS])
@@ -117,6 +121,30 @@ function RemoveDatabase
                                 ;;
                         [nN]|[nN][oO])
                                 showresult "skipping remove database $DBNAME"
+                                break
+                                ;;
+                        *)
+                                echo "Please answer Y/N"
+                                ;;
+                esac
+        done
+}
+
+function RemoveDatabaseUser
+{
+        while true;
+        do
+                display "Remove Database User"
+                echo "Your Database User might be used with other database.  "
+                read -p "Do you want to remove database user $DBUSER (Y/N): " YN
+                case $YN in
+                        [yY]|[yY][eE][sS])
+                                mysql -u root -e "DROP USER $DBUSER;" 2>> $ERRORFILE
+                                showresult "Database User $DBUSER removed"
+                                break
+                                ;;
+                        [nN]|[nN][oO])
+                                showresult "skipping remove database user $DBUSER"
                                 break
                                 ;;
                         *)
@@ -136,5 +164,8 @@ clear
 getInformation
 checkvariables
 RemoveFiles
+pauseandclear
 RemoveDatabase
+pauseandclear
+RemoveDatabaseUser
 Finalize

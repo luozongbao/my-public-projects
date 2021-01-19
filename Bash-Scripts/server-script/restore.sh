@@ -173,12 +173,21 @@ function configurewpconfig
         DBFILE=$ORIGINALDB.sql
 }
 
+function CreateDBUser
+{
+        display "Create Database User"
+        mysql u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
+        showresult "Created Database User $DBUSER"
+}
+
 function DropDatabase
 {
         display "droping $DBNAME database"
         mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
         showresult "Droped $DBNAME" 
 }
+
+
 
 function createDatabase
 {
@@ -341,6 +350,8 @@ RestoringFileDirectory
 pauseandclear
 configurewpconfig
 pauseandclear
+CreateDBUser
+#pauseandclear
 DropDatabase
 #pauseandclear
 createDatabase

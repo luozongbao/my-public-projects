@@ -176,7 +176,7 @@ function configurewpconfig
 function CreateDBUser
 {
         display "Create Database User"
-        mysql u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
+        mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
         showresult "Created Database User $DBUSER"
 }
 

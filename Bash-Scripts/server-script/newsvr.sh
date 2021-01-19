@@ -81,6 +81,8 @@ function installswap
                         ;;
                     esac
                 done
+                break
+                ;;
             [nN]|[nN][oO])
                 showresult "Skip Installing Swap"
                 break

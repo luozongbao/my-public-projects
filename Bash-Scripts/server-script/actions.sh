@@ -321,7 +321,7 @@ function BackupRemoveUnecessaryBackFiles
 	while true;
 	do
 		display "Unnecessary Files"
-		read -p "Remove unecessary files? (Y/N)" YN
+		read -p "Remove unecessary files? [Y/N]" YN
 		case $YN in [yY]|[yY][eE][sS])
 			#REMOVE ARCHIVED FILES
 			echo "removing unnecessary files..."
@@ -356,7 +356,7 @@ function RemoveFiles
                 do
                         display "Remove File Folder"
                         echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
-                        read -p " Continue (Y/N): " YN
+                        read -p " Continue [Y/N]: " YN
                         case $YN in
                                 [yY]|[yY][eE][sS])
                                         rm -r $FILELOC/$FILEDIR 2>> $ERRORFILE
@@ -383,7 +383,7 @@ function RemoveDatabase
         while true;
         do
                 display "Remove Database"
-                read -p "This will remove database $DBNAME permanently (Y/N): " YN
+                read -p "This will remove database $DBNAME permanently [Y/N]: " YN
                 case $YN in
                         [yY]|[yY][eE][sS])
                                 mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
@@ -407,7 +407,7 @@ function RemoveDatabaseUser
         do
                 display "Remove Database User"
                 echo "Your Database User might be used with other database.  "
-                read -p "Do you want to remove database user $DBUSER (Y/N): " YN
+                read -p "Do you want to remove database user $DBUSER [Y/N]: " YN
                 case $YN in
                         [yY]|[yY][eE][sS])
                                 mysql -u root -e "DROP USER $DBUSER;" 2>> $ERRORFILE
@@ -490,7 +490,7 @@ function ConfigureTestSite
 {
         while true;
         do
-                read -p "Is this a test site? (Y/N): " YN
+                read -p "Is this a test site? [Y/N]: " YN
                 case $YN in
                         [yY]|[yY][eE][sS])
                                 cd $FILELOC/$FILEDIR
@@ -518,7 +518,7 @@ function completeURLChanged
                 echo "Moving Site or Relocate Site detected"
                 while true;
                 do
-                        read -p "Do you want to update the site URL? (Y/N): " YN
+                        read -p "Do you want to update the site URL? [Y/N]: " YN
                         case $YN in
                                 [yY]|[yY][eE][sS])
                                         cd $FILELOC/$FILEDIR
@@ -550,7 +550,7 @@ function installswap
     clear
     while true;
     do
-        read -p "Do you want to install swap? (Y/N): " YN
+        read -p "Do you want to install swap? [Y/N]: " YN
         case $YN in 
             [yY]|[yY][eE][sS])
                 while true;
@@ -598,7 +598,7 @@ function UpdateUpgrade
     display "Update and Upgrade Server"
     while true;
     do
-        read -p "Unpdate and Upgrade Server Now? (Y/N): " UP
+        read -p "Unpdate and Upgrade Server Now? [Y/N]: " UP
         case $UP in 
             [yY]|[yY][eE][sS])
                 apt update 2>>$ERRORFILE
@@ -623,7 +623,7 @@ function ConfigHostName
     display "Set Host name"
     while true;
     do
-        read -p "Congfigure HostName? (Y/N): " HN
+        read -p "Congfigure HostName? [Y/N]: " HN
         case $HN in 
             [yY]|[yY][eE][sS])
                 read -p "What is your Host Name (HostName): " HOSTNAME
@@ -652,7 +652,7 @@ function ConfigTimeZone
     display "Configure Time Zone"
     while true;
     do
-        read -p "Congfigure Timezone? (Y/N): " TZ
+        read -p "Congfigure Timezone? [Y/N]: " TZ
         case $TZ in 
             [yY]|[yY][eE][sS])
                 read -p "What Time Zone (Asia/Bangkok): " TIMEZONE
@@ -681,7 +681,7 @@ function InstallZipUnzip
     display "Install Zip/Unzip"
     while true;
     do
-        read -p "Install Zip and Unzip Now? (Y/N): " ZIP
+        read -p "Install Zip and Unzip Now? [Y/N]: " ZIP
         case $ZIP in 
             [yY]|[yY][eE][sS])
                 apt install -y zip unzip 2>>$ERRORFILE
@@ -705,7 +705,7 @@ function InstallMariadb
     display "Install MariaDB"
     while true;
     do
-        read -p "Install Mariadb Server Now? (Y/N): " MDB
+        read -p "Install Mariadb Server Now? [Y/N]: " MDB
         case $MDB in 
             [yY]|[yY][eE][sS])
                 apt install -y mariadb-server  2>>$ERRORFILE
@@ -724,13 +724,20 @@ function InstallMariadb
     done
 }
 
+function InstallApacheWPCLI
+{
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
+    chmod +x wp-cli.phar 2>>$ERRORFILE
+    mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+}
+
 function InstallWordpressApache
 {
     clear
     display $'Wordpress for Apache Server \n This will install Following \n    - wordpress \n     - wp-cli'
     while true;
     do
-        read -p "Install Wordpress Now? (Y/N): " WPAPCHE
+        read -p "Install Wordpress Now? [Y/N]: " WPAPCHE
         case $WPAPCHE in 
             [yY]|[yY][eE][sS])
                 SITELOC=/var/www/html
@@ -740,9 +747,7 @@ function InstallWordpressApache
                 unzip latest.zip 2>>$ERRORFILE
                 chown -R www-data:www-data wordpress 2>>$ERRORFILE
                 rm latest.zip 2>>$ERRORFILE
-                curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
-                chmod +x wp-cli.phar 2>>$ERRORFILE
-                mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+                InstallApacheWPCLI
                 cd $CURDIR
                 showresult "Wordpress and wp-cli Installed at $SITELOC"
                 read -p "Press Enter to continue: " ENTER
@@ -764,7 +769,7 @@ function InstallApache
     display "Install Apache Virtual Server"
     while true;
     do
-        read -p "Install Apache Web Server Now? (Y/N): " APCHE
+        read -p "Install Apache Web Server Now? [Y/N]: " APCHE
         case $APCHE in 
             [yY]|[yY][eE][sS])
                 InstallMariadb 2>>$ERRORFILE
@@ -784,13 +789,21 @@ function InstallApache
     done
 }
 
+function InstallOLSWPCLI
+{
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
+    chmod +x wp-cli.phar 2>>$ERRORFILE
+    mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+    cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
+}
+
 function InstallWordpressOLS
 {
     clear
     display $' Wordpress for OpenLiteSpeed Server \n This will install Following \n    - wordpress \n     - wp-cli'
     while true;
     do
-        read -p "Install Wordpress Now? (Y/N): " WPOLS
+        read -p "Install Wordpress Now? [Y/N]: " WPOLS
         case $WPOLS in 
             [yY]|[yY][eE][sS])
                 SITELOC=/usr/local/lsws/sites
@@ -800,10 +813,7 @@ function InstallWordpressOLS
                 unzip latest.zip 2>>$ERRORFILE
                 chown -R nobody:nogroup wordpress 2>>$ERRORFILE
                 rm latest.zip 2>>$ERRORFILE
-                curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
-                chmod +x wp-cli.phar 2>>$ERRORFILE
-                mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
-                cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
+                InstallOLSWPCLI
                 cd $CURDIR
                 showresult "Wordpress and wp-cli Installed at $SITELOC"
                 read -p "Press Enter to continue: " ENTER
@@ -819,13 +829,15 @@ function InstallWordpressOLS
     done
 }
 
+
+
 function InstallOpenLiteSpeed
 {
     clear
     display "Installing OpenLiteSpeed Virtual Server"
     while true;
     do
-        read -p "Install OpenLiteSpeed Web Server Now? (Y/N): " OLS
+        read -p "Install OpenLiteSpeed Web Server Now? [Y/N]: " OLS
         case $OLS in 
             [yY]|[yY][eE][sS])
                 InstallMariadb
@@ -854,7 +866,7 @@ function InstallCron
     display "Install Server Cron Schedule"
     while true;
     do
-        read -p "Install reset cron schedule Now? (Y/N): " CRON
+        read -p "Install reset cron schedule Now? [Y/N]: " CRON
         case $CRON in 
             [yY]|[yY][eE][sS])
                 crontab -l > mycron 2>>$ERRORFILE
@@ -912,7 +924,7 @@ function InstallWebServer
     display "Install Web Server"
     while true;
     do
-        read -p "Do you want to install Web Server Now? (Y/N): " WS
+        read -p "Do you want to install Web Server Now? [Y/N]: " WS
         case $WS in 
             [yY]|[yY][eE][sS])
                 SelectVirtualHostServer
@@ -1013,32 +1025,62 @@ function newsvr
     wp --info
 }
 
+function InstallWordpress
+{
+    if [ -e "/var/www" ]
+    then
+        InstallWordpressApache
+    fi
+    if [ -e "/usr/local/lsws" ]
+    then
+        InstallWordpressOLS
+    fi
+}
+
+function InstallWPCLI
+{
+    if [ -e "/var/www" ]
+    then
+        InstallApacheWPCLI
+    fi
+    if [ -e "/usr/local/lsws" ]
+    then
+        InstallOLSWPCLI
+    fi
+}
+
 function main
 {
     while true;
     do
+        clear
+        echo
         echo "Select Actions"
         echo "   N) New Server Setup"
         echo "   B) Backup Website"
         echo "   R) Restore Website"
         echo "   M) Remove Website"
-        read -p "What is your action" ANS
+        echo "   W) Install Wordpress"
+        echo "   C) Install WP-CLI"
+        read -p "What is your action?: " ANS
         case $ANS in 
-            [nN])
+            [nN]|[nN][eE][wW])
                 newsvr
-                break
                 ;;
-            [bB])
+            [bB]|[bB][aA][cC][kK][uU][pP])
                 backup
-                break
                 ;;
-            [rR])
+            [rR]|[rR][eE][sS][tT][oO][rR][eE])
                 restore
-                break
                 ;;
-            [mM])
+            [mM]|[rR][eE][mM][oO][vV][eE])
                 remove
-                break
+                ;;
+            [wW]|[wW][oO][rR][dD][pP][rR][eE][eE][sS][sS])
+                InstallWordpress
+                ;;
+            [cC]|[wW][pP][cC][lL][iI])
+                InstallWPCLI
                 ;;
             [xX])
                 display "Exit Program"
@@ -1046,8 +1088,8 @@ function main
                 break
                 ;;
             *)
-            ;;            
-
+            ;; 
+        esac          
     done
 }
 

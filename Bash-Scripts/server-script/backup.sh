@@ -13,7 +13,7 @@ if (( $EUID != 0 )); then
 	exit
 fi
 
-DIRLOC=/usr/local/lsws/sites
+FILELOC=/usr/local/lsws/sites
 FILEDIR=""
 DBNAME=""
 # DBUSER=""
@@ -25,8 +25,6 @@ BKFILE=""
 BKFINAL=""
 WPCONFIG=""
 
-RESULTFILE="$CURDIR/result.txt"
-ERRORFILE="$CURDIR/error.txt"
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
@@ -64,7 +62,7 @@ function getInformation
 {
 	display "Collect Information for backup"
 	read -p "Please input files directory:" FILEDIR
-	WPCONFIG=$DIRLOC/$FILEDIR/wp-config.php
+	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
 	DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
 	showresult "Retrieved Database Name '$DBNAME' from $WPCONFIG"
 	FINAL=latest.$FILEDIR.zip
@@ -76,12 +74,12 @@ function getInformation
 # CHCEK VALID VARIABLES
 function checkvariables
 {
-	if [ -d "$DIRLOC" ];
+	if [ -d "$FILELOC" ];
 	then
-		display "Directory $DIRLOC CHECKED"
-		echo "Directory $DIRLOC CHECKED" >> $RESULTFILE
+		display "Directory $FILELOC CHECKED"
+		echo "Directory $FILELOC CHECKED" >> $RESULTFILE
 	else
-		display "$DIRLOC WRONG FILE DIRECTORY LOCATION"
+		display "$FILELOC WRONG FILE DIRECTORY LOCATION"
 		exit 1
 	fi
 
@@ -91,16 +89,16 @@ function checkvariables
 		echo "Files Directory INPUT IS EMPTY" >> $RESULTFILE
 		exit 1
 	else
-		if [ -d "$DIRLOC/$FILEDIR" ];
+		if [ -d "$FILELOC/$FILEDIR" ];
 		then
-			display "FILE DIRECTORY $DIRLOC/$FILEDIR CHECKED"
+			display "FILE DIRECTORY $FILELOC/$FILEDIR CHECKED"
 		else
-			display "WRONG FILE DIRECTORY $DIRLOC/$FILEDIR"
+			display "WRONG FILE DIRECTORY $FILELOC/$FILEDIR"
 			exit 1
 		fi
 	fi
 
-	display "Input Information CHECKED.  Start Backing up $DIRLOC/$FILEDIR Files"
+	display "Input Information CHECKED.  Start Backing up $FILELOC/$FILEDIR Files"
 }
 
 function backupbackup
@@ -118,12 +116,12 @@ function backupbackup
 # ARCHIVING DIRECTORY
 function ArchiveDirectory
 {
-	cd $DIRLOC
+	cd $FILELOC
 	zip -r $BKFILE $FILEDIR 2>>$ERRORFILE
 	clear
 	mv $BKFILE $CURDIR 2>>$ERRORFILE
 	cd $CURDIR
-	showresult "$DIRLOC/$FILEDIR Archived"
+	showresult "$FILELOC/$FILEDIR Archived"
 }
 # MOVE ARCHIVED FILE TO CURRENT DIRECTORY
 
@@ -168,12 +166,15 @@ function RemoveUnecessaryFiles
 	done	
 }
 
+
+
 function Finalize
 {
+	cd $CURDIR
 	showresult " ----==== ALL DONE ====----" 
-	echo "ALL DONE"
 	cat $RESULTFILE
 }
+
 
 clear
 getInformation
@@ -189,3 +190,7 @@ pauseandclear
 RemoveUnecessaryFiles
 pauseandclear
 Finalize
+
+
+
+

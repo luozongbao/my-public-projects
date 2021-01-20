@@ -63,7 +63,7 @@ function getInformation
                 DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
                 DBUSER=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
         else
-                showresult "$DIRLOC/$FILEDIR is an invalid Wordpress Folder"
+                showresult "$FILELOC/$FILEDIR is an invalid Wordpress Folder"
                 exit 1
         fi
 }

@@ -694,6 +694,33 @@ function InstallZipUnzip
     done
 }
 
+function InstallFirewall
+{
+    display "Install Firewall"
+    while true;
+    do
+        read -p "Do you want to install firewall Now? [Y/N]: " FIREWALL
+        case $FIREWALL in 
+            [yY]|[yY][eE][sS])
+                if [ -e /etc/init.d/ufw ]
+                then
+                    showresult "UFW firewall already installed"
+                else
+                    apt install ufw
+                fi
+                pauseandclear
+                break
+                ;;
+            [nN]|[nN][oO])
+                break
+                ;;
+            *) 
+                echo "Please, answer Yes or No"
+            ;;
+        esac
+    done
+}
+
 function InstallWebmin
 {
     display "Install Webmin"
@@ -985,6 +1012,8 @@ function InstallWebServer
     done
 }
 
+
+
 function Finalize
 {
 	cd $CURDIR
@@ -1063,6 +1092,7 @@ function Newsvr
     ConfigTimeZone
     ConfigHostName
     InstallZipUnzip
+    InstallFirewall
     InstallWebmin
     InstallNetDATA
     InstallWebServer

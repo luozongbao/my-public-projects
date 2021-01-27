@@ -1119,12 +1119,13 @@ function main
         echo "   Backup)    BACKUP Website"
         echo "   Restore)   RESTORE Website"
         echo "   Remove)    REMOVE Website"
+        echo "   Webserver) Install Webserver"
         echo "   Webmin)    Install WEBMIN (Large)"
         echo "   NetData)   Install NetData (Large)"
         echo "   Wordpress) Install WORDPRESS"
         echo "   WPCLI)     Install WPCLI"
         echo "   Test)      TEST Environment Configuration"
-        echo "   X) EXIT Program"
+        echo "   X)         EXIT Program"
         echo "=================================================="
         echo
         read -p "What is your action?: " ANS
@@ -1140,6 +1141,9 @@ function main
                 ;;
             [rR][eE][mM][oO][vV][eE])
                 Remove
+                ;;
+            [wW][eE][bB][sS][eE][rR[vV][eE][rR])
+                InstallWebServer
                 ;;
             [wW][eE][bB][mM][iI][nN])
                 InstallWebmin

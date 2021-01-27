@@ -1113,6 +1113,8 @@ function main
     do
         echo
         echo "Select Actions"
+        echo "=============="
+        echo
         echo "   New)       NEW Server Setup"
         echo "   Backup)    BACKUP Website"
         echo "   Restore)   RESTORE Website"
@@ -1123,6 +1125,8 @@ function main
         echo "   WPCLI)     Install WPCLI"
         echo "   Test)      TEST Environment Configuration"
         echo "   X) EXIT Program"
+        echo "=================================================="
+        echo
         read -p "What is your action?: " ANS
         case $ANS in 
             [nN][eE][wW])

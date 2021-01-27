@@ -724,11 +724,15 @@ function InstallMariadb
     done
 }
 
+
+
 function InstallApacheWPCLI
 {
+    display "Installing Wordpress Console Line Interfacie (WP-CLI)"
     curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
     chmod +x wp-cli.phar 2>>$ERRORFILE
     mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+    showresult "WP-CLI for Apache Installed"
 }
 
 function InstallWordpressApache
@@ -747,9 +751,8 @@ function InstallWordpressApache
                 unzip latest.zip 2>>$ERRORFILE
                 chown -R www-data:www-data wordpress 2>>$ERRORFILE
                 rm latest.zip 2>>$ERRORFILE
+                showresult "Wordpress Installed at $SITELOC"
                 InstallApacheWPCLI
-                cd $CURDIR
-                showresult "Wordpress and wp-cli Installed at $SITELOC"
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -791,10 +794,12 @@ function InstallApache
 
 function InstallOLSWPCLI
 {
+    display "Installing Wordpress Console Line Interfacie (WP-CLI)"
     curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
     chmod +x wp-cli.phar 2>>$ERRORFILE
     mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
     cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
+    showresult "WP CLI for OpenLiteSpeed installed"
 }
 
 function InstallWordpressOLS
@@ -813,9 +818,8 @@ function InstallWordpressOLS
                 unzip latest.zip 2>>$ERRORFILE
                 chown -R nobody:nogroup wordpress 2>>$ERRORFILE
                 rm latest.zip 2>>$ERRORFILE
+                showresult "Wordpress Installed at $SITELOC"
                 InstallOLSWPCLI
-                cd $CURDIR
-                showresult "Wordpress and wp-cli Installed at $SITELOC"
                 read -p "Press Enter to continue: " ENTER
                 break
                 ;;
@@ -1053,18 +1057,19 @@ function main
 {
     while true;
     do
-        clear
         echo
         echo "Select Actions"
-        echo "   N) New Server Setup"
-        echo "   B) Backup Website"
-        echo "   R) Restore Website"
-        echo "   M) Remove Website"
-        echo "   W) Install Wordpress"
-        echo "   C) Install WP-CLI"
+        echo "   N) NEW Server Setup"
+        echo "   B) BACKUP Website"
+        echo "   R) RESTORE Website"
+        echo "   M) REMOVE Website"
+        echo "   W) Install WORDPRESS"
+        echo "   C) Install WPCLI"
+        echo "   T) Test Environment Configuration"
+        echo "   X) EXIT Program"
         read -p "What is your action?: " ANS
         case $ANS in 
-            [nN]|[nN][eE][wW])
+            [nN]|[nN][eE][wW]|[nN][eE][wW])
                 newsvr
                 ;;
             [bB]|[bB][aA][cC][kK][uU][pP])
@@ -1078,17 +1083,25 @@ function main
                 ;;
             [wW]|[wW][oO][rR][dD][pP][rR][eE][eE][sS][sS])
                 InstallWordpress
+                cat $RESULTFILE
+                wp --info
                 ;;
             [cC]|[wW][pP][cC][lL][iI])
                 InstallWPCLI
+                cat $RESULTFILE
+                wp --info
                 ;;
-            [xX])
+            [tT]|[tT][eE][sS][tT])
+                ConfigureTestSite
+                wp --info
+                ;;
+            [xX]|[eE][xX][iI][tT])
                 display "Exit Program"
-                exit 0
                 break
                 ;;
             *)
-            ;; 
+                clear
+                ;; 
         esac          
     done
 }

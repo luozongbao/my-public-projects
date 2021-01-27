@@ -1076,7 +1076,7 @@ function main
         echo "   M) REMOVE Website"
         echo "   W) Install WORDPRESS"
         echo "   C) Install WPCLI"
-        echo "   T) Test Environment Configuration"
+        echo "   T) TEST Environment Configuration"
         echo "   X) EXIT Program"
         read -p "What is your action?: " ANS
         case $ANS in 
@@ -1096,22 +1096,26 @@ function main
                 InstallWordpress
                 cat $RESULTFILE
                 wp --info
+                pauseandclear
                 ;;
             [cC]|[wW][pP][cC][lL][iI])
                 InstallWPCLI
                 cat $RESULTFILE
                 wp --info
+                pauseandclear
                 ;;
             [tT]|[tT][eE][sS][tT])
                 ConfigureTestSite
                 wp --info
+                pauseandclear
                 ;;
             [xX]|[eE][xX][iI][tT])
                 display "Exit Program"
                 break
                 ;;
             *)
-                clear
+                display "Please use specific letter or the word written in uppercase"
+                pauseandclear
                 ;; 
         esac          
     done

@@ -1037,6 +1037,11 @@ function InstallWordpress
     fi
     if [ -e "/usr/local/lsws" ]
     then
+        SITELOC=/usr/local/lsws/sites
+        if [ ! -e $SITELOC ]
+        then
+            mkdir $SITELOC
+        fi
         InstallWordpressOLS
     fi
 }
@@ -1049,6 +1054,12 @@ function InstallWPCLI
     fi
     if [ -e "/usr/local/lsws" ]
     then
+        SITELOC=/usr/local/lsws/sites
+        if [ ! -e $SITELOC ]
+        then
+            mkdir $SITELOC
+        fi
+        
         InstallOLSWPCLI
     fi
 }

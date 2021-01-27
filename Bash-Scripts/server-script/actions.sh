@@ -970,7 +970,7 @@ function Backup
     Finalize
 }
 
-function restore
+function Restore
 {
     clear
     getRestoreInformation
@@ -1001,7 +1001,7 @@ function restore
 }
 
 
-function remove
+function Remove
 {
     clear
     getRemoveInformation
@@ -1015,7 +1015,7 @@ function remove
 }
 
 
-function newsvr
+function Newsvr
 {
     UpdateUpgrade
     installswap
@@ -1081,16 +1081,16 @@ function main
         read -p "What is your action?: " ANS
         case $ANS in 
             [nN]|[nN][eE][wW]|[nN][eE][wW])
-                newsvr
+                Newsvr
                 ;;
             [bB]|[bB][aA][cC][kK][uU][pP])
-                backup
+                Backup
                 ;;
             [rR]|[rR][eE][sS][tT][oO][rR][eE])
-                restore
+                Restore
                 ;;
             [mM]|[rR][eE][mM][oO][vV][eE])
-                remove
+                Remove
                 ;;
             [wW]|[wW][oO][rR][dD][pP][rR][eE][eE][sS][sS])
                 InstallWordpress

@@ -702,7 +702,7 @@ function InstallWebmin
         read -p "Install Webmin Now? [Y/N]: " WEBMIN
         case $WEBMIN in 
             [yY]|[yY][eE][sS])
-                echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/source.list
+                echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list
                 cd
                 wget https://download.webmin.com/jcameron-key.asc 2>>$ERRORFILE
                 apt-key add jcameron-key.asc 2>> $ERRORFILE

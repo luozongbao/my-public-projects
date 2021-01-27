@@ -723,6 +723,32 @@ function InstallWebmin
     done
 }
 
+function InstallNetDATA
+{
+    display "Install NetDATA"
+    while true;
+    do
+        read -p "Install NetData Now? [Y/N]: " NETDATA
+        case $NETDATA in 
+            [yY]|[yY][eE][sS])
+                bash <(curl -Ss https://my-netdata.io/kickstart.sh)
+                showresult "NetDATA Installed"
+                pauseandclear
+                break
+                ;;
+            [nN]|[nN][oO])
+                break
+                ;;
+            *) 
+                echo "Please, answer Yes or No"
+            ;;
+        esac
+    done
+}
+
+
+
+
 function InstallMariadb
 {
     display "Install MariaDB"
@@ -1038,6 +1064,7 @@ function Newsvr
     ConfigHostName
     InstallZipUnzip
     InstallWebmin
+    InstallNetDATA
     InstallWebServer
     pauseandclear
     Finalize
@@ -1086,41 +1113,49 @@ function main
     do
         echo
         echo "Select Actions"
-        echo "   N) NEW Server Setup"
-        echo "   B) BACKUP Website"
-        echo "   R) RESTORE Website"
-        echo "   M) REMOVE Website"
-        echo "   W) Install WORDPRESS"
-        echo "   C) Install WPCLI"
-        echo "   T) TEST Environment Configuration"
+        echo "   New)       NEW Server Setup"
+        echo "   Backup)    BACKUP Website"
+        echo "   Restore)   RESTORE Website"
+        echo "   Remove)    REMOVE Website"
+        echo "   Webmin)    Install WEBMIN (Large)"
+        echo "   NetData)   Install NetData (Large)"
+        echo "   Wordpress) Install WORDPRESS"
+        echo "   WPCLI)     Install WPCLI"
+        echo "   Test)      TEST Environment Configuration"
         echo "   X) EXIT Program"
         read -p "What is your action?: " ANS
         case $ANS in 
-            [nN]|[nN][eE][wW]|[nN][eE][wW])
+            [nN][eE][wW])
                 Newsvr
                 ;;
-            [bB]|[bB][aA][cC][kK][uU][pP])
+            [bB][aA][cC][kK][uU][pP])
                 Backup
                 ;;
-            [rR]|[rR][eE][sS][tT][oO][rR][eE])
+            [rR][eE][sS][tT][oO][rR][eE])
                 Restore
                 ;;
-            [mM]|[rR][eE][mM][oO][vV][eE])
+            [rR][eE][mM][oO][vV][eE])
                 Remove
                 ;;
-            [wW]|[wW][oO][rR][dD][pP][rR][eE][eE][sS][sS])
+            [wW][eE][bB][mM][iI][nN])
+                InstallWebmin
+                ;;
+            [nN][eE][tT][dD][aA][tT][aA])
+                InstallNetDATA
+                ;;
+            [wW][oO][rR][dD][pP][rR][eE][eE][sS][sS])
                 InstallWordpress
                 cat $RESULTFILE
                 wp --info
                 pauseandclear
                 ;;
-            [cC]|[wW][pP][cC][lL][iI])
+            [wW][pP][cC][lL][iI])
                 InstallWPCLI
                 cat $RESULTFILE
                 wp --info
                 pauseandclear
                 ;;
-            [tT]|[tT][eE][sS][tT])
+            [tT][eE][sS][tT])
                 ConfigureTestSite
                 wp --info
                 pauseandclear

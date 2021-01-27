@@ -1,7 +1,7 @@
 #! /bin/bash
 ###################################################################
 # Script Name	: Backup Website                                                                                             
-# Description	: To backup a website on server                                                                      
+# Description	: Script to set new server                                                                 
 # Args         	:                       
 # Date          :
 # Version       :                                                                                           
@@ -547,7 +547,6 @@ function completeURLChanged
 
 function installswap
 {
-    clear
     while true;
     do
         read -p "Do you want to install swap? [Y/N]: " YN
@@ -567,7 +566,7 @@ function installswap
                             echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
                             mount -a 2>>$ERRORFILE
                             showresult "Swap is setted to $SWAPSIZE GB" 
-                            read -p "Press Enter to continue: " ENTER
+                            pauseandclear
                             break
                             ;;
                         [0])
@@ -594,7 +593,6 @@ function installswap
 
 function UpdateUpgrade
 {
-    clear
     display "Update and Upgrade Server"
     while true;
     do
@@ -604,7 +602,7 @@ function UpdateUpgrade
                 apt update 2>>$ERRORFILE
                 apt upgrade -y 2>>$ERRORFILE
                 showresult "Update, Upgrade Done" 
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
                 break
                 ;;
             [nN]|[nN][oO])
@@ -619,7 +617,6 @@ function UpdateUpgrade
 
 function ConfigHostName
 {
-    clear
     display "Set Host name"
     while true;
     do
@@ -633,7 +630,7 @@ function ConfigHostName
                 fi
                 hostnamectl set-hostname $HOSTNAME 2>>$ERRORFILE
                 showresult "Host Name Setted to $HOSTNAME"
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
                 break
                 ;;
             [nN]|[nN][oO])
@@ -648,7 +645,6 @@ function ConfigHostName
 
 function ConfigTimeZone
 {
-    clear
     display "Configure Time Zone"
     while true;
     do
@@ -662,7 +658,7 @@ function ConfigTimeZone
                 fi
                 timedatectl set-timezone $TIMEZONE 2>>$ERRORFILE
                 showresult "Timezone Setted to $TIMEZONE"
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
                 break
                 ;;
             [nN]|[nN][oO])
@@ -677,7 +673,6 @@ function ConfigTimeZone
 
 function InstallZipUnzip
 {
-    clear
     display "Install Zip/Unzip"
     while true;
     do
@@ -686,7 +681,36 @@ function InstallZipUnzip
             [yY]|[yY][eE][sS])
                 apt install -y zip unzip 2>>$ERRORFILE
                 showresult "Zip/Unzip Installed"
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
+                break
+                ;;
+            [nN]|[nN][oO])
+                break
+                ;;
+            *) 
+                echo "Please, answer Yes or No"
+            ;;
+        esac
+    done
+}
+
+function InstallWebmin
+{
+    display "Install Webmin"
+    while true;
+    do
+        read -p "Install Webmin Now? [Y/N]: " WEBMIN
+        case $WEBMIN in 
+            [yY]|[yY][eE][sS])
+                echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/source.list
+                cd
+                wget https://download.webmin.com/jcameron-key.asc 2>>$ERRORFILE
+                apt-key add jcameron-key.asc 2>> $ERRORFILE
+                apt-get install apt-transport-https 2>>$ERRORFILE
+                apt-get update  2>> $ERRORFILE
+                apt-get install webmin 2>>$ERRORFILE
+                showresult "Webmin Installed"
+                pauseandclear
                 break
                 ;;
             [nN]|[nN][oO])
@@ -701,7 +725,6 @@ function InstallZipUnzip
 
 function InstallMariadb
 {
-    clear
     display "Install MariaDB"
     while true;
     do
@@ -711,7 +734,7 @@ function InstallMariadb
                 apt install -y mariadb-server  2>>$ERRORFILE
                 mysql_secure_installation 2>>$ERRORFILE
                 showresult "MariaDB installed"
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
                 break
                 ;;
             [nN]|[nN][oO])
@@ -737,7 +760,6 @@ function InstallApacheWPCLI
 
 function InstallWordpressApache
 {
-    clear
     display $'Wordpress for Apache Server \n This will install Following \n    - wordpress \n     - wp-cli'
     while true;
     do
@@ -753,7 +775,7 @@ function InstallWordpressApache
                 rm latest.zip 2>>$ERRORFILE
                 showresult "Wordpress Installed at $SITELOC"
                 InstallApacheWPCLI
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
                 break
                 ;;
             [nN]|[nN][oO])
@@ -768,7 +790,6 @@ function InstallWordpressApache
 
 function InstallApache
 {
-    clear
     display "Install Apache Virtual Server"
     while true;
     do
@@ -778,7 +799,7 @@ function InstallApache
                 InstallMariadb 2>>$ERRORFILE
                 apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE
                 showresult "Apache installed"
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
                 InstallWordpressApache
                 break
                 ;;
@@ -804,7 +825,6 @@ function InstallOLSWPCLI
 
 function InstallWordpressOLS
 {
-    clear
     display $' Wordpress for OpenLiteSpeed Server \n This will install Following \n    - wordpress \n     - wp-cli'
     while true;
     do
@@ -820,7 +840,7 @@ function InstallWordpressOLS
                 rm latest.zip 2>>$ERRORFILE
                 showresult "Wordpress Installed at $SITELOC"
                 InstallOLSWPCLI
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
                 break
                 ;;
             [nN]|[nN][oO])
@@ -837,7 +857,6 @@ function InstallWordpressOLS
 
 function InstallOpenLiteSpeed
 {
-    clear
     display "Installing OpenLiteSpeed Virtual Server"
     while true;
     do
@@ -850,7 +869,7 @@ function InstallOpenLiteSpeed
                 rm ols1clk.sh 2>>$ERRORFILE
                 showresult "OpenLiteSpeed installed"
                 cat /usr/local/lsws/password >> $RESULTFILE
-                read -p "Press Enter to continue: " ENTER
+                pauseandclear
                 InstallWordpressOLS
                 break
                 ;;
@@ -866,7 +885,6 @@ function InstallOpenLiteSpeed
 
 function InstallCron
 {
-    clear
     display "Install Server Cron Schedule"
     while true;
     do
@@ -894,7 +912,6 @@ function InstallCron
 
 function SelectVirtualHostServer
 {
-    clear
     display "Select Vertual Host Server Type"
     while true;
     do
@@ -902,12 +919,10 @@ function SelectVirtualHostServer
         case $AOC in 
             [aA]|[aA][pP][aA][cC][hH][eE])
                 InstallApache
-                InstallCron
                 break
                 ;;
             [oO]|[oO][pP][eE][nN][lL][iI][tT][eE][sS][pP][eE][eE][dD])
                 InstallOpenLiteSpeed
-                InstallCron
                 break
                 ;;
             [cC]|[cC][aA][nN][cC][eE][lL])
@@ -924,7 +939,6 @@ function SelectVirtualHostServer
 
 function InstallWebServer
 {
-    clear
     display "Install Web Server"
     while true;
     do
@@ -932,6 +946,7 @@ function InstallWebServer
         case $WS in 
             [yY]|[yY][eE][sS])
                 SelectVirtualHostServer
+                InstallCron
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1022,6 +1037,7 @@ function Newsvr
     ConfigTimeZone
     ConfigHostName
     InstallZipUnzip
+    InstallWebmin
     InstallWebServer
     pauseandclear
     Finalize

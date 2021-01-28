@@ -28,6 +28,10 @@ BKFILE=""
 BKFINAL=""
 WPCONFIG=""
 
+NUMERIC='^\d+$'
+
+
+
 
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
@@ -708,6 +712,64 @@ function InstallFirewall
                 else
                     apt install ufw
                 fi
+                while true;
+                do
+                    echo "This might interupt server connection please be sure."
+                    echo "Options: Type 'SHOW' 'ALLOW' 'DENY' 'ENABLE' 'DISABLE' 'DEFAULT' 'EXIT'"
+                    read -p "Do you want to Allow oer Deny Enable Disable Firewall now? [Y/N]: " ADED
+                    case $ADED in
+                        [sS][hH][oO][wW])
+                            ufw status
+                            ;;
+                        [aA][lL][lL][oO][wW])
+                            echo "This might interupt server connection please be sure."
+                            read -p "Please specify port number to allow: " ALLOWPORT
+                            if [[ $ALLOWPORT =~ $NUMERIC ]] ; then
+	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
+                            else    
+                                echo "please specify port number"
+                            fi
+                            ;;
+                        [dD][eE][nN][yY])
+                            echo "This might interupt server connection please be sure."
+                            read -p "Please specify port number to deny: " DENYPORT
+                            if [[ $DENYPORT =~ $NUMERIC ]] ; then
+	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
+                            else    
+                                echo "please specify port number"
+                            fi
+                            ;;
+                        [eE][nN][aA][bB][lL][eE])
+                                read -p "This might interupt server connection, do you want to continue? [Y/N]: " CONTINUE
+                                if [ $CONTINUE =~ '[yY]|[yY][eE][sS]' ] 
+                                then
+                                    ufw enable 2>> $ERRORFILE
+                                fi
+                            ;;
+                        [dD][iI][sS][aA][bB][lL][eE])
+                            ufw disable 2>> $ERRORFILE
+                            ;;
+                        [dD][eE][fF][aA][uU][lL][tT])
+                            echo "This might interupt server connection please be sure."
+                            read -p "Please specify default ports actions ALLOW or DENY? [Y/N]: " DEFAULT
+                            if [[ $DEFAULT =~ '[aA][lL][lL][oO][wW]' ]] ; 
+                            then
+	                            ufw default allow 2>> $ERRORFILE
+                            elif [[ $DEFAULT =~ '[dD][eE][nN][yY]' ]]
+                            then
+                                ufw default deny 2>> $ERRORFILE
+                            else    
+                                echo "Please Specify 'ALLOW' or 'DENY'"
+                            fi
+                            ;;
+                        [eE][xX][iI][tT])
+                            break
+                            ;;
+                        *)
+                            echo "Options: Type 'ALLOW' 'DENY' 'ENABLE' 'DISABLE' 'EXIT'"
+                            ;;
+                done
+
                 pauseandclear
                 break
                 ;;

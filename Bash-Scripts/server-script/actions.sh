@@ -847,7 +847,7 @@ function InstallNetDATA
 
 function securemysql
 {
-mysql_secure_installation <<EOF
+    mysql_secure_installation <<EOF
 
 n
 y

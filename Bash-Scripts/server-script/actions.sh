@@ -28,7 +28,7 @@ BKFILE=""
 BKFINAL=""
 WPCONFIG=""
 
-RGXNUMERIC='^\d+$'
+RGXNUMERIC='^[0-9]+$'
 
 
 
@@ -715,8 +715,8 @@ function InstallFirewall
                 while true;
                 do
                     echo "This might interupt server connection please be sure."
-                    echo "Options: Type 'SHOW' 'ALLOW' 'DENY' 'ENABLE' 'DISABLE' 'DEFAULT' 'EXIT'"
-                    read -p "Do you want to Allow oer Deny Enable Disable Firewall now? [Y/N]: " ADED
+                    echo "Options: [Type 'SHOW' 'ALLOW' 'DENY' 'ENABLE' 'DISABLE' 'DEFAULT' 'EXIT']"
+                    read -p "Do you want to Allow oer Deny Enable Disable Firewall now?: " ADED
                     case $ADED in
                         [sS][hH][oO][wW])
                             ufw status
@@ -771,8 +771,9 @@ function InstallFirewall
                         *)
                             echo "Options: Type 'ALLOW' 'DENY' 'ENABLE' 'DISABLE' 'EXIT'"
                             ;;
-                done
+                    esac
 
+                done
                 pauseandclear
                 break
                 ;;

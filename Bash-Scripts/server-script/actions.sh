@@ -28,7 +28,7 @@ BKFILE=""
 BKFINAL=""
 WPCONFIG=""
 
-NUMERIC='^\d+$'
+RGXNUMERIC='^\d+$'
 
 
 
@@ -724,7 +724,7 @@ function InstallFirewall
                         [aA][lL][lL][oO][wW])
                             echo "This might interupt server connection please be sure."
                             read -p "Please specify port number to allow: " ALLOWPORT
-                            if [[ $ALLOWPORT =~ $NUMERIC ]] ; then
+                            if [[ $ALLOWPORT =~ $RGXNUMERIC ]] ; then
 	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
                             else    
                                 echo "please specify port number"
@@ -733,15 +733,16 @@ function InstallFirewall
                         [dD][eE][nN][yY])
                             echo "This might interupt server connection please be sure."
                             read -p "Please specify port number to deny: " DENYPORT
-                            if [[ $DENYPORT =~ $NUMERIC ]] ; then
+                            if [[ $DENYPORT =~ $RGXNUMERIC ]] ; then
 	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
                             else    
                                 echo "please specify port number"
                             fi
                             ;;
                         [eE][nN][aA][bB][lL][eE])
+                                RGXYES="^[yY]|[yY][eE][sS]$"
                                 read -p "This might interupt server connection, do you want to continue? [Y/N]: " CONTINUE
-                                if [ $CONTINUE =~ '[yY]|[yY][eE][sS]' ] 
+                                if [ $CONTINUE =~ $RGXYES ] 
                                 then
                                     ufw enable 2>> $ERRORFILE
                                 fi
@@ -750,12 +751,14 @@ function InstallFirewall
                             ufw disable 2>> $ERRORFILE
                             ;;
                         [dD][eE][fF][aA][uU][lL][tT])
+                            RGXALLOW="^[aA][lL][lL][oO][wW]$"
+                            RGXDENY="^[dD][eE][nN][yY]$"
                             echo "This might interupt server connection please be sure."
                             read -p "Please specify default ports actions ALLOW or DENY? [Y/N]: " DEFAULT
-                            if [[ $DEFAULT =~ '[aA][lL][lL][oO][wW]' ]] ; 
+                            if [[ $DEFAULT =~ $RGXALLOW ]] ; 
                             then
 	                            ufw default allow 2>> $ERRORFILE
-                            elif [[ $DEFAULT =~ '[dD][eE][nN][yY]' ]]
+                            elif [[ $DEFAULT =~ $RGXDENY ]]
                             then
                                 ufw default deny 2>> $ERRORFILE
                             else    
@@ -1216,6 +1219,7 @@ function main
         echo "   NetData)   Install NetData (Large)"
         echo "   Wordpress) Install WORDPRESS"
         echo "   WPCLI)     Install WPCLI"
+        echo "   UFW)       Install UFW firewall"
         echo "   Test)      TEST Environment Configuration"
         echo "   X)         EXIT Program"
         echo "=================================================="
@@ -1255,8 +1259,14 @@ function main
                 wp --info
                 pauseandclear
                 ;;
+            [uU][fF][wW])
+                InstallFirewall
+                cat $RESULTFILE
+                pauseandclear
+                ;;
             [tT][eE][sS][tT])
                 ConfigureTestSite
+                cat $RESULTFILE
                 wp --info
                 pauseandclear
                 ;;

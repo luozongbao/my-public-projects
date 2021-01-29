@@ -845,7 +845,27 @@ function InstallNetDATA
     done
 }
 
-
+function securemysql
+{
+    mysql_secure_installation 2>>$ERRORFILE
+    SECURE_MYSQL=$(expect -c "
+    set timeout 10
+    spawn mysql_secure_installation
+    expect \"Enter current password for root (enter for none):\"
+    send \"\r\"
+    expect \"Change the root password?\"
+    send \"n\r\"
+    expect \"Remove anonymous users?\"
+    send \"y\r\"
+    expect \"Disallow root login remotely?\"
+    send \"y\r\"
+    expect \"Remove test database and access to it?\"
+    send \"y\r\"
+    expect \"Reload privilege tables now?\"
+    send \"y\r\"
+    expect eof
+    ")
+}
 
 
 function InstallMariadb
@@ -857,7 +877,7 @@ function InstallMariadb
         case $MDB in 
             [yY]|[yY][eE][sS])
                 apt install -y mariadb-server  2>>$ERRORFILE
-                mysql_secure_installation 2>>$ERRORFILE
+                securemysql
                 showresult "MariaDB installed"
                 pauseandclear
                 break

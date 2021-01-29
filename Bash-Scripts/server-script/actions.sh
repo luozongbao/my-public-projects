@@ -885,7 +885,7 @@ function InstallApacheWPCLI
 
 function InstallWordpressApache
 {
-    display $'Wordpress for Apache Server \n This will install Following \n    - wordpress \n     - wp-cli'
+    display $'Wordpress for Apache Server \n*   This will install Following \n*     - wordpress \n*     - wp-cli'
     while true;
     do
         read -p "Install Wordpress Now? [Y/N]: " WPAPCHE
@@ -950,7 +950,7 @@ function InstallOLSWPCLI
 
 function InstallWordpressOLS
 {
-    display $' Wordpress for OpenLiteSpeed Server \n This will install Following \n    - wordpress \n     - wp-cli'
+    display $'Wordpress for Apache Server \n*   This will install Following \n*     - wordpress \n*     - wp-cli'
     while true;
     do
         read -p "Install Wordpress Now? [Y/N]: " WPOLS
@@ -1245,7 +1245,7 @@ function main
             [rR][eE][mM][oO][vV][eE])
                 Remove
                 ;;
-            [wW][eE][bB][sS][eE][rR[vV][eE][rR])
+            [wW][eE][bB][sS][eE][rR][vV][eE][rR])
                 InstallWebServer
                 ;;
             [wW][eE][bB][mM][iI][nN])
@@ -1254,7 +1254,7 @@ function main
             [nN][eE][tT][dD][aA][tT][aA])
                 InstallNetDATA
                 ;;
-            [wW][oO][rR][dD][pP][rR][eE][eE][sS][sS])
+            [wW][oO][rR][dD][pP][rR][eE][sS][sS])
                 InstallWordpress
                 cat $RESULTFILE
                 wp --info

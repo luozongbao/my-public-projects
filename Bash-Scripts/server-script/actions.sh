@@ -726,6 +726,7 @@ function InstallFirewall
                             read -p "Please specify port number to allow: " ALLOWPORT
                             if [[ $ALLOWPORT =~ $RGXNUMERIC ]] ; then
 	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
+                                showresult "UFW allowed port: $ALLOWPORT"
                             else    
                                 echo "please specify port number"
                             fi
@@ -735,6 +736,7 @@ function InstallFirewall
                             read -p "Please specify port number to deny: " DENYPORT
                             if [[ $DENYPORT =~ $RGXNUMERIC ]] ; then
 	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
+                                showresult "UFW denied port: $DENYPORT"
                             else    
                                 echo "please specify port number"
                             fi
@@ -742,13 +744,15 @@ function InstallFirewall
                         [eE][nN][aA][bB][lL][eE])
                                 RGXYES="^[yY]|[yY][eE][sS]$"
                                 read -p "This might interupt server connection, do you want to continue? [Y/N]: " CONTINUE
-                                if [ $CONTINUE =~ $RGXYES ] 
+                                if [[ $CONTINUE =~ $RGXYES ]]
                                 then
                                     ufw enable 2>> $ERRORFILE
+                                    showresult "UFW Activated"
                                 fi
                             ;;
                         [dD][iI][sS][aA][bB][lL][eE])
                             ufw disable 2>> $ERRORFILE
+                            showresult "UFW Deactivated"
                             ;;
                         [dD][eE][fF][aA][uU][lL][tT])
                             RGXALLOW="^[aA][lL][lL][oO][wW]$"
@@ -758,9 +762,11 @@ function InstallFirewall
                             if [[ $DEFAULT =~ $RGXALLOW ]] ; 
                             then
 	                            ufw default allow 2>> $ERRORFILE
+                                showresult "UFW default action: Allow"
                             elif [[ $DEFAULT =~ $RGXDENY ]]
                             then
                                 ufw default deny 2>> $ERRORFILE
+                                showresult "UFW default action: Deny"
                             else    
                                 echo "Please Specify 'ALLOW' or 'DENY'"
                             fi

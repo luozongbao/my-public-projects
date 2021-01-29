@@ -847,7 +847,7 @@ function InstallNetDATA
 
 function securemysql
 {
-    mysql_secure_installation 2>>$ERRORFILE
+    #mysql_secure_installation 2>>$ERRORFILE
     SECURE_MYSQL=$(expect -c "
     set timeout 10
     spawn mysql_secure_installation
@@ -865,6 +865,8 @@ function securemysql
     send \"y\r\"
     expect eof
     ")
+
+    echo "$SECURE_MYSQL"
 }
 
 
@@ -1241,6 +1243,7 @@ function main
         echo "   Backup)    BACKUP Website"
         echo "   Restore)   RESTORE Website"
         echo "   Remove)    REMOVE Website"
+        echo "   DBServer)  Install DBSERVER - Mariadb"
         echo "   Webserver) Install Webserver"
         echo "   Webmin)    Install WEBMIN (Large)"
         echo "   NetData)   Install NetData (Large)"
@@ -1264,6 +1267,9 @@ function main
                 ;;
             [rR][eE][mM][oO][vV][eE])
                 Remove
+                ;;
+            [dD][bB][sS][eE][rR][vV][eE][rR])
+                InstallMariadb
                 ;;
             [wW][eE][bB][sS][eE][rR][vV][eE][rR])
                 InstallWebServer

@@ -38,6 +38,7 @@ ERRORFILE="$CURDIR/error.txt"
 
 clear
 echo
+echo "User=$USER"
 echo "Current Directory=$PWD"
 echo "Home Directory=$HOME"
 echo
@@ -567,8 +568,7 @@ function CustomMOTD
 
 function CustomPrompt
 {
-
-    echo "PS1='\[\e[0m\][\[\e[0;95m\]\d\[\e[0m\]:\[\e[0;95m\]\t\[\e[0m\]]\[\e[0m\]@\[\e[0;96m\]\h\[\e[m\] \[\e[0m\]<\[\e[0;92m\]\w\[\e[0m\]>\[\e[m\]\n\[\e[0m\][\[\e[0;38;5;208m\]\j\[\e[0m\]]\[\e[0;93m\]\u\[\e[m\] \[\e[0;97m\]\$\[\e[m\] \[\e0'" >> $HOME/.bashrc
+    echo "PS1='\[\e[0m\][\[\e[0;95m\]\d\[\e[0m\]:\[\e[0;95m\]\t\[\e[0m\]]\[\e[0m\]@\[\e[0;96m\]\h\[\e[m\] \[\e[0m\]<\[\e[0;92m\]\w\[\e[0m\]>\[\e[m\]\n\[\e[0m\][\[\e[0;38;5;208m\]\j\[\e[0m\]]\[\e[0;93m\]\u\[\e[m\] \[\e[0;97m\]\$\[\e[m\] \[\e0'" >> $CURDIR/.bashrc
     showresult "Created Custom Prompt"
 }
 
@@ -1194,10 +1194,9 @@ function Remove
 
 function Newsvr
 {
-
     CustomPrompt
-    UpdateUpgrade
     CustomMOTD
+    UpdateUpgrade
     installswap
     ConfigTimeZone
     ConfigHostName

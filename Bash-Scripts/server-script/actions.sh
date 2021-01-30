@@ -38,10 +38,13 @@ ERRORFILE="$CURDIR/error.txt"
 
 clear
 echo
-echo "User=$USER"
+echo "Make sure you run program in user home directory"
 echo "Current Directory=$PWD"
-echo "Home Directory=$HOME"
-echo
+read -p "" CONTINUE
+if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
+then
+    exit 
+fi
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 

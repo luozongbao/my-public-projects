@@ -40,7 +40,7 @@ clear
 echo
 echo "Make sure you run program in user home directory"
 echo "Current Directory=$PWD"
-read -p "" CONTINUE
+read -p "Do you want to continue? [y/n]: " CONTINUE
 if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
 then
     exit 

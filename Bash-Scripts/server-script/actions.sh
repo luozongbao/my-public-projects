@@ -548,6 +548,23 @@ function completeURLChanged
         fi
 }
 
+function CustomMOTD
+{
+    apt install screenfetch
+    echo "#! $(which bash)" > /etc/update-motd.d/motd
+    echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
+    echo "/usr/bin/screenfetch" >> /etc/update-motd.d/motd
+    chmod -x /etc/update-motd.d/*
+    chmod +x /etc/update-motd.d/motd
+
+}
+
+function CustomPrompt
+{
+
+    echo "PS1='\[\e[0m\][\[\e[0;95m\]\d\[\e[0m\]:\[\e[0;95m\]\t\[\e[0m\]]\[\e[0m\]@\[\e[0;96m\]\h\[\e[m\] \[\e[0m\]<\[\e[0;92m\]\w\[\e[0m\]>\[\e[m\]\n\[\e[0m\][\[\e[0;38;5;208m\]\j\[\e[0m\]]\[\e[0;93m\]\u\[\e[m\] \[\e[0;97m\]\$\[\e[m\] \[\e0'" >> $HOME/.bashrc
+}
+
 
 function installswap
 {
@@ -1170,6 +1187,8 @@ function Remove
 
 function Newsvr
 {
+    CustomMOTD
+    CustomPrompt
     UpdateUpgrade
     installswap
     ConfigTimeZone
@@ -1229,6 +1248,8 @@ function main
         echo "=============="
         echo
         echo "   New)       NEW Server Setup"
+        echo "   MOTD)      Install new MOTD"
+        echo "   PROMPT)    My Custom Prompt"
         echo "   Backup)    BACKUP Website"
         echo "   Restore)   RESTORE Website"
         echo "   Remove)    REMOVE Website"
@@ -1247,6 +1268,12 @@ function main
         case $ANS in 
             [nN][eE][wW])
                 Newsvr
+                ;;
+            [mM][oO][tT][dD])
+                CustomMOTD
+                ;;
+            [pP][rR][oO][mM][pP][tT])
+                CustomPrompt
                 ;;
             [bB][aA][cC][kK][uU][pP])
                 Backup

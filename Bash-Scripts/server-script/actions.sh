@@ -553,7 +553,7 @@ function CustomMOTD
     apt install screenfetch
     echo "#! $(which bash)" > /etc/update-motd.d/motd
     echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
-    echo "/usr/bin/screenfetch" >> /etc/update-motd.d/motd
+    echo "$(which screenfetch)" >> /etc/update-motd.d/motd
     chmod -x /etc/update-motd.d/*
     chmod +x /etc/update-motd.d/motd
 

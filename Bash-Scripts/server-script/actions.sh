@@ -36,6 +36,11 @@ RGXNUMERIC='^[0-9]+$'
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
+clear
+echo
+echo "Current Directory=$PWD"
+echo "Home Directory=$HOME"
+echo
 
 echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
@@ -550,19 +555,21 @@ function completeURLChanged
 
 function CustomMOTD
 {
+    apt update
     apt install screenfetch
     echo "#! $(which bash)" > /etc/update-motd.d/motd
     echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
     echo "$(which screenfetch)" >> /etc/update-motd.d/motd
     chmod -x /etc/update-motd.d/*
     chmod +x /etc/update-motd.d/motd
-
+    showresult "Created New Message of the day (MOTD)"
 }
 
 function CustomPrompt
 {
 
     echo "PS1='\[\e[0m\][\[\e[0;95m\]\d\[\e[0m\]:\[\e[0;95m\]\t\[\e[0m\]]\[\e[0m\]@\[\e[0;96m\]\h\[\e[m\] \[\e[0m\]<\[\e[0;92m\]\w\[\e[0m\]>\[\e[m\]\n\[\e[0m\][\[\e[0;38;5;208m\]\j\[\e[0m\]]\[\e[0;93m\]\u\[\e[m\] \[\e[0;97m\]\$\[\e[m\] \[\e0'" >> $HOME/.bashrc
+    showresult "Created Custom Prompt"
 }
 
 
@@ -1187,9 +1194,10 @@ function Remove
 
 function Newsvr
 {
-    CustomMOTD
+
     CustomPrompt
     UpdateUpgrade
+    CustomMOTD
     installswap
     ConfigTimeZone
     ConfigHostName

@@ -141,7 +141,7 @@ function CheckFolder
         return 0
     else
         showresult "Folder $1 not found"
-        if [ $2 -eq "critical" ]
+        if [ "$2" == "critical" ]
         then
             exit 1
         fi
@@ -156,7 +156,7 @@ function CheckFile
         return 0
     else
         showresult "File $1 not found"
-        if [ $2 -eq "critical" ]
+        if [ "$2" == "critical" ]
         then
             exit 1
         fi
@@ -265,13 +265,13 @@ function checkRestorevariables
 function backupbackup
 {
 	# BACKUP FINAL FILE
-    if $(CheckFile $FINAL )
+    if $(CheckFile $FINAL "optional" )
     then
 		display "Found Previous Backup File '$FINAL'"
 		run "$(mv $FINAL $BKFINAL)" "Backed up previous backup file $FINAL to $BKFINAL" "Backup Prevouse Backup $FINAL to $BKFINAL Failed" true
 	fi
 	# BACKUP FINAL FILE
-    if $(CheckFile $FINAL.md5 )
+    if $(CheckFile $FINAL.md5 "optional")
 	then
 		display "Found Previous Backup Hash File '$FINAL.md5'"
 		run "$(mv $FINAL.md5 $BKFINAL.md5)" "Backed up previous backup file $FINAL.md5 to $BKFINAL.md5" "Backup Prevouse Backup $FINAL.md5 to $BKFINAL.md5 Failed" true
@@ -579,6 +579,7 @@ function ConfigureTestSite
         case $YN in
             [yY]|[yY][eE][sS])
                 cd $FILELOC/$FILEDIR
+                completeURLChanged
                 discourageSearchEnging
                 disablePlugins
                 updatePlugins
@@ -598,34 +599,35 @@ function ConfigureTestSite
 
 function completeURLChanged
 {
-    if [ ! "$FILEDIR" == "$ORIGINALDIR" ] || [ ! "$ORIGINALDB" == "$DBNAME" ]
-    then
-        echo "Moving Site or Relocate Site detected"
-        while true;
-        do
-            read -p "Do you want to update the site URL? [Y/N]: " YN
-            case $YN in
-                [yY]|[yY][eE][sS])
-                    cd $FILELOC/$FILEDIR
-                    echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
-                    echo "*** Please check and recheck before press ENTER" 
-                    read -p "Please input your original website url with http/https: " ORIGINALURL
-                    echo "working .."
-                    wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
-                    showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
-                    pauseandclear
-                    ConfigureTestSite
-                    break
-                    ;;
-                [nN]|[nN][oO])
-                    break
-                    ;;
-                *)
-                    echo "please answer yes or no"
-                    ;;
-            esac
-        done
-    fi
+
+    while true;
+    do
+        read -p "Do you want to update the site URL? [Y/N]: " YN
+        case $YN in
+            [yY]|[yY][eE][sS])
+                cd $FILELOC/$FILEDIR
+                echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
+                echo "*** Please check and recheck before press ENTER" 
+                read -p "Please input your original website url with http/https: " ORIGINALURL
+                if [ -z $URL ]
+                then
+                    read -p "Please input your new website url with http/https: " URL
+                fi
+                echo "working .."
+                wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
+                showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
+                pauseandclear
+                ConfigureTestSite
+                break
+                ;;
+            [nN]|[nN][oO])
+                break
+                ;;
+            *)
+                echo "please answer yes or no"
+                ;;
+        esac
+    done
 }
 
 function CustomMOTD

@@ -220,6 +220,15 @@ function PrepareEnvironment
         if [ -e $FINAL ]
         then
                 display "copying $FINAL to $FILELOC"
+                if [ -e ${FINAL}.md5 ]
+                then
+                    echo "MD5 file found, attempt to check agaist it"
+                    if [ $(md5sum -c ${FINAL}.md5) -ne 0 ]
+                    then
+                        showresult "Backup File corrupted or not the same as encrypted MD5"
+                        exit 1
+                    fi
+                fi
                 cp $FINAL $FILELOC 
                 cd $FILELOC
                 display "Unpacking $FINAL ..."
@@ -294,6 +303,7 @@ function ArchiveBackupFiles
 {
 	display "Archiving files..."
 	zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE
+    md5sum $FINAL > ${FINAL}.md5
 	showresult "Archived $BKFILE and $DBFILE to $FINAL"
 }
 

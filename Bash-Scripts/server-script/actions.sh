@@ -40,13 +40,12 @@ function initialize
     echo "Make sure you run program in user home directory"
     echo "Current Directory=$PWD"
     read -p "Do you want to continue? [y/n]: " CONTINUE
-
-    echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
-
     if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
     then
         exit 
     fi
+
+    echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
     if [ -d /usr/local/lsws ]
     then
@@ -105,7 +104,7 @@ function run
     then
         # Successfully Executed
         showresult $2
-        return true
+        return 0
     else
         # Execution Failed
         showresult $3
@@ -114,7 +113,7 @@ function run
             # if true exit script
             exit 1
         fi
-        return false
+        return 1
     fi
 
 }
@@ -139,10 +138,10 @@ function CheckFolder
 {
     if [ -e $1 ]
     then
-        return true
+        return 0
     else
         showresult "Folder $1 not found"
-        if $($2)
+        if [ $2 -eq "critical" ]
         then
             exit 1
         fi
@@ -154,10 +153,10 @@ function CheckFile
 {
     if [ -e $1 ]
     then
-        return true
+        return 0
     else
         showresult "File $1 not found"
-        if $($2)
+        if [ $2 -eq "critical" ]
         then
             exit 1
         fi
@@ -194,7 +193,7 @@ function getRemoveInformation
     display "Collect Information For Website Removal"
     read -p "Please input the website File Directory: " FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-        if $(CheckFile $WPCONFIG) 
+        if $(CheckFile $WPCONFIG "critical") 
         then
                 RetrieveDatabaseName
                 RetrieveDatabaseUser
@@ -204,7 +203,7 @@ function getRemoveInformation
 # CHCEK VALID VARIABLES
 function checkBackupVariables
 {
-    if $(CheckFolder "$FILELOC")
+    if $(CheckFolder $FILELOC "critical")
     then
 		processed "Directory $FILELOC CHECKED"
     fi
@@ -214,7 +213,7 @@ function checkBackupVariables
 		showresult "Files Directory INPUT IS EMPTY" 
 		exit 1
 	else
-        if $(CheckFolder "$FILELOC/$FILEDIR")
+        if $(CheckFolder $FILELOC/$FILEDIR "critical")
 		then
 			processed "$FILELOC/$FILEDIR CHECKED"
 		fi
@@ -242,7 +241,7 @@ function checkRestorevariables
     fi
 
     WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-    CheckFile $WPCONFIG
+    CheckFile $WPCONFIG "critical"
 
     if [ -z $URL ]
     then
@@ -250,12 +249,12 @@ function checkRestorevariables
             exit 1
     fi
 
-    if $(CheckFile $CURDIR/$FINAL)
+    if $(CheckFile $CURDIR/$FINAL "critical")
     then
             processed "Original Backup $CURDIR/$FINAL Found"
     fi
 
-    if $(CheckFolder $FILELOC)
+    if $(CheckFolder $FILELOC "critical")
     then
             processed "$FILELOC Found"
     fi
@@ -266,15 +265,15 @@ function checkRestorevariables
 function backupbackup
 {
 	# BACKUP FINAL FILE
-    if $(CheckFile $FINAL false)
+    if $(CheckFile $FINAL )
     then
 		display "Found Previous Backup File '$FINAL'"
 		run "$(mv $FINAL $BKFINAL)" "Backed up previous backup file $FINAL to $BKFINAL" "Backup Prevouse Backup $FINAL to $BKFINAL Failed" true
 	fi
 	# BACKUP FINAL FILE
-    if $(CheckFile $FINAL.md5 false)
+    if $(CheckFile $FINAL.md5 )
 	then
-		display "Found Previous Backup File '$FINAL'"
+		display "Found Previous Backup Hash File '$FINAL.md5'"
 		run "$(mv $FINAL.md5 $BKFINAL.md5)" "Backed up previous backup file $FINAL.md5 to $BKFINAL.md5" "Backup Prevouse Backup $FINAL.md5 to $BKFINAL.md5 Failed" true
 	fi
 
@@ -293,7 +292,7 @@ function ArchiveDirectory
 
 function CheckMD5
 {
-    if $(CheckFile $CURDIR/$FINAL.md5 false)
+    if $(CheckFile $CURDIR/$FINAL.md5 )
     then
         echo "MD5 file found, attempt to check agaist it"
         if [ $(md5sum -c ${FINAL}.md5) -eq 0 ]
@@ -309,7 +308,7 @@ function CheckMD5
 # MOVE ARCHIVED FILE TO DIRECTORY
 function PrepareEnvironment
 {
-    if $(CheckFile $CURDIR/$FINAL true)
+    if $(CheckFile $CURDIR/$FINAL "critical")
     then
         CheckMD5
         echo "copying $FINAL to $FILELOC"...
@@ -324,7 +323,7 @@ function PrepareEnvironment
 
 function RemoveExistedDirectory
 {
-    if $(CheckFolder "$FILELOC/$FILEDIR" )
+    if $(CheckFolder $FILELOC/$FILEDIR "critical" )
     then
         echo "removing existing directory"
         run "$(rm -r $FILELOC/$FILEDIR)" "$FILELOC/$FILEDIR found and removed" "removing $FILELOC/$FILEDIR failed" true
@@ -349,7 +348,7 @@ function configurewpconfig
     run "$(ORIGINALPASS=$(cat wp-config.php | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE)" "Retrieved Database Password" "Retrieving Database Password failed" true
 
     DBFILE=$ORIGINALDB.sql
-    CheckFile $DBFILE true
+    CheckFile $DBFILE "critical"
     
     if [ ! "$ORIGINALDB" == "$DBNAME" ]
     then
@@ -440,7 +439,7 @@ function RestoreRemoveFiles
 
 function RemoveFiles
 {
-    if $(CheckFile $FILELOC/$FILEDIR )
+    if $(CheckFile $FILELOC/$FILEDIR "critical" )
     then
             while true;
             do
@@ -1325,7 +1324,6 @@ function InstallWPCLI
 function main
 {
     initialize
-    pauseandclear
     while true;
     do
         echo

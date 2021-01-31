@@ -559,8 +559,8 @@ function completeURLChanged
 
 function CustomMOTD
 {
-    apt update
-    apt install screenfetch
+    apt update -y 2>>$ERRORFILE
+    apt install screenfetch -y 2>> $ERRORFILE
     echo "#! $(which bash)" > /etc/update-motd.d/motd
     echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
     echo "$(which screenfetch)" >> /etc/update-motd.d/motd
@@ -743,8 +743,8 @@ function InstallFirewall
                 do
                     echo "This might interupt server connection please be sure."
                     echo "Options: [Type 'SHOW' 'ALLOW' 'DENY' 'ENABLE' 'DISABLE' 'DEFAULT' 'EXIT']"
-                    read -p "Do you want to Allow oer Deny Enable Disable Firewall now?: " ADED
-                    case $ADED in
+                    read -p "Do you want to Allow oer Deny Enable Disable Firewall now?: " UFWSETTINGS
+                    case $UFWSETTINGS in
                         [sS][hH][oO][wW])
                             ufw status
                             ;;
@@ -883,6 +883,7 @@ y
 y
 y
 EOF
+showresult "Database mysql installation secured"
 }
 
 
@@ -895,8 +896,8 @@ function InstallMariadb
         case $MDB in 
             [yY]|[yY][eE][sS])
                 apt install -y mariadb-server  2>>$ERRORFILE
-                securemysql
                 showresult "MariaDB installed"
+                securemysql
                 pauseandclear
                 break
                 ;;

@@ -13,7 +13,7 @@ if (( $EUID != 0 )); then
 	exit
 fi
 
-FILELOC=""
+FILELOC=/usr/local/lsws/sites
 ORIGINALDIR=""
 FILEDIR=""
 DBNAME=""
@@ -30,36 +30,23 @@ WPCONFIG=""
 
 RGXNUMERIC='^[0-9]+$'
 
+
+
+
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
-function initialize
-{
-    clear
-    echo
-    echo "Make sure you run program in user home directory"
-    echo "Current Directory=$PWD"
-    read -p "Do you want to continue? [y/n]: " CONTINUE
+clear
+echo
+echo "Make sure you run program in user home directory"
+echo "Current Directory=$PWD"
+read -p "Do you want to continue? [y/n]: " CONTINUE
+if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
+then
+    exit 
+fi
 
-    echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
-
-    if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
-    then
-        exit 
-    fi
-
-    if [ -d /usr/local/lsws ]
-    then
-        FILELOC=/usr/local/lsws/sites
-    fi
-    if [ -d /var/www ]
-    then
-        FILELOC=/var/www
-    fi
-}
-
-
-
+echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
 function display
 {
@@ -75,11 +62,6 @@ function display
     echo
 }
 
-function processed
-{
-    echo $1
-}
-
 function showresult
 {
     HLINE="****************************************************************************************************"
@@ -90,78 +72,10 @@ function showresult
     echo $1 >> $RESULTFILE
 }
 
-
-
 function pauseandclear
 {
         read -p "Press ENTER to continue" ENTER
         clear
-}
-
-function run
-{
-    LASTCODE=$?
-    if [ $LASTCODE -eq 0 ]
-    then
-        # Successfully Executed
-        showresult $2
-        return true
-    else
-        # Execution Failed
-        showresult $3
-        if $($4)
-        then
-            # if true exit script
-            exit 1
-        fi
-        return false
-    fi
-
-}
-
-
-
-
-
-function RetrieveDatabaseName
-{
-    echo "Retrieving Database Name from $WPCONFIG"
-    run "$(DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE)" "Retrieved Database Name '$DBNAME' from $WPCONFIG" "Could not Retrieve Database Name from $WPCONFIG" true
-}
-
-function RetrieveDatabaseUser
-{
-    echo "Retrieving Database Username from $WPCONFIG"
-    run "$(DBUSER=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE)" "Retrieved Database User '$DBUSER' from $WPCONFIG" "Could not retrieve Database User from $WPCONFIG" true
-}
-
-function CheckFolder
-{
-    if [ -e $1 ]
-    then
-        return true
-    else
-        showresult "Folder $1 not found"
-        if $($2)
-        then
-            exit 1
-        fi
-    fi
-    
-}
-
-function CheckFile
-{
-    if [ -e $1 ]
-    then
-        return true
-    else
-        showresult "File $1 not found"
-        if $($2)
-        then
-            exit 1
-        fi
-    fi
 }
 
 function getBackupInformation
@@ -169,7 +83,8 @@ function getBackupInformation
 	display "Collect Information for backup"
 	read -p "Please input files directory:" FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-	RetrieveDatabaseName
+	DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
+	showresult "Retrieved Database Name '$DBNAME' from $WPCONFIG"
 	FINAL=latest.$FILEDIR.zip
 	DBFILE=$DBNAME.sql
 	BKFILE=$FILEDIR.zip
@@ -181,9 +96,9 @@ function getRestoreInformation
         display "Collecting information for the job"
         read -p "Please, input backup original folder name: " ORIGINALDIR
         read -p "Please, input target directory (Blank for same as original): " FILEDIR
-        read -p "Please, input target database name (Blank for same as original): " DBNAME
-        read -p "Please, input target database username (Blank for same as original): " DBUSER
-        read -p "Please, input target database password for '$DBUSER' (Blank for same as original): " DBPASS
+        read -p "Please, input target database name: " DBNAME
+        read -p "Please, input target database username: " DBUSER
+        read -p "Please, input target database password for '$DBUSER': " DBPASS
         read -p "Please, input new website URL with http/https: " URL
         FINAL=latest.$ORIGINALDIR.zip
         BKFILE=$ORIGINALDIR.zip
@@ -191,222 +106,237 @@ function getRestoreInformation
 
 function getRemoveInformation
 {
-    display "Collect Information For Website Removal"
-    read -p "Please input the website File Directory: " FILEDIR
+        display "Collect Information For Website Removal"
+        read -p "Please input the website File Directory: " FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-        if $(CheckFile $WPCONFIG) 
+        if [ -e $WPCONFIG ]
         then
-                RetrieveDatabaseName
-                RetrieveDatabaseUser
+                DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
+                DBUSER=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
+        else
+                showresult "$FILELOC/$FILEDIR is an invalid Wordpress Folder"
+                exit 1
         fi
 }
 
 # CHCEK VALID VARIABLES
 function checkBackupVariables
 {
-    if $(CheckFolder "$FILELOC")
-    then
-		processed "Directory $FILELOC CHECKED"
-    fi
+	if [ -d "$FILELOC" ];
+	then
+		display "Directory $FILELOC CHECKED"
+		echo "Directory $FILELOC CHECKED" >> $RESULTFILE
+	else
+		display "$FILELOC WRONG FILE DIRECTORY LOCATION"
+		exit 1
+	fi
 
 	if [ -z "$FILEDIR" ];
 	then
-		showresult "Files Directory INPUT IS EMPTY" 
+		display "Files Directory INPUT IS EMPTY" 
+		echo "Files Directory INPUT IS EMPTY" >> $RESULTFILE
 		exit 1
 	else
-        if $(CheckFolder "$FILELOC/$FILEDIR")
+		if [ -d "$FILELOC/$FILEDIR" ];
 		then
-			processed "$FILELOC/$FILEDIR CHECKED"
+			display "FILE DIRECTORY $FILELOC/$FILEDIR CHECKED"
+		else
+			display "WRONG FILE DIRECTORY $FILELOC/$FILEDIR"
+			exit 1
 		fi
 	fi
 
-	processed "Input Information CHECKED.  Start Backing up $FILELOC/$FILEDIR Files"
+	display "Input Information CHECKED.  Start Backing up $FILELOC/$FILEDIR Files"
 }
 
 function checkRestorevariables
 {
-    if [ -z $DBUSER ]
-    then
-        RetrieveDatabaseUser
-    fi
+        if [ -z $DBUSER ] || [ -z $DBUSER ] || [ -z $DBNAME ] || [ -z $URL ]
+        then
+                showresult "input error"
+                exit 1
+        fi
 
-    if [ -z $DBNAME ]
-    then
-        RetrieveDatabaseName
-    fi
+        if [ -z $FILEDIR ]
+        then
+                FILEDIR=$ORIGINALDIR
+                showresult "Recover to the same directory '$ORIGINALDIR'"
+        fi
+        WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
 
-    if [ -z $FILEDIR ]
-    then
-            FILEDIR=$ORIGINALDIR
-            processed "Recover to the same directory '$ORIGINALDIR'"
-    fi
+        if [ -f $FINAL ]
+        then
+                showresult "Original Backup $FINAL Found"
+        else
+                showresult "Original backup $FINAL not found"
+                exit 1
+        fi
 
-    WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-    CheckFile $WPCONFIG
-
-    if [ -z $URL ]
-    then
-            processed "URL input error: $URL"
-            exit 1
-    fi
-
-    if $(CheckFile $CURDIR/$FINAL)
-    then
-            processed "Original Backup $CURDIR/$FINAL Found"
-    fi
-
-    if $(CheckFolder $FILELOC)
-    then
-            processed "$FILELOC Found"
-    fi
-    processed "Variables Checked"
+        if [ -d $FILELOC ]
+        then
+                showresult "$FILELOC Found"
+        else
+                showresult "File Location $FILELOC error"
+                exit 1
+        fi
+        showresult "Variables Checked"
 }
 
+function checkRemoveVariables
+{
+        if [ -z $FILEDIR ] || [ -z $DBNAME ]
+        then
+                echo "Input Missing"
+                exit 1
+        fi
+}
 
 function backupbackup
 {
 	# BACKUP FINAL FILE
-    if $(CheckFile $FINAL false)
-    then
-		display "Found Previous Backup File '$FINAL'"
-		run "$(mv $FINAL $BKFINAL)" "Backed up previous backup file $FINAL to $BKFINAL" "Backup Prevouse Backup $FINAL to $BKFINAL Failed" true
-	fi
-	# BACKUP FINAL FILE
-    if $(CheckFile $FINAL.md5 false)
+	if [ -e $FINAL ];
 	then
+		pauseandclear
 		display "Found Previous Backup File '$FINAL'"
-		run "$(mv $FINAL.md5 $BKFINAL.md5)" "Backed up previous backup file $FINAL.md5 to $BKFINAL.md5" "Backup Prevouse Backup $FINAL.md5 to $BKFINAL.md5 Failed" true
+		mv $FINAL $BKFINAL
+		showresult "Backed up previous backup file $FINAL to $BKFINAL"
 	fi
-
 }
 
 # ARCHIVING DIRECTORY
 function ArchiveDirectory
 {
 	cd $FILELOC
-    echo "Archiving $FILELOC/$FILEDIR ..."
-	run "$(zip -r $BKFILE $FILEDIR 2>>$ERRORFILE)" "$FILELOC/$FILEDIR Archived" "Archiving $FILELOC/$FILEDIR failed" true
-	run "$(mv $BKFILE $CURDIR 2>>$ERRORFILE)" "$FILELOC/$FILEDIR Moved to $CURDIR" "Moving $FILELOC/$FILEDIR failed" true
+	zip -r $BKFILE $FILEDIR 2>>$ERRORFILE
+	clear
+	mv $BKFILE $CURDIR 2>>$ERRORFILE
 	cd $CURDIR
-	processed 
+	showresult "$FILELOC/$FILEDIR Archived"
 }
+# MOVE ARCHIVED FILE TO CURRENT DIRECTORY
 
-function CheckMD5
-{
-    if $(CheckFile $CURDIR/$FINAL.md5 false)
-    then
-        echo "MD5 file found, attempt to check agaist it"
-        if [ $(md5sum -c ${FINAL}.md5) -eq 0 ]
-        then
-            return true
-        else
-            showresult "Backup File corrupted or not the same as encrypted MD5"
-            exit 1
-        fi
-    fi
-}
-
-# MOVE ARCHIVED FILE TO DIRECTORY
 function PrepareEnvironment
 {
-    if $(CheckFile $CURDIR/$FINAL true)
-    then
-        CheckMD5
-        echo "copying $FINAL to $FILELOC"...
-        run "$(cp $FINAL $FILELOC)" "$FINAL Copied to $FILELOC" "Copying $FINAL to $FILELOC failed" true 
-        cd $FILELOC
-        display "Unpacking $FINAL ..."
-        run "$(unzip -o $FINAL 2>> $ERRORFILE)" "Unziped $FINAL Successful" "Unzip $FINAL failed" true
-        cd $CURDIR
-        processed "$FINAL unpacked."
-    fi
+        if [ -e $FINAL ]
+        then
+                display "copying $FINAL to $FILELOC"
+                if [ -e ${FINAL}.md5 ]
+                then
+                    echo "MD5 file found, attempt to check agaist it"
+                    if [ $(md5sum -c ${FINAL}.md5) -ne 0 ]
+                    then
+                        showresult "Backup File corrupted or not the same as encrypted MD5"
+                        exit 1
+                    fi
+                fi
+                cp $FINAL $FILELOC 
+                cd $FILELOC
+                display "Unpacking $FINAL ..."
+                unzip -o $FINAL 2>> $ERRORFILE
+                showresult "$FINAL unpacked."
+        else    
+                showresult "No Backup File '$FINAL' Found"
+        fi
 }
 
 function RemoveExistedDirectory
 {
-    if $(CheckFolder "$FILELOC/$FILEDIR" )
-    then
-        echo "removing existing directory"
-        run "$(rm -r $FILELOC/$FILEDIR)" "$FILELOC/$FILEDIR found and removed" "removing $FILELOC/$FILEDIR failed" true
-    fi
+        if [ -d "$FILELOC/$FILEDIR" ]
+        then
+                display "removing existing directory"
+                rm -r $FILELOC/$FILEDIR
+                showresult "$FILELOC/$FILEDIR found and removed" 
+        fi
 }
 
 function RestoringFileDirectory
 {
-    echo "Recover Directory from Backup"
-    run "$(unzip -o $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE)" "Recovered $BKFILE to $FILELOC/$TEMPDIR"  "Recovered $BKFILE to $FILELOC/$TEMPDIR Failed" true
-    run "$(mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE)" "Placed file to $FILELOC/$FILEDIR" "Can not placed file to $FILELOC/$FILEDIR" true
-    run "$(rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE)" "$FILELOC/$TEMPDIR removed" "Removing $FILELOC/$TEMPDIR failed" false
-    run "$(chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE)" "Setted Permission to $FILEDIR" "Setting Permission to $FILEDIR failed" false
+        display "Recover Directory from Backup"
+        unzip -o $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE
+        showresult "Recovered $BKFILE to $FILELOC/$TEMPDIR" 
+        mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
+        rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
+        chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
+        showresult "Modified folder permissions"
 }
 
 
 function configurewpconfig
 {
+        ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>> $ERRORFILE
+        showresult "Original Database Name '$ORIGINALDB' retrieved"
+        ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
+        showresult "Original Database User '$ORIGINALUSR' retrieved"
+        ORIGINALPASS=$(cat wp-config.php | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE
+        showresult "Original Database Password '$ORIGINALPASS' retrieved"
+        DBFILE=$ORIGINALDB.sql
 
-    run "$(ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>> $ERRORFILE)" "Original Database Name '$ORIGINALDB' retrieved" "Original Database Name retrieving failed" true
-    run "$(ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE)" "Original Database User '$ORIGINALUSR' retrieved" "Retrieving Original Database Username failed" true
-    run "$(ORIGINALPASS=$(cat wp-config.php | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE)" "Retrieved Database Password" "Retrieving Database Password failed" true
-
-    DBFILE=$ORIGINALDB.sql
-    CheckFile $DBFILE true
-    
-    if [ ! "$ORIGINALDB" == "$DBNAME" ]
-    then
-            run "$(sed -i "/DB_NAME/s/'[^']*'/'$DBNAME'/2" $WPCONFIG 2>>$ERRORFILE)" "Edited database name to ($DBNAME) in $WPCONFIG" "Editing Database name failed" true
-    fi
-
-    if [ ! "$ORIGINALUSR" == "$DBUSER" ]
-    then
-            run "$(sed -i "/DB_USER/s/'[^']*'/'$DBUSER'/2" $WPCONFIG 2>>$ERRORFILE)"  "Edited database username to ($DBUSER) in $WPCONFIG" "Editing database username in $WPCONFIG failed" true
-    fi
-    if [ ! "$ORIGINALPASS" == "$DBPASS" ]
-    then
-            run "$(sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG 2>>$ERRORFILE)" "Edited database password to ($DBPASS) in $WPCONFIG" "Editing database password in $WPCONFIG failed" true
-    fi
-
+        if [ ! "$ORIGINALDB" == "$DBNAME" ]
+        then
+                sed -i "/DB_NAME/s/'[^']*'/'$DBNAME'/2" $WPCONFIG 2>>$ERRORFILE
+                showresult "$WPCONFIG edited switch $ORIGINALDB to $DBNAME"
+        fi
+        if [ ! "$ORIGINALUSR" == "$DBUSER" ]
+        then
+                sed -i "/DB_USER/s/'[^']*'/'$DBUSER'/2" $WPCONFIG 2>>$ERRORFILE
+                showresult "$WPCONFIG edited switch $ORIGINALUSR to $DBUSER"
+        fi
+        if [ ! "$ORIGINALPASS" == "$DBPASS" ]
+        then
+                sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG
+                showresult "$WPCONFIG edited switch $ORIGINALPASS to $DBPASS"
+        fi
+        DBFILE=$ORIGINALDB.sql
 }
 
 # EXPORT DATABASE
 function exportDatabase
 {
-	echo "Dumping Database $DBNAME to $DBFILE"
+	display "Dumping Database $DBNAME to $DBFILE"
 	# mysqldump -u $DBUSER --password="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
-	run "$(mysqldump -u root $DBNAME > $DBFILE 2>>$ERRORFILE)" "Database exported to $DBFILE" "Exporting database failed" true
+	mysqldump -u root $DBNAME > $DBFILE 2>>$ERRORFILE
+	showresult "Database exported to $DBFILE"
 }
 
 # ARCHIVE BACKUP FILES
 function ArchiveBackupFiles
 {
-	echo "Archiving files..."
-	run "$(zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE)" "Archived $BKFILE and $DBFILE to $FINAL" "Archiving $BKFILE and $DBFILE to $FINAL failed" true
-    run "$(md5sum $FINAL > $FINAL.md5 2>>$ERRORFILE)" "Created MD5 checksum for $FINAL > $FINAL.md5" "Creating MD5 Checksum for $FINAL failed" false
+	display "Archiving files..."
+	zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE
+    md5sum $FINAL > ${FINAL}.md5
+	showresult "Archived $BKFILE and $DBFILE to $FINAL"
 }
 
 
 function CreateDBUser
 {
         display "Create Database User"
-        run "$(mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE)" "Created Database User $DBUSER" "Creating database user $DBUSER failed" true
+        mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
+        showresult "Created Database User $DBUSER"
 }
 
 function DropDatabase
 {
         display "droping $DBNAME database"
-        run "$(mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE)" "Dropped database $DBNAME" "Droping database $DBNAME failed" true 
+        mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
+        showresult "Droped $DBNAME" 
 }
+
+
 
 function createDatabase
 {
         display "create database $DBNAME"
-        run "$(mysql -u root -e "CREATE DATABASE $DBNAME;" 2>>$ERRORFILE)" "Created database $DBNAME" "Creating database $DBNAME failed" true
-        run "$(mysql -u root -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER;" 2>>$ERRORFILE)" "Granted Privileges to $DBUSER" "Granting privileges to $DBUSER failed" true
+        mysql -u root -e "CREATE DATABASE $DBNAME;" 2>>$ERRORFILE
+        mysql -u root -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER;" 2>>$ERRORFILE
+        showresult "Created Database $DBNAME and gave Privileges to $DBUSER."
 }
 
 function ImportDatabase
 {
         display "importing database from $DBFILE"
-        run "$(mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE)" "Imported $DBFILE to database $DBNAME" "Importing $DBFILE to database $DBNAME failed" true
+        mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE
+        showresult "Imported $DBFILE to database $DBNAME"
 }
 
 function BackupRemoveUnecessaryBackFiles
@@ -418,8 +348,9 @@ function BackupRemoveUnecessaryBackFiles
 		case $YN in [yY]|[yY][eE][sS])
 			#REMOVE ARCHIVED FILES
 			echo "removing unnecessary files..."
-			run "$(rm $DBFILE)" "Removed $DBFILE" "Removing $DBFILE failed" false
-			run "$(rm $BKFILE)" "Removed $BKFILE" "Removing $BKFILE failed" false
+			rm $DBFILE
+			rm $BKFILE
+			showresult "Removed $BKFILE and $DBFILE"
 			break
 			;;
 		[nN]|[nN][oO])
@@ -434,118 +365,124 @@ function BackupRemoveUnecessaryBackFiles
 
 function RestoreRemoveFiles
 {
-    run "$(rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE)" "Removed $BKFILE $DBFLE $FINAL" "Removing $BKFILE $DBFILE $FINAL failed" false 
+        showresult "Moved $FILELOC/$TEMPDIR to $FILELOC/$FILEDIR" 
+        rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
+        showresult "Removed unnessary files $BKFILE $DBFILE $FINAL"
 }
 
 
 function RemoveFiles
 {
-    if $(CheckFile $FILELOC/$FILEDIR )
-    then
-            while true;
-            do
-                    display "Remove File Folder"
-                    echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
-                    read -p " Continue [Y/N]: " YN
-                    case $YN in
-                            [yY]|[yY][eE][sS])
-                                    RemoveExistedDirectory
-                                    break
-                                    ;;
-                            [nN]|[nN][oO])
-                                    echo "skipped removing $FILELOC/$FILEDIR"
-                                    break
-                                    ;;
-                            *)
-                                    echo "Please answer Y/N"
-                                    ;;
-                    esac
-            done
-
-    fi
+        if [ -d "$FILELOC/$FILEDIR" ]
+        then
+                while true;
+                do
+                        display "Remove File Folder"
+                        echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
+                        read -p " Continue [Y/N]: " YN
+                        case $YN in
+                                [yY]|[yY][eE][sS])
+                                        rm -r $FILELOC/$FILEDIR 2>> $ERRORFILE
+                                        showresult "$FILELOC/$FILEDIR removed."
+                                        break
+                                        ;;
+                                [nN]|[nN][oO])
+                                        showresult "skipped removing $FILELOC/$FILEDIR"
+                                        break
+                                        ;;
+                                *)
+                                        echo "Please answer Y/N"
+                                        ;;
+                        esac
+                done
+        else
+                showresult "DIrectory $FILELOC/$FILEDIR not found."
+                exit 1
+        fi
 }
 
 function RemoveDatabase
 {
-    while true;
-    do
-            display "Remove Database"
-            read -p "This will remove database $DBNAME permanently [Y/N]: " YN
-            case $YN in
-                    [yY]|[yY][eE][sS])
-                            run "$(mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE)" "Removed $DBNAME" "Removing $DBNAME failed" true
-                            break
-                            ;;
-                    [nN]|[nN][oO])
-                            showresult "skipp removing database $DBNAME"
-                            break
-                            ;;
-                    *)
-                            echo "Please answer Y/N"
-                            ;;
-            esac
-    done
+        while true;
+        do
+                display "Remove Database"
+                read -p "This will remove database $DBNAME permanently [Y/N]: " YN
+                case $YN in
+                        [yY]|[yY][eE][sS])
+                                mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
+                                showresult "$DBNAME removed"
+                                break
+                                ;;
+                        [nN]|[nN][oO])
+                                showresult "skipping remove database $DBNAME"
+                                break
+                                ;;
+                        *)
+                                echo "Please answer Y/N"
+                                ;;
+                esac
+        done
 }
 
 function RemoveDatabaseUser
 {
-    while true;
-    do
-            display "Remove Database User"
-            echo "Your Database User might be used with other database.  "
-            read -p "Do you want to remove database user $DBUSER [Y/N]: " YN
-            case $YN in
-                    [yY]|[yY][eE][sS])
-                            run "$(mysql -u root -e "DROP USER $DBUSER;" 2>> $ERRORFILE)" "Removed Database User $DBUSER" "Removing database user $DBUSER failed" true
-                            break
-                            ;;
-                    [nN]|[nN][oO])
-                            echo "skipping remove database user $DBUSER"
-                            break
-                            ;;
-                    *)
-                            echo "Please answer Y/N"
-                            ;;
-            esac
-    done
-}
-
-function showURL
-{
-    display "homeurl and siteurl in table ${TABLEPREF}options is shown below"
-    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
-    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
+        while true;
+        do
+                display "Remove Database User"
+                echo "Your Database User might be used with other database.  "
+                read -p "Do you want to remove database user $DBUSER [Y/N]: " YN
+                case $YN in
+                        [yY]|[yY][eE][sS])
+                                mysql -u root -e "DROP USER $DBUSER;" 2>> $ERRORFILE
+                                showresult "Database User $DBUSER removed"
+                                break
+                                ;;
+                        [nN]|[nN][oO])
+                                showresult "skipping remove database user $DBUSER"
+                                break
+                                ;;
+                        *)
+                                echo "Please answer Y/N"
+                                ;;
+                esac
+        done
 }
 
 function UpdateURL
 {
-    display "Modifying HomeURL and SiteURL"
-    run "$(TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE)" "Retrieved Table prefix '$TABLEPREF'" "Retrieving Table Prefix failed" true
-    DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
-    SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
-    run "$(mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE)" "Updated homeurl/siteURL to $URL" "Updating homeurl/siteURL failed" true
-    showURL
+        display "Modifying HomeURL and SiteURL"
+        TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
+        showresult "Table prefix '$TABLEPREF' retrieved"
+        DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
+        SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
+        mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE
+        showresult "Updated homeurl/siteURL to $URL."
+        echo "homeurl and siteurl in table ${TABLEPREF}options is shown below"
+        mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
+        mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
 }
 
 function discourageSearchEnging
 {
-    run "$(wp option set blog_public 0 --allow-root 2>> $ERRORFILE)" "Discouraged search engines from indexing the site" "Discoruaging search engines failed" false
+    wp option set blog_public 0 --allow-root 2>> $ERRORFILE
+    showresult "Discouraged search engines from indexing the site"
 }
 
 function disablePlugins
 {
+    
     while true;
     do
         echo
         echo " List Plugins and status "
-        wp plugin list --allow-root
+        sudo wp plugin list --allow-root
         echo
         read -p "(Type 'DONE' to exit) Type plugin name to disable: " PLUGIN
         if [ "$PLUGIN" == "DONE" ]
         then
-            break
+                break
         else
-            run "$(wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE)" "Disabled plugin $PLUGIN" "Disabling plugin $Plugin failed" false
+                wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE
         fi
     done
 }
@@ -561,12 +498,12 @@ function updatePlugins
         read -p "Type 'DONE' to exit, Type 'ALL' update all plugins, or type plugin name to Update: " PLUGIN
         if [ "$PLUGIN" == "DONE" ]
         then
-            break
+                break
         elif  [ "$PLUGIN" == "ALL" ]
         then
-            run "$(wp plugin update --all --allow-root 2>> $ERRORFILE)" "Updated all plugins" "Updating all plugins failed" false
+                wp plugin update --all --allow-root 2>> $ERRORFILE
         else
-            run "$(wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE)" "Updated plugin $PLUGIN" "Updating plugin $PLUGIN failed" false 
+                wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE
         fi
     done
 
@@ -574,70 +511,71 @@ function updatePlugins
 
 function ConfigureTestSite
 {
-    while true;
-    do
-        read -p "Is this a test site? [Y/N]: " YN
-        case $YN in
-            [yY]|[yY][eE][sS])
-                cd $FILELOC/$FILEDIR
-                discourageSearchEnging
-                disablePlugins
-                updatePlugins
-                wp plugin status --allow-root
-                break
-                ;;
-            [nN]|[nN][oO])
-                break
-                ;;
-            *)
-                echo "Please answer yes or no"
-                ;;
-        esac
-    done
+        while true;
+        do
+                read -p "Is this a test site? [Y/N]: " YN
+                case $YN in
+                        [yY]|[yY][eE][sS])
+                                cd $FILELOC/$FILEDIR
+                                discourageSearchEnging
+                                disablePlugins
+                                updatePlugins
+                                wp plugin status --allow-root
+                                break
+                                ;;
+                        [nN]|[nN][oO])
+                                break
+                                ;;
+                        *)
+                                echo "Please answer yes or no"
+                                ;;
+                esac
+        done
 
 }
 
 function completeURLChanged
 {
-    if [ ! "$FILEDIR" == "$ORIGINALDIR" ] || [ ! "$ORIGINALDB" == "$DBNAME" ]
-    then
-        echo "Moving Site or Relocate Site detected"
-        while true;
-        do
-            read -p "Do you want to update the site URL? [Y/N]: " YN
-            case $YN in
-                [yY]|[yY][eE][sS])
-                    cd $FILELOC/$FILEDIR
-                    echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
-                    echo "*** Please check and recheck before press ENTER" 
-                    read -p "Please input your original website url with http/https: " ORIGINALURL
-                    echo "working .."
-                    wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
-                    showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
-                    pauseandclear
-                    ConfigureTestSite
-                    break
-                    ;;
-                [nN]|[nN][oO])
-                    break
-                    ;;
-                *)
-                    echo "please answer yes or no"
-                    ;;
-            esac
-        done
-    fi
+        if [ ! "$FILEDIR" == "$ORIGINALDIR" ] || [ ! "$ORIGINALDB" == "$DBNAME" ]
+        then
+                echo "Moving Site or Relocate Site detected"
+                while true;
+                do
+                        read -p "Do you want to update the site URL? [Y/N]: " YN
+                        case $YN in
+                                [yY]|[yY][eE][sS])
+                                        cd $FILELOC/$FILEDIR
+                                        echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
+                                        echo "*** Please check and recheck before press ENTER" 
+                                        read -p "Please input your original website url with http/https: " ORIGINALURL
+                                        echo "working .."
+                                        sudo -u root wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
+                                        showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
+                                        pauseandclear
+                                        ConfigureTestSite
+                                        
+                                        break
+                                        ;;
+                                [nN]|[nN][oO])
+                                        break
+                                        ;;
+                                *)
+                                        echo "please answer yes or no"
+                                        ;;
+                        esac
+                done
+        fi
 }
 
 function CustomMOTD
 {
-    run "$(apt update -y 2>>$ERRORFILE)" "Updated Server" "Update server failed" false
-    run "$(apt install screenfetch -y 2>> $ERRORFILE)" "Installed screenfetch" "Install screenfetch failed" false
+    apt update -y 2>>$ERRORFILE
+    apt install screenfetch -y 2>> $ERRORFILE
     echo "#! $(which bash)" > /etc/update-motd.d/motd
     echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
     echo "$(which screenfetch)" >> /etc/update-motd.d/motd
-    run "$(chmod -x /etc/update-motd.d/*)" "Changed Permission to files" "Change permission to files failed" false
-    run "$(chmod +x /etc/update-motd.d/motd)" "Added execute permission to motd" "Add execute permission to motd failed" false
+    chmod -x /etc/update-motd.d/*
+    chmod +x /etc/update-motd.d/motd
     showresult "Created New Message of the day (MOTD)"
 }
 
@@ -661,14 +599,15 @@ function installswap
                     read -p "Install Swap Size in GB: " SWAPSIZE
                     case $SWAPSIZE in [1]|[2]|[3]|[4]|[5]|[6]|[7]|[8]|[9])
                             echo "Configuring Swap ..."
-                            run "$(fallocate -l ${SWAPSIZE}G /swapfile 2>>$ERRORFILE)" "Fallocated" "Fallocated failed" true
-                            run "$(dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE)) 2>>$ERRORFILE)" "dd for swapfile" "dd failed" true
-                            run "$(chmod 600 /swapfile 2>>$ERRORFILE)" "Locked swap location" "Locking swap location failed" true
-                            run "$(mkswap /swapfile 2>>$ERRORFILE)" "Created swap" "Create swap failed" true
-                            run "$(swapon /swapfile 2>>$ERRORFILE)" "Enabled swap" "Enable swap failed" true
-                            run "$(echo "/swapfile swap swap defaults 0 0" >> /etc/fstab)" "Added swap at system start" "Add swap to system start failed" false
-                            run "$(mount -a 2>>$ERRORFILE)" "Mounted swap" "Mount swap failed" false
+                            fallocate -l ${SWAPSIZE}G /swapfile 2>>$ERRORFILE
+                            dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE)) 2>>$ERRORFILE
+                            chmod 600 /swapfile 2>>$ERRORFILE
+                            mkswap /swapfile 2>>$ERRORFILE
+                            swapon /swapfile 2>>$ERRORFILE
+                            echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
+                            mount -a 2>>$ERRORFILE
                             showresult "Swap is setted to $SWAPSIZE GB" 
+                            pauseandclear
                             break
                             ;;
                         [0])
@@ -701,10 +640,8 @@ function UpdateUpgrade
         read -p "Unpdate and Upgrade Server Now? [Y/N]: " UP
         case $UP in 
             [yY]|[yY][eE][sS])
-                echo "Updating server ..."
-                run "$(apt update -y 2>>$ERRORFILE)" "Updated Server" "Update Server failed" true
-                echo "Upgrading server, this will take minutes or hours ..."
-                run "$(apt upgrade -y 2>>$ERRORFILE)" "Upgraded server" "Upgrade Server Failed" true
+                apt update 2>>$ERRORFILE
+                apt upgrade -y 2>>$ERRORFILE
                 showresult "Update, Upgrade Done" 
                 pauseandclear
                 break
@@ -732,7 +669,8 @@ function ConfigHostName
                 then 
                     HOSTNAME=HostName 
                 fi
-                run "$(hostnamectl set-hostname $HOSTNAME 2>>$ERRORFILE)" "Setted hostname to $HOSTNAME" "Set hostname failed" false
+                hostnamectl set-hostname $HOSTNAME 2>>$ERRORFILE
+                showresult "Host Name Setted to $HOSTNAME"
                 pauseandclear
                 break
                 ;;
@@ -759,7 +697,8 @@ function ConfigTimeZone
                 then 
                     TIMEZONE=Asia/Bangkok 
                 fi
-                run "$(timedatectl set-timezone $TIMEZONE 2>>$ERRORFILE)" "Setted timezone to $TIMEZONE" "Set timezone failed" false
+                timedatectl set-timezone $TIMEZONE 2>>$ERRORFILE
+                showresult "Timezone Setted to $TIMEZONE"
                 pauseandclear
                 break
                 ;;
@@ -781,7 +720,8 @@ function InstallZipUnzip
         read -p "Install Zip and Unzip Now? [Y/N]: " ZIP
         case $ZIP in 
             [yY]|[yY][eE][sS])
-                run "$(apt install -y zip unzip 2>>$ERRORFILE)" "Installed zip/unzip" "Install zip/unzip failed" true
+                apt install -y zip unzip 2>>$ERRORFILE
+                showresult "Zip/Unzip Installed"
                 pauseandclear
                 break
                 ;;
@@ -807,7 +747,7 @@ function InstallFirewall
                 then
                     showresult "UFW firewall already installed"
                 else
-                    run "$(apt install -y ufw)" "Installed UFW Firewall" "Install UFW failed" true
+                    apt install ufw
                 fi
                 while true;
                 do
@@ -898,12 +838,13 @@ function InstallWebmin
         read -p "Install Webmin Now? [Y/N]: " WEBMIN
         case $WEBMIN in 
             [yY]|[yY][eE][sS])
-                run "$(echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list)" "Added webmin repository" "Add webmin repository failed" true
-                run "$(wget https://download.webmin.com/jcameron-key.asc 2>>$ERRORFILE)" "Downloaded jcameron-key" "Download jcameron-key failed" true
-                run "$(apt-key add jcameron-key.asc 2>> $ERRORFILE)" "Added jcameron-key to system" "Add jcameron-key failed" true
-                run "$(apt-get install apt-transport-https 2>>$ERRORFILE)" "Installed apt-transport-https" "Install apt-transport-htps failed" true 
-                run "$(apt-get -y update  2>> $ERRORFILE)" "Updated server" "Update server failed" true
-                run "$(apt-get install webmin 2>>$ERRORFILE)" "Installed webmin" "Install webmin failed" true
+                echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list
+                cd
+                wget https://download.webmin.com/jcameron-key.asc 2>>$ERRORFILE
+                apt-key add jcameron-key.asc 2>> $ERRORFILE
+                apt-get install apt-transport-https 2>>$ERRORFILE
+                apt-get update  2>> $ERRORFILE
+                apt-get install webmin 2>>$ERRORFILE
                 showresult "Webmin Installed"
                 pauseandclear
                 break
@@ -926,7 +867,7 @@ function InstallNetDATA
         read -p "Install NetData Now? [Y/N]: " NETDATA
         case $NETDATA in 
             [yY]|[yY][eE][sS])
-                run "$(bash <(curl -Ss https://my-netdata.io/kickstart.sh))" "Installed NetData" "Install Netdata failed" true
+                bash <(curl -Ss https://my-netdata.io/kickstart.sh)
                 showresult "NetDATA Installed"
                 pauseandclear
                 break
@@ -964,7 +905,7 @@ function InstallMariadb
         read -p "Install Mariadb Server Now? [Y/N]: " MDB
         case $MDB in 
             [yY]|[yY][eE][sS])
-                run "$(apt install -y mariadb-server  2>>$ERRORFILE)" "Installed Mariadb-server" "Install Mariadb failed" true
+                apt install -y mariadb-server  2>>$ERRORFILE
                 showresult "MariaDB installed"
                 securemysql
                 pauseandclear
@@ -985,9 +926,9 @@ function InstallMariadb
 function InstallApacheWPCLI
 {
     display "Installing Wordpress Console Line Interfacie (WP-CLI)"
-    run "$(curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE)" "Downloaded wpcli" "Download wpcli failed" true
-    run "$(chmod +x wp-cli.phar 2>>$ERRORFILE)" "Added execute permission to wpcli" "Add execute permission to wpcli failed" true
-    run "$(mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE)" "Moved file for all users" "Move file to all users failed" true
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
+    chmod +x wp-cli.phar 2>>$ERRORFILE
+    mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
     showresult "WP-CLI for Apache Installed"
 }
 
@@ -1002,10 +943,10 @@ function InstallWordpressApache
                 SITELOC=/var/www/html
                 mkdir $SITELOC 2>>$ERRORFILE
                 cd $SITELOC 2>>$ERRORFILE
-                run "$(wget https://wordpress.org/latest.zip 2>>$ERRORFILE)" "Downloaded wordpress" "Download wordpress failed" true
-                run "$(unzip latest.zip 2>>$ERRORFILE)" "Extracted wordpress" "Extract wordpress failed" true
-                run "$(chown -R www-data:www-data wordpress 2>>$ERRORFILE)" "Changed wordpress folder owner" "Change wordpress folder owner failed" true
-                run "$(rm latest.zip 2>>$ERRORFILE)" "Removed archive file" "Remove archive file failed" true
+                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
+                unzip latest.zip 2>>$ERRORFILE
+                chown -R www-data:www-data wordpress 2>>$ERRORFILE
+                rm latest.zip 2>>$ERRORFILE
                 showresult "Wordpress Installed at $SITELOC"
                 InstallApacheWPCLI
                 pauseandclear
@@ -1029,8 +970,8 @@ function InstallApache
         read -p "Install Apache Web Server Now? [Y/N]: " APCHE
         case $APCHE in 
             [yY]|[yY][eE][sS])
-                InstallMariadb 
-                run "$(apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE)" "Installed Apache2" "Install Apache2 failed" true
+                InstallMariadb 2>>$ERRORFILE
+                apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE
                 showresult "Apache installed"
                 pauseandclear
                 InstallWordpressApache
@@ -1049,11 +990,11 @@ function InstallApache
 function InstallOLSWPCLI
 {
     display "Installing Wordpress Console Line Interfacie (WP-CLI)"
-    run "$(curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE)" "Downloaded wpcli" "Download wpcli failed" true
-    run "$(chmod +x wp-cli.phar 2>>$ERRORFILE)" "Added execute permission to wpcli" "Add execute permission to wpcli failed" true
-    run "$(mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE)" "Moved file for all users" "Move file to all users failed" true
-    run "$(cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE)" "Copied php" "Copy php failed" true
-    showresult "WP-CLI for Apache Installed"
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
+    chmod +x wp-cli.phar 2>>$ERRORFILE
+    mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+    cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
+    showresult "WP CLI for OpenLiteSpeed installed"
 }
 
 function InstallWordpressOLS
@@ -1067,10 +1008,10 @@ function InstallWordpressOLS
                 SITELOC=/usr/local/lsws/sites
                 mkdir $SITELOC 2>>$ERRORFILE
                 cd $SITELOC 2>>$ERRORFILE
-                run "$(wget https://wordpress.org/latest.zip 2>>$ERRORFILE)" "Downloaded wordpress" "Download wordpress failed" true
-                run "$(unzip latest.zip 2>>$ERRORFILE)" "Extracted wordpress" "Extract wordpress failed" true
-                run "$(chown -R nobody:nogroup wordpress 2>>$ERRORFILE)" "Changed wordpress folder owner" "Change wordpress folder owner failed" true
-                run "$(rm latest.zip 2>>$ERRORFILE)" "Removed archive file" "Remove archive file failed" true
+                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
+                unzip latest.zip 2>>$ERRORFILE
+                chown -R nobody:nogroup wordpress 2>>$ERRORFILE
+                rm latest.zip 2>>$ERRORFILE
                 showresult "Wordpress Installed at $SITELOC"
                 InstallOLSWPCLI
                 pauseandclear
@@ -1097,9 +1038,9 @@ function InstallOpenLiteSpeed
         case $OLS in 
             [yY]|[yY][eE][sS])
                 InstallMariadb
-                run "$(wget --no-check-certificate https://raw.githubusercontent.com/litespeedtech/ols1clk/master/ols1clk.sh && bash ols1clk.sh 2>>$ERRORFILE)" "Downloaded and installed Openlitespeed" "Download and install Openlitespeed failed" true
-                run "$(apt-get install -y lsphp73 lsphp73-curl lsphp73-imap lsphp73-mysql lsphp73-intl lsphp73-pgsql lsphp73-sqlite3 lsphp73-tidy lsphp73-snmp lsphp73-json lsphp73-common lsphp73-ioncube 2>>$ERRORFILE)" "Installed PHP73" "Install PHP73 failed" true
-                run "$(rm ols1clk.sh 2>>$ERRORFILE)" "Removed Openlitespeed installation script" "Remove Openlitespeed installation script failed" true
+                wget --no-check-certificate https://raw.githubusercontent.com/litespeedtech/ols1clk/master/ols1clk.sh && bash ols1clk.sh 2>>$ERRORFILE
+                apt-get install -y lsphp73 lsphp73-curl lsphp73-imap lsphp73-mysql lsphp73-intl lsphp73-pgsql lsphp73-sqlite3 lsphp73-tidy lsphp73-snmp lsphp73-json lsphp73-common lsphp73-ioncube 2>>$ERRORFILE
+                rm ols1clk.sh 2>>$ERRORFILE
                 showresult "OpenLiteSpeed installed"
                 cat /usr/local/lsws/password >> $RESULTFILE
                 pauseandclear
@@ -1124,16 +1065,12 @@ function InstallCron
         read -p "Install reset cron schedule Now? [Y/N]: " CRON
         case $CRON in 
             [yY]|[yY][eE][sS])
-                if [ $(crontab -l) -eq 0 ]
-                then
-                    crontab -l > mycron 2>>$ERRORFILE
-                fi
-                
+                crontab -l > mycron 2>>$ERRORFILE
                 #echo new cron into cron file
-                run "$(echo "30 3 * * * shutdown -r now" >> mycron)" "Added new cron file" "Add new cron file failed" true
+                echo "30 3 * * * shutdown -r now" >> mycron
                 #install new cron file
-                run "$(crontab mycron 2>>$ERRORFILE)" "Applied cron file to cron" "Apply cron file to cron failed" true
-                run "$(rm mycron 2>>$ERRORFILE)" "Remove cron file" "Remove cron file failed" true
+                crontab mycron 2>>$ERRORFILE
+                rm mycron 2>>$ERRORFILE
                 showresult "Cron Installed"
                 break
                 ;;
@@ -1259,6 +1196,7 @@ function Remove
 {
     clear
     getRemoveInformation
+    checkRemoveVariables
     RemoveFiles
     pauseandclear
     RemoveDatabase
@@ -1324,8 +1262,6 @@ function InstallWPCLI
 
 function main
 {
-    initialize
-    pauseandclear
     while true;
     do
         echo
@@ -1346,7 +1282,7 @@ function main
         echo "   WPCLI)     Install WPCLI"
         echo "   UFW)       Install UFW firewall"
         echo "   Test)      TEST Environment Configuration"
-        echo "   X)         EXIT Script"
+        echo "   X)         EXIT Program"
         echo "=================================================="
         echo
         read -p "What is your action?: " ANS

@@ -33,19 +33,21 @@ RGXNUMERIC='^[0-9]+$'
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
+clear
+echo
+echo "Make sure you run program in user home directory"
+echo "Current Directory=$PWD"
+read -p "Do you want to continue? [y/n]: " CONTINUE
+if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
+then
+    exit 
+fi
+
+echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
+
 function initialize
 {
-    clear
-    echo
-    echo "Make sure you run program in user home directory"
-    echo "Current Directory=$PWD"
-    read -p "Do you want to continue? [y/n]: " CONTINUE
-    if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
-    then
-        exit 
-    fi
 
-    echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 
     if [ -d /usr/local/lsws ]
     then
@@ -605,7 +607,7 @@ function completeURLChanged
         read -p "Do you want to update the site URL? [Y/N]: " YN
         case $YN in
             [yY]|[yY][eE][sS])
-                cd $FILELOC/$FILEDIR
+                
                 echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
                 echo "*** Please check and recheck before press ENTER" 
                 read -p "Please input your original website url with http/https: " ORIGINALURL
@@ -613,6 +615,11 @@ function completeURLChanged
                 then
                     read -p "Please input your new website url with http/https: " URL
                 fi
+                if [ -z $FILEDIR ]
+                then
+                    read -p "Please input working wordpress directory: " FILEDIR
+                fi
+                cd $FILELOC/$FILEDIR
                 echo "working .."
                 wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
                 showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
@@ -1399,6 +1406,7 @@ function main
                 pauseandclear
                 ;;
             [tT][eE][sS][tT])
+                initialize
                 ConfigureTestSite
                 cat $RESULTFILE
                 wp --info

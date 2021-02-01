@@ -567,7 +567,7 @@ function updatePlugins
             break
         elif  [ "$PLUGIN" == "ALL" ]
         then
-            run "$(wp plugin update --all --allow-root 2>> $ERRORFILE)" "Updated all plugins" "Updating all plugins failed" false
+            run "$(wp plugin update --all --allow-root 2>> $ERRORFILE)" $("Updated all plugins") "Updating all plugins failed" false
         else
             run "$(wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE)" "Updated plugin $PLUGIN" "Updating plugin $PLUGIN failed" false 
         fi

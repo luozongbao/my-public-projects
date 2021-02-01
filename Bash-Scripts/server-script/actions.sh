@@ -267,13 +267,13 @@ function checkRestorevariables
 function backupbackup
 {
 	# BACKUP FINAL FILE
-    if $(CheckFile $FINAL "optional" )
+    if [ $(CheckFile $FINAL "optional") -eq 0 ]
     then
 		display "Found Previous Backup File '$FINAL'"
 		run "$(mv $FINAL $BKFINAL)" "Backed up previous backup file $FINAL to $BKFINAL" "Backup Prevouse Backup $FINAL to $BKFINAL Failed" true
 	fi
 	# BACKUP FINAL FILE
-    if $(CheckFile $FINAL.md5 "optional")
+    if [ $(CheckFile $FINAL.md5 "optional") -eq 0]
 	then
 		display "Found Previous Backup Hash File '$FINAL.md5'"
 		run "$(mv $FINAL.md5 $BKFINAL.md5)" "Backed up previous backup file $FINAL.md5 to $BKFINAL.md5" "Backup Prevouse Backup $FINAL.md5 to $BKFINAL.md5 Failed" true

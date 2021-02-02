@@ -269,7 +269,7 @@ function checkRestorevariables
 function backupbackup
 {
 	# BACKUP FINAL FILE
-    if ( $(CheckFile $FINAL "optional") ) 
+    if ( $(CheckFile $FINAL "optional" ) ) 
     then
 		display "Found Previous Backup File '$FINAL'"
 		run "$(mv $FINAL $BKFINAL)" "Backed up previous backup file $FINAL to $BKFINAL" "Backup Prevouse Backup $FINAL to $BKFINAL Failed" true
@@ -641,12 +641,16 @@ function completeURLChanged
 
 function CustomMOTD
 {
-    run "$(apt update -y 2>>$ERRORFILE)" "Updated Server" "Update server failed" false
+    echo "Updating Server"
+    run "$(apt update -y 2>>$ERRORFILE)" $("Updated Server") $("Update server failed") false
+    echo "Installing ScreenFetch"
     run "$(apt install screenfetch -y 2>> $ERRORFILE)" "Installed screenfetch" "Install screenfetch failed" false
     echo "#! $(which bash)" > /etc/update-motd.d/motd
     echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
     echo "$(which screenfetch)" >> /etc/update-motd.d/motd
+    echo "Disabling Old Message of the Day"
     run "$(chmod -x /etc/update-motd.d/*)" "Changed Permission to files" "Change permission to files failed" false
+    echo "Enable New Message of the Day (MOTD)"
     run "$(chmod +x /etc/update-motd.d/motd)" "Added execute permission to motd" "Add execute permission to motd failed" false
     showresult "Created New Message of the day (MOTD)"
 }

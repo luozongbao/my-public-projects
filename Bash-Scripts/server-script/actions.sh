@@ -354,7 +354,7 @@ function ArchiveDirectory
 
 function CheckMD5
 {
-    if ( $(CheckFile $CURDIR/$FINAL.md5 "Optional" ))
+    if ( $(CheckFileOptional $CURDIR/$FINAL.md5  ))
     then
         echo "MD5 file found, attempt to check agaist it"
         if [ $(md5sum -c ${FINAL}.md5) -eq 0 ]

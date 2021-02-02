@@ -37,22 +37,13 @@ RGXNUMERIC='^[0-9]+$'
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
-clear
-echo
-echo "Make sure you run program in user home directory"
-echo "Current Directory=$PWD"
-read -p "Do you want to continue? [y/n]: " CONTINUE
-if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
-then
-    exit 
-fi
 
-echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
+
+
+
 
 function initialize
 {
-
-
     if [ -d /usr/local/lsws ]
     then
         FILELOC=/usr/local/lsws/sites
@@ -63,6 +54,18 @@ function initialize
         FILELOC=/var/www
         wEBSERVER="Apache"
     fi
+
+    clear
+    echo
+    echo "Make sure you run program in user home directory"
+    echo "Current Directory=$PWD"
+    echo "Virtual Web Hosting Server= $WEBSERVER"
+    read -p "Do you want to continue? [y/n]: " CONTINUE
+    if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
+    then
+        exit 
+    fi
+    echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 }
 
 
@@ -82,10 +85,6 @@ function display
     echo
 }
 
-function processed
-{
-    echo $1
-}
 
 function showresult
 {
@@ -236,7 +235,7 @@ function checkBackupVariables
 {
     if ($(CheckFolder $FILELOC "critical"))
     then
-		processed "Directory $FILELOC CHECKED"
+		echo "Directory $FILELOC CHECKED"
     fi
 
 	if [ -z "$FILEDIR" ];
@@ -246,11 +245,11 @@ function checkBackupVariables
 	else
         if ($(CheckFolder $FILELOC/$FILEDIR "critical"))
 		then
-			processed "$FILELOC/$FILEDIR CHECKED"
+			echo "$FILELOC/$FILEDIR CHECKED"
 		fi
 	fi
 
-	processed "Input Information CHECKED.  Start Backing up $FILELOC/$FILEDIR Files"
+	showresult "Input Information CHECKED.  Start Backing up $FILELOC/$FILEDIR Files"
 }
 
 function checkRestorevariables
@@ -268,7 +267,7 @@ function checkRestorevariables
     if [ -z $FILEDIR ]
     then
             FILEDIR=$ORIGINALDIR
-            processed "Recover to the same directory '$ORIGINALDIR'"
+            echo "Recover to the same directory '$ORIGINALDIR'"
     fi
 
     WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
@@ -276,20 +275,21 @@ function checkRestorevariables
 
     if [ -z $URL ]
     then
-            processed "URL input error: $URL"
+            showresult "URL input error: $URL"
             exit 1
     fi
 
     if ( $(CheckFile $CURDIR/$FINAL "critical"))
     then
-            processed "Original Backup $CURDIR/$FINAL Found"
+            echo "Original Backup $CURDIR/$FINAL Found"
     fi
 
     if ( $(CheckFolder $FILELOC "critical"))
     then
-            processed "$FILELOC Found"
+            echo "$FILELOC Found"
     fi
-    processed "Variables Checked"
+
+    showresult "Variables Checked"
 }
 
 
@@ -301,7 +301,7 @@ function backupbackup
 		echo "Found Previous Backup File '$FINAL'"
         SUCCESS="Backed up previous backup file $FINAL to $BKFINAL"
         FAILED="Backup Prevouse Backup $FINAL to $BKFINAL Failed"
-		mv $FINAL $BKFINAL)
+		mv $FINAL $BKFINAL
         checkCritical
 
 	fi
@@ -311,7 +311,7 @@ function backupbackup
 		echo "Found Previous Backup Hash File '$FINAL.md5'"
         SUCCESS="Backed up previous backup file $FINAL.md5 to $BKFINAL.md5"
         FAILED="Backup Prevouse Backup $FINAL.md5 to $BKFINAL.md5 Failed"
-		mv $FINAL.md5 $BKFINAL.md5)
+		mv $FINAL.md5 $BKFINAL.md5
         checkCritical
 	fi
 
@@ -334,7 +334,7 @@ function ArchiveDirectory
     checkCritical
 
 	cd $CURDIR
-	processed 
+
 }
 
 function CheckMD5

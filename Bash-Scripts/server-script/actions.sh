@@ -30,7 +30,6 @@ WPCONFIG=""
 SUCCESS=""
 FAILED=""
 CRITICAL=""
-PROCESSD=""
 
 RGXNUMERIC='^[0-9]+$'
 
@@ -105,7 +104,8 @@ function pauseandclear
 
 function check
 {
-    if [ $PROCESSD -eq 0 ]
+    PROCESSED=$?
+    if [ $PROCESSED == 0 ]
     then
         # Successfully Executed
         showresult $SUCCESS
@@ -120,7 +120,8 @@ function check
 
 function checkCritical
 {
-    if [ $PROCESSD -eq 0 ]
+    PROCESSED=$?
+    if [ $PROCESSED == 0 ]
     then
         # Successfully Executed
         showresult $SUCCESS
@@ -142,7 +143,7 @@ function RetrieveDatabaseName
     echo "Retrieving Database Name from $WPCONFIG"
     SUCCESS="Retrieved Database Name from $WPCONFIG"
     FAILED="Could not Retrieve Database Name from $WPCONFIG"
-    PROCESSD=$(DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE)
+    DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
 }
 
@@ -151,7 +152,7 @@ function RetrieveDatabaseUser
     echo "Retrieving Database Username from $WPCONFIG"
     SUCCESS="Retrieved Database User from $WPCONFIG"
     FAILED="Could not retrieve Database User from $WPCONFIG"
-    PROCESSD=$(DBUSER=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE)
+    DBUSER=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
 }
 
@@ -293,7 +294,7 @@ function backupbackup
 		display "Found Previous Backup File '$FINAL'"
         SUCCESS="Backed up previous backup file $FINAL to $BKFINAL"
         FAILED="Backup Prevouse Backup $FINAL to $BKFINAL Failed"
-		PROCESSD=$(mv $FINAL $BKFINAL)
+		mv $FINAL $BKFINAL)
         checkCritical
 
 	fi
@@ -303,7 +304,7 @@ function backupbackup
 		display "Found Previous Backup Hash File '$FINAL.md5'"
         SUCCESS="Backed up previous backup file $FINAL.md5 to $BKFINAL.md5"
         FAILED="Backup Prevouse Backup $FINAL.md5 to $BKFINAL.md5 Failed"
-		PROCESSD=$(mv $FINAL.md5 $BKFINAL.md5)
+		mv $FINAL.md5 $BKFINAL.md5)
         checkCritical
 	fi
 
@@ -316,11 +317,11 @@ function ArchiveDirectory
     echo "Archiving $FILELOC/$FILEDIR ..."
     SUCCESS="$FILELOC/$FILEDIR Archived"
     FAILED="Archiving $FILELOC/$FILEDIR failed"
-	PROCESSD=$(zip -r $BKFILE $FILEDIR 2>>$ERRORFILE)
+	zip -r $BKFILE $FILEDIR 2>>$ERRORFILE
     checkCritical
     SUCCESS="$FILELOC/$FILEDIR Moved to $CURDIR"
     FAILED="Moving $FILELOC/$FILEDIR failed"
-	PROCESSD=$(mv $BKFILE $CURDIR 2>>$ERRORFILE)
+	mv $BKFILE $CURDIR 2>>$ERRORFILE
     checkCritical
 	cd $CURDIR
 	processed 
@@ -350,13 +351,13 @@ function PrepareEnvironment
         echo "copying $FINAL to $FILELOC"...
         SUCCESS="$FINAL Copied to $FILELOC"
         FAILED="Copying $FINAL to $FILELOC failed"
-        PROCESSD=$(cp $FINAL $FILELOC)
+        cp $FINAL $FILELOC)
         checkCritical
         cd $FILELOC
         display "Unpacking $FINAL ..."
         SUCCESS="Unziped $FINAL Successful"
         FAILED="Unzip $FINAL failed"
-        PROCESSD=$(unzip -o $FINAL 2>> $ERRORFILE)
+        unzip -o $FINAL 2>> $ERRORFILE
         checkCritical
         cd $CURDIR
         processed "$FINAL unpacked."
@@ -370,7 +371,7 @@ function RemoveExistedDirectory
         echo "removing existing directory"
         SUCCESS="$FILELOC/$FILEDIR found and removed"
         FAILED="removing $FILELOC/$FILEDIR failed"
-        PROCESSD=$(rm -r $FILELOC/$FILEDIR)
+        rm -r $FILELOC/$FILEDIR)
         checkCritical
     fi
 }
@@ -380,19 +381,19 @@ function RestoringFileDirectory
     echo "Recover Directory from Backup"
     SUCCESS="Recovered $BKFILE to $FILELOC/$TEMPDIR"
     FAILED="Recovered $BKFILE to $FILELOC/$TEMPDIR Failed" 
-    PROCESSD=$(unzip -o $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE)
+    unzip -o $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE
     checkCritical
     SUCCESS="Placed file to $FILELOC/$FILEDIR"
     FAILED="Can not placed file to $FILELOC/$FILEDIR"
-    PROCESSD=$(mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE)
+    mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
     checkCritical
     SUCCESS="$FILELOC/$TEMPDIR removed"
     FAILED="Removing $FILELOC/$TEMPDIR failed"
-    PROCESSD=$(rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE)
+    rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
     check
     SUCCESS="Setted Permission to $FILEDIR"
     FAILED="Setting Permission to $FILEDIR failed"
-    PROCESSD=$(chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE)
+    chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
     checkCritical
 }
 
@@ -401,15 +402,15 @@ function configurewpconfig
 {
     SUCCESS="Original Database Name '$ORIGINALDB' retrieved"
     FAILED="Original Database Name retrieving failed"
-    PROCESSD=$(ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>> $ERRORFILE)
+    ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>> $ERRORFILE
     checkCritical
     SUCCESS="Original Database User '$ORIGINALUSR' retrieved"
     FAILED="Retrieving Original Database Username failed"
-    PROCESSD=$(ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE)
+    ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
     SUCCESS="Retrieved Database Password"
     FAILED="Retrieving Database Password failed"
-    PROCESSD=$(ORIGINALPASS=$(cat wp-config.php | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE)
+    ORIGINALPASS=$(cat wp-config.php | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
 
 
@@ -420,7 +421,7 @@ function configurewpconfig
     then
             SUCCESS="Edited database name to ($DBNAME) in $WPCONFIG"
             FAILED="Editing Database name failed"
-            PROCESSD=$(sed -i "/DB_NAME/s/'[^']*'/'$DBNAME'/2" $WPCONFIG 2>>$ERRORFILE)
+            sed -i "/DB_NAME/s/'[^']*'/'$DBNAME'/2" $WPCONFIG 2>>$ERRORFILE
             checkCritical
     fi
 
@@ -428,14 +429,14 @@ function configurewpconfig
     then
             SUCCESS="Edited database username to ($DBUSER) in $WPCONFIG"
             FAILED="Editing database username in $WPCONFIG failed"
-            PROCESSD=$(sed -i "/DB_USER/s/'[^']*'/'$DBUSER'/2" $WPCONFIG 2>>$ERRORFILE)
+            sed -i "/DB_USER/s/'[^']*'/'$DBUSER'/2" $WPCONFIG 2>>$ERRORFILE
             checkCritical
     fi
     if [ ! "$ORIGINALPASS" == "$DBPASS" ]
     then
             SUCCESS="Edited database password to ($DBPASS) in $WPCONFIG"
             FAILED="Editing database password in $WPCONFIG failed"
-            PROCESSD=$(sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG 2>>$ERRORFILE)
+            sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG 2>>$ERRORFILE
             checkCritical
     fi
 
@@ -448,7 +449,7 @@ function exportDatabase
 	# mysqldump -u $DBUSER --password="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
     SUCCESS="Database exported to $DBFILE"
     FAILED="Exporting database failed"
-	PROCESSD=$(mysqldump -u root $DBNAME > $DBFILE 2>>$ERRORFILE)
+	mysqldump -u root $DBNAME > $DBFILE 2>>$ERRORFILE
     checkCritical
 }
 
@@ -458,11 +459,11 @@ function ArchiveBackupFiles
 	echo "Archiving files..."
     SUCCESS="Archived $BKFILE and $DBFILE to $FINAL"
     FAILED="Archiving $BKFILE and $DBFILE to $FINAL failed"
-	PROCESSD=$(zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE)
+	zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE
     checkCritical
     SUCCESS="Created MD5 checksum for $FINAL > $FINAL.md5"
     FAILED="Creating MD5 Checksum for $FINAL failed"
-    PROCESSD=$(md5sum $FINAL > $FINAL.md5 2>>$ERRORFILE)
+    md5sum $FINAL > $FINAL.md5 2>>$ERRORFILE
     check
 }
 
@@ -472,7 +473,7 @@ function CreateDBUser
     display "Create Database User"
     SUCCESS="Created Database User $DBUSER"
     FAILED="Creating database user $DBUSER failed"
-    PROCESSD=$(mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE)
+    mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
     checkCritical
 }
 
@@ -481,7 +482,7 @@ function DropDatabase
     display "droping $DBNAME database"
     SUCCESS="Dropped database $DBNAME"
     FAILED="Droping database $DBNAME failed"
-    PROCESSD=$(mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE)
+    mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
     checkCritical
 }
 
@@ -490,11 +491,11 @@ function createDatabase
     display "create database $DBNAME"
     SUCCESS="Created database $DBNAME"
     FAILED="Creating database $DBNAME failed"
-    PROCESSD=$(mysql -u root -e "CREATE DATABASE $DBNAME;" 2>>$ERRORFILE)
+    mysql -u root -e "CREATE DATABASE $DBNAME;" 2>>$ERRORFILE
     checkCritical
     SUCCESS="Granted Privileges to $DBUSER"
     FAILED="Granting privileges to $DBUSER failed"
-    PROCESSD=$(mysql -u root -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER;" 2>>$ERRORFILE)
+    mysql -u root -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER;" 2>>$ERRORFILE
     checkCritical
 }
 
@@ -503,7 +504,7 @@ function ImportDatabase
     display "importing database from $DBFILE"
     SUCCESS="Imported $DBFILE to database $DBNAME"
     FAILED="Importing $DBFILE to database $DBNAME failed"
-    PROCESSD=$(mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE)
+    mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE
     checkCritical
 }
 
@@ -518,11 +519,11 @@ function BackupRemoveUnecessaryBackFiles
 			echo "removing unnecessary files..."
             SUCCESS="Removed $DBFILE"
             FAILED="Removing $DBFILE failed"
-			PROCESSD=$(rm $DBFILE)
+			rm $DBFILE)
             check
             SUCCESS="Removed $BKFILE"
             FAILED="Removing $BKFILE failed"
-			PROCESSD=$(rm $BKFILE)
+			rm $BKFILE)
             check
 			break
 			;;
@@ -540,7 +541,7 @@ function RestoreRemoveFiles
 {
     SUCCESS="Removed $BKFILE $DBFLE $FINAL"
     FAILED="Removing $BKFILE $DBFILE $FINAL failed"
-    PROCESSD=$(rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE)
+    rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
     check
 }
 
@@ -582,7 +583,7 @@ function RemoveDatabase
                 [yY]|[yY][eE][sS])
                     SUCCESS="Removed $DBNAME"
                     FAILED="Removing $DBNAME failed"
-                    PROCESSD=$(mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE)
+                    mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
                     checkCritical
                     break
                     ;;
@@ -608,7 +609,7 @@ function RemoveDatabaseUser
                     [yY]|[yY][eE][sS])
                         SUCCESS="Removed Database User $DBUSER"
                         FAILED="Removing database user $DBUSER failed"
-                        PROCESSD=$(mysql -u root -e "DROP USER $DBUSER;" 2>> $ERRORFILE)
+                        mysql -u root -e "DROP USER $DBUSER;" 2>> $ERRORFILE
                         checkCritical
                         break
                         ;;
@@ -635,13 +636,13 @@ function UpdateURL
     display "Modifying HomeURL and SiteURL"
     SUCCESS="Retrieved Table prefix '$TABLEPREF'"
     FAILED="Retrieving Table Prefix failed"
-    PROCESSD=$(TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE)
+    TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
     checkCritical
     DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
     SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
     SUCCESS="Updated homeurl/siteURL to $URL"
     FAILED="Updating homeurl/siteURL failed"
-    PROCESSD=$(mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE)
+    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE
     checkCritical
     showURL
 }
@@ -650,7 +651,7 @@ function discourageSearchEnging
 {
     SUCCESS="Discouraged search engines from indexing the site"
     FAILED="Discoruaging search engines failed"
-    PROCESSD=$(wp option set blog_public 0 --allow-root 2>> $ERRORFILE)
+    wp option set blog_public 0 --allow-root 2>> $ERRORFILE
     check
 }
 
@@ -669,7 +670,7 @@ function disablePlugins
         else
             SUCCESS="Disabled plugin $PLUGIN"
             FAILED="Disabling plugin $Plugin failed"
-            PROCESSD=$(wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE)
+            wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE
             check
         fi
     done
@@ -691,12 +692,12 @@ function updatePlugins
         then
             SUCCESS="Updated all plugins"
             FAILED="Updating all plugins failed"
-            PROCESSD=$(wp plugin update --all --allow-root 2>> $ERRORFILE)
+            wp plugin update --all --allow-root 2>> $ERRORFILE
             check
         else
             SUCCESS="Updated plugin $PLUGIN"
             FAILED="Updating plugin $PLUGIN failed"
-            PROCESSD=$(wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE)
+            wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE
             check
         fi
     done
@@ -772,12 +773,12 @@ function CustomMOTD
     echo "Updating Server"
     SUCCESS="Updated Server"
     FAILED="Update server failed" 
-    PROCESSD=$(apt update -y 2>>$ERRORFILE)
+    apt update -y 2>>$ERRORFILE
     check
     echo "Installing ScreenFetch"
     SUCCESS="Installed screenfetch"
     FAILED="Install screenfetch failed"
-    PROCESSD=$(apt install screenfetch -y 2>> $ERRORFILE)
+    apt install screenfetch -y 2>> $ERRORFILE
     check
     echo "#! $(which bash)" > /etc/update-motd.d/motd
     echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
@@ -785,12 +786,12 @@ function CustomMOTD
     echo "Disabling Old Message of the Day"
     SUCCESS="Changed Permission to files"
     FAILED="Change permission to files failed"
-    PROCESSD=$(chmod -x /etc/update-motd.d/*)
+    chmod -x /etc/update-motd.d/*)
     check
     echo "Enable New Message of the Day (MOTD)"
     SUCCESS="Added execute permission to motd"
     FAILED="Add execute permission to motd failed"
-    PROCESSD=$(chmod +x /etc/update-motd.d/motd)
+    chmod +x /etc/update-motd.d/motd)
     check
     showresult "Created New Message of the day (MOTD)"
 }
@@ -817,31 +818,31 @@ function installswap
                             echo "Configuring Swap ..."
                             SUCCESS="Fallocated"
                             FAILED="Fallocated failed"
-                            PROCESSD=$(fallocate -l ${SWAPSIZE}G /swapfile 2>>$ERRORFILE)
+                            fallocate -l ${SWAPSIZE}G /swapfile 2>>$ERRORFILE
                             checkCritical
                             SUCCESS="dd for swapfile"
                             FAILED="dd failed"
-                            PROCESSD=$(dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE)) 2>>$ERRORFILE)
+                            dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE)) 2>>$ERRORFILE
                             checkCritical
                             SUCCESS="Locked swap location"
                             FAILED="Locking swap location failed"
-                            PROCESSD=$(chmod 600 /swapfile 2>>$ERRORFILE)
+                            chmod 600 /swapfile 2>>$ERRORFILE
                             checkCritical
                             SUCCESS="Created swap"
                             FAILED="Create swap failed"
-                            PROCESSD=$(mkswap /swapfile 2>>$ERRORFILE)
+                            mkswap /swapfile 2>>$ERRORFILE
                             checkCritical
                             SUCCESS="Enabled swap"
                             FAILED="Enable swap failed" 
-                            PROCESSD=$(swapon /swapfile 2>>$ERRORFILE)
+                            swapon /swapfile 2>>$ERRORFILE
                             checkCritical
                             SUCCESS="Added swap at system start"
                             FAILED="Add swap to system start failed"
-                            PROCESSD=$(echo "/swapfile swap swap defaults 0 0" >> /etc/fstab)
+                            echo "/swapfile swap swap defaults 0 0" >> /etc/fstab)
                             checkCritical
                             SUCCESS="Mounted swap"
                             FAILED="Mount swap failed"
-                            PROCESSD=$(mount -a 2>>$ERRORFILE)
+                            mount -a 2>>$ERRORFILE
                             check
                             showresult "Swap is setted to $SWAPSIZE GB" 
                             break
@@ -879,12 +880,12 @@ function UpdateUpgrade
                 echo "Updating server ..."
                 SUCCESS="Updated Server"
                 FAILED="Update Server failed"
-                PROCESSD=$(apt update -y 2>>$ERRORFILE)
+                apt update -y 2>>$ERRORFILE
                 checkCritical
                 echo "Upgrading server, this will take minutes or hours ..."
                 SUCCESS="Upgraded server"
                 FAILED="Upgrade Server Failed"
-                PROCESSD=$(apt upgrade -y 2>>$ERRORFILE)
+                apt upgrade -y 2>>$ERRORFILE
                 checkCritical
                 showresult "Update, Upgrade Done" 
                 pauseandclear
@@ -915,7 +916,7 @@ function ConfigHostName
                 fi
                 SUCCESS="Setted hostname to $HOSTNAME"
                 FAILED="Set hostname failed"
-                PROCESSD=$(hostnamectl set-hostname $HOSTNAME 2>>$ERRORFILE)
+                hostnamectl set-hostname $HOSTNAME 2>>$ERRORFILE
                 checkCritical
                 pauseandclear
                 break
@@ -945,7 +946,7 @@ function ConfigTimeZone
                 fi
                 SUCCESS="Setted timezone to $TIMEZONE"
                 FAILED="Set timezone failed"
-                PROCESSD=$(timedatectl set-timezone $TIMEZONE 2>>$ERRORFILE)
+                timedatectl set-timezone $TIMEZONE 2>>$ERRORFILE
                 checkCritical
                 pauseandclear
                 break
@@ -970,7 +971,7 @@ function InstallZipUnzip
             [yY]|[yY][eE][sS])
                 SUCCESS="Installed zip/unzip"
                 FAILED="Install zip/unzip failed"
-                PROCESSD=$(apt install -y zip unzip 2>>$ERRORFILE)
+                apt install -y zip unzip 2>>$ERRORFILE
                 checkCritical
                 pauseandclear
                 break
@@ -999,7 +1000,7 @@ function InstallFirewall
                 else
                     SUCCESS="Installed UFW Firewall"
                     FAILED="Install UFW failed"
-                    PROCESSD=$(apt install -y ufw)
+                    apt install -y ufw)
                     checkCritical
                 fi
                 while true;
@@ -1093,27 +1094,27 @@ function InstallWebmin
             [yY]|[yY][eE][sS])
                 SUCCESS="Added webmin repository"
                 FAILED="Add webmin repository failed"
-                PROCESSD=$(echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list)
+                echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list)
                 checkCritical
                 SUCCESS="Downloaded jcameron-key"
                 FAILED="Download jcameron-key failed"
-                PROCESSD=$(wget https://download.webmin.com/jcameron-key.asc 2>>$ERRORFILE)
+                wget https://download.webmin.com/jcameron-key.asc 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Added jcameron-key to system"
                 FAILED="Add jcameron-key failed"
-                PROCESSD=$(apt-key add jcameron-key.asc 2>> $ERRORFILE)
+                apt-key add jcameron-key.asc 2>> $ERRORFILE
                 checkCritical
                 SUCCESS="Installed apt-transport-https"
                 FAILED="Install apt-transport-htps failed"
-                PROCESSD=$(apt-get install apt-transport-https 2>>$ERRORFILE)
+                apt-get install apt-transport-https 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Updated server"
                 FAILED="Update server failed"
-                PROCESSD=$(apt-get -y update  2>> $ERRORFILE)
+                apt-get -y update  2>> $ERRORFILE
                 checkCritical
                 SUCCESS="Installed webmin"
                 FAILED="Install webmin failed"
-                PROCESSD=$(apt-get install webmin 2>>$ERRORFILE)
+                apt-get install webmin 2>>$ERRORFILE
                 checkCritical
                 showresult "Webmin Installed"
                 pauseandclear
@@ -1139,7 +1140,7 @@ function InstallNetDATA
             [yY]|[yY][eE][sS])
                 SUCCESS="Installed NetData"
                 FAILED="Install Netdata failed"
-                PROCESSD=$(bash <(curl -Ss https://my-netdata.io/kickstart.sh))
+                bash <(curl -Ss https://my-netdata.io/kickstart.sh))
                 checkCritical
                 showresult "NetDATA Installed"
                 pauseandclear
@@ -1180,7 +1181,7 @@ function InstallMariadb
             [yY]|[yY][eE][sS])
                 SUCCESS="Installed Mariadb-server"
                 FAILED="Install Mariadb failed"
-                PROCESSD=$(apt install -y mariadb-server  2>>$ERRORFILE)
+                apt install -y mariadb-server  2>>$ERRORFILE
                 checkCritical
                 showresult "MariaDB installed"
                 securemysql
@@ -1204,15 +1205,15 @@ function InstallApacheWPCLI
     display "Installing Wordpress Console Line Interfacie (WP-CLI)"
     SUCCESS="Downloaded wpcli"
     FAILED="Download wpcli failed"
-    PROCESSD=$(curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE)
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
     checkCritical
     SUCCESS="Added execute permission to wpcli"
     FAILED="Add execute permission to wpcli failed"
-    PROCESSD=$(chmod +x wp-cli.phar 2>>$ERRORFILE)
+    chmod +x wp-cli.phar 2>>$ERRORFILE
     checkCritical
     SUCCESS="Moved file for all users"
     FAILED="Move file to all users failed"
-    PROCESSD=$(mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE)
+    mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
     checkCritical
     showresult "WP-CLI for Apache Installed"
 }
@@ -1230,19 +1231,19 @@ function InstallWordpressApache
                 cd $SITELOC 2>>$ERRORFILE
                 SUCCESS="Downloaded wordpress" 
                 FAILED="Download wordpress failed"
-                PROCESSD=$(wget https://wordpress.org/latest.zip 2>>$ERRORFILE)
+                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Extracted wordpress"
                 FAILED="Extract wordpress failed"
-                PROCESSD=$(unzip latest.zip 2>>$ERRORFILE)
+                unzip latest.zip 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Changed wordpress folder owner"
                 FAILED="Change wordpress folder owner failed"
-                PROCESSD=$(chown -R www-data:www-data wordpress 2>>$ERRORFILE)
+                chown -R www-data:www-data wordpress 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Removed archive file"
                 FAILED="Remove archive file failed"
-                PROCESSD=$(rm latest.zip 2>>$ERRORFILE)
+                rm latest.zip 2>>$ERRORFILE
                 checkCritical
                 showresult "Wordpress Installed at $SITELOC"
                 InstallApacheWPCLI
@@ -1270,7 +1271,7 @@ function InstallApache
                 InstallMariadb 
                 SUCCESS="Installed Apache2"
                 FAILED="Install Apache2 failed"
-                PROCESSD=$(apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE)
+                apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE
                 checkCritical
                 showresult "Apache installed"
                 pauseandclear
@@ -1292,19 +1293,19 @@ function InstallOLSWPCLI
     display "Installing Wordpress Console Line Interfacie (WP-CLI)"
     SUCCESS="Downloaded wpcli"
     FAILED="Download wpcli failed"
-    PROCESSD=$(curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE)
+    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
     checkCritical
     SUCCESS="Added execute permission to wpcli"
     FAILED="Add execute permission to wpcli failed"
-    PROCESSD=$(chmod +x wp-cli.phar 2>>$ERRORFILE)
+    chmod +x wp-cli.phar 2>>$ERRORFILE
     checkCritical
     SUCCESS="Moved file for all users"
     FAILED="Move file to all users failed"
-    PROCESSD=$(mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE)
+    mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
     checkCritical
     SUCCESS="Copied php"
     FAILED="Copy php failed"
-    PROCESSD=$(cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE)
+    cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
     checkCritical
     showresult "WP-CLI for Apache Installed"
 }
@@ -1322,19 +1323,19 @@ function InstallWordpressOLS
                 cd $SITELOC 2>>$ERRORFILE
                 SUCCESS="Downloaded wordpress"
                 FAILED="Download wordpress failed"
-                PROCESSD=$(wget https://wordpress.org/latest.zip 2>>$ERRORFILE)
+                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Extracted wordpress"
                 FAILED="Extract wordpress failed"
-                PROCESSD=$(unzip latest.zip 2>>$ERRORFILE)
+                unzip latest.zip 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Changed wordpress folder owner"
                 FAILED="Change wordpress folder owner failed"
-                PROCESSD=$(chown -R nobody:nogroup wordpress 2>>$ERRORFILE)
+                chown -R nobody:nogroup wordpress 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Removed archive file"
                 FAILED="Remove archive file failed"
-                PROCESSD=$(rm latest.zip 2>>$ERRORFILE)
+                rm latest.zip 2>>$ERRORFILE
                 checkCritical
                 showresult "Wordpress Installed at $SITELOC"
                 InstallOLSWPCLI
@@ -1364,15 +1365,15 @@ function InstallOpenLiteSpeed
                 InstallMariadb
                 SUCCESS="Downloaded and installed Openlitespeed"
                 FAILED="Download and install Openlitespeed failed"
-                PROCESSD=$(wget --no-check-certificate https://raw.githubusercontent.com/litespeedtech/ols1clk/master/ols1clk.sh && bash ols1clk.sh 2>>$ERRORFILE)
+                wget --no-check-certificate https://raw.githubusercontent.com/litespeedtech/ols1clk/master/ols1clk.sh && bash ols1clk.sh 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Installed PHP73"
                 FAILED="Install PHP73 failed"
-                PROCESSD=$(apt-get install -y lsphp73 lsphp73-curl lsphp73-imap lsphp73-mysql lsphp73-intl lsphp73-pgsql lsphp73-sqlite3 lsphp73-tidy lsphp73-snmp lsphp73-json lsphp73-common lsphp73-ioncube 2>>$ERRORFILE)
+                apt-get install -y lsphp73 lsphp73-curl lsphp73-imap lsphp73-mysql lsphp73-intl lsphp73-pgsql lsphp73-sqlite3 lsphp73-tidy lsphp73-snmp lsphp73-json lsphp73-common lsphp73-ioncube 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Removed Openlitespeed installation script"
                 FAILED="Remove Openlitespeed installation script failed"
-                PROCESSD=$(rm ols1clk.sh 2>>$ERRORFILE) 
+                rm ols1clk.sh 2>>$ERRORFILE 
                 checkCritical
                 showresult "OpenLiteSpeed installed"
                 cat /usr/local/lsws/password >> $RESULTFILE
@@ -1406,16 +1407,16 @@ function InstallCron
                 #echo new cron into cron file
                 SUCCESS="Added new cron file"
                 FAILED="Add new cron file failed"
-                PROCESSD=$(echo "30 3 * * * shutdown -r now" >> mycron)
+                echo "30 3 * * * shutdown -r now" >> mycron)
                 checkCritical
                 #install new cron file
                 SUCCESS="Applied cron file to cron"
                 FAILED="Apply cron file to cron failed"
-                PROCESSD=$(crontab mycron 2>>$ERRORFILE)
+                crontab mycron 2>>$ERRORFILE
                 checkCritical
                 SUCCESS="Remove cron file"
                 FAILED="Remove cron file failed"
-                PROCESSD=$(rm mycron 2>>$ERRORFILE)
+                rm mycron 2>>$ERRORFILE
                 checkCritical
                 showresult "Cron Installed"
                 break

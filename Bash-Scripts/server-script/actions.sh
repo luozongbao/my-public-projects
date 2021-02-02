@@ -233,7 +233,7 @@ function getRemoveInformation
 function checkBackupVariables
 {
     FOCUS=$FILELOC
-    if ($(CheckCritical))
+    if $(CheckCritical)
     then
 		echo "Directory $FILELOC CHECKED"
     fi
@@ -244,7 +244,7 @@ function checkBackupVariables
 		exit 1
 	else
         FOCUS=$FILELOC/$FILEDIR
-        if ($(CheckCritical))
+        if $(CheckCritical)
 		then
 			echo "$FILELOC/$FILEDIR CHECKED"
 		fi

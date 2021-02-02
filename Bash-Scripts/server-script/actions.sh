@@ -30,6 +30,7 @@ WPCONFIG=""
 SUCCESS=""
 FAILED=""
 CRITICAL=""
+WEBSERVER=""
 
 RGXNUMERIC='^[0-9]+$'
 
@@ -55,10 +56,12 @@ function initialize
     if [ -d /usr/local/lsws ]
     then
         FILELOC=/usr/local/lsws/sites
+        WEBSERVER="OLS"
     fi
     if [ -d /var/www ]
     then
         FILELOC=/var/www
+        wEBSERVER="Apache"
     fi
 }
 
@@ -289,9 +292,9 @@ function checkRestorevariables
 function backupbackup
 {
 	# BACKUP FINAL FILE
-    if ( $(CheckFile $FINAL $("optional") ) ) 
+    if ( $(CheckFile $FINAL "Optional" ) ) 
     then
-		display "Found Previous Backup File '$FINAL'"
+		echo "Found Previous Backup File '$FINAL'"
         SUCCESS="Backed up previous backup file $FINAL to $BKFINAL"
         FAILED="Backup Prevouse Backup $FINAL to $BKFINAL Failed"
 		mv $FINAL $BKFINAL)
@@ -299,9 +302,9 @@ function backupbackup
 
 	fi
 	# BACKUP FINAL FILE
-    if ( $(CheckFile $FINAL.md5 $("optional")) )
+    if ( $(CheckFile $FINAL.md5 "Optional") )
 	then
-		display "Found Previous Backup Hash File '$FINAL.md5'"
+		echo "Found Previous Backup Hash File '$FINAL.md5'"
         SUCCESS="Backed up previous backup file $FINAL.md5 to $BKFINAL.md5"
         FAILED="Backup Prevouse Backup $FINAL.md5 to $BKFINAL.md5 Failed"
 		mv $FINAL.md5 $BKFINAL.md5)
@@ -314,15 +317,18 @@ function backupbackup
 function ArchiveDirectory
 {
 	cd $FILELOC
+
     echo "Archiving $FILELOC/$FILEDIR ..."
     SUCCESS="$FILELOC/$FILEDIR Archived"
     FAILED="Archiving $FILELOC/$FILEDIR failed"
 	zip -r $BKFILE $FILEDIR 2>>$ERRORFILE
     checkCritical
+
     SUCCESS="$FILELOC/$FILEDIR Moved to $CURDIR"
     FAILED="Moving $FILELOC/$FILEDIR failed"
 	mv $BKFILE $CURDIR 2>>$ERRORFILE
     checkCritical
+
 	cd $CURDIR
 	processed 
 }
@@ -348,19 +354,13 @@ function PrepareEnvironment
     if ( $(CheckFile $CURDIR/$FINAL "critical") )
     then
         CheckMD5
+        
         echo "copying $FINAL to $FILELOC"...
         SUCCESS="$FINAL Copied to $FILELOC"
         FAILED="Copying $FINAL to $FILELOC failed"
-        cp $FINAL $FILELOC)
+        cp $FINAL $FILELOC 2>> $ERRORFILE
         checkCritical
-        cd $FILELOC
-        display "Unpacking $FINAL ..."
-        SUCCESS="Unziped $FINAL Successful"
-        FAILED="Unzip $FINAL failed"
-        unzip -o $FINAL 2>> $ERRORFILE
-        checkCritical
-        cd $CURDIR
-        processed "$FINAL unpacked."
+
     fi
 }
 
@@ -368,49 +368,88 @@ function RemoveExistedDirectory
 {
     if ($(CheckFolder $FILELOC/$FILEDIR "critical" ))
     then
+        read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
+        if [[ $YN =~ [nN]|[nN][oO] ]]
+        then
+            exit 
+        fi
+
         echo "removing existing directory"
         SUCCESS="$FILELOC/$FILEDIR found and removed"
         FAILED="removing $FILELOC/$FILEDIR failed"
-        rm -r $FILELOC/$FILEDIR)
+        rm -r $FILELOC/$FILEDIR) 2>>$ERRORFILE
         checkCritical
     fi
 }
 
 function RestoringFileDirectory
 {
-    echo "Recover Directory from Backup"
+    cd $FILELOC
+
+    echo "Unpacking $FINAL ..."
+    SUCCESS="Unziped $FINAL Successful"
+    FAILED="Unzip $FINAL failed"
+    unzip -o $FINAL 2>> $ERRORFILE
+    checkCritical
+
+
+    echo "Recover Directory from Backup $FILELOC/$TEMPDIR"
     SUCCESS="Recovered $BKFILE to $FILELOC/$TEMPDIR"
     FAILED="Recovered $BKFILE to $FILELOC/$TEMPDIR Failed" 
     unzip -o $BKFILE -d $FILELOC/$TEMPDIR 2>>$ERRORFILE
     checkCritical
+
+    echo "Moving folder from $FILELOC/$TEMPDIR/$ORIGINALDIR to $FILELOC/$FILEDIR"
     SUCCESS="Placed file to $FILELOC/$FILEDIR"
     FAILED="Can not placed file to $FILELOC/$FILEDIR"
     mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
     checkCritical
+
+    echo "Removing Temp folder $FILELOC/$TEMPDIR"
     SUCCESS="$FILELOC/$TEMPDIR removed"
     FAILED="Removing $FILELOC/$TEMPDIR failed"
     rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
     check
-    SUCCESS="Setted Permission to $FILEDIR"
-    FAILED="Setting Permission to $FILEDIR failed"
-    chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
-    checkCritical
+
+    if [ WEBSERVER == "OLS" ]
+    then
+        echo "Adding Permission nobody:nogroup to $FILEDIR"
+        SUCCESS="Setted Permission to $FILEDIR"
+        FAILED="Setting Permission to $FILEDIR failed"
+        chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
+        checkCritical
+    elif [ WEBSERVER == "Apache" ]
+    then
+        echo "Adding Permission www-data:www-data to $FILEDIR"
+        SUCCESS="Setted Permission to $FILEDIR"
+        FAILED="Setting Permission to $FILEDIR failed"
+        chown -R www-data:www-data $FILEDIR 2>>$ERRORFILE
+        checkCritical
+    fi
+
+
+    cd $CURDIR
 }
 
 
 function configurewpconfig
 {
+    echo "Retrieving Original Database Name from $WPCONFIG"
     SUCCESS="Original Database Name '$ORIGINALDB' retrieved"
     FAILED="Original Database Name retrieving failed"
     ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>> $ERRORFILE
     checkCritical
+
+    echo "Retrieving Original Database user from $WPCONFIG"
     SUCCESS="Original Database User '$ORIGINALUSR' retrieved"
     FAILED="Retrieving Original Database Username failed"
     ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
+
+    echo "Retrieving Original Database Password from $WPCONFIG"
     SUCCESS="Retrieved Database Password"
     FAILED="Retrieving Database Password failed"
-    ORIGINALPASS=$(cat wp-config.php | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE
+    ORIGINALPASS=$(cat $WPCONFIG | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
 
 
@@ -419,6 +458,7 @@ function configurewpconfig
     
     if [ ! "$ORIGINALDB" == "$DBNAME" ]
     then
+            echo "Database Name change, configuring $WPCONFIG"
             SUCCESS="Edited database name to ($DBNAME) in $WPCONFIG"
             FAILED="Editing Database name failed"
             sed -i "/DB_NAME/s/'[^']*'/'$DBNAME'/2" $WPCONFIG 2>>$ERRORFILE
@@ -427,6 +467,7 @@ function configurewpconfig
 
     if [ ! "$ORIGINALUSR" == "$DBUSER" ]
     then
+            echo "Database username change, configuring $WPCONFIG"
             SUCCESS="Edited database username to ($DBUSER) in $WPCONFIG"
             FAILED="Editing database username in $WPCONFIG failed"
             sed -i "/DB_USER/s/'[^']*'/'$DBUSER'/2" $WPCONFIG 2>>$ERRORFILE
@@ -434,6 +475,7 @@ function configurewpconfig
     fi
     if [ ! "$ORIGINALPASS" == "$DBPASS" ]
     then
+            echo "Database password change, configuring $WPCONFIG"
             SUCCESS="Edited database password to ($DBPASS) in $WPCONFIG"
             FAILED="Editing database password in $WPCONFIG failed"
             sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG 2>>$ERRORFILE
@@ -461,6 +503,8 @@ function ArchiveBackupFiles
     FAILED="Archiving $BKFILE and $DBFILE to $FINAL failed"
 	zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE
     checkCritical
+
+    echo "Creating MD5 Hash File"
     SUCCESS="Created MD5 checksum for $FINAL > $FINAL.md5"
     FAILED="Creating MD5 Checksum for $FINAL failed"
     md5sum $FINAL > $FINAL.md5 2>>$ERRORFILE
@@ -470,7 +514,7 @@ function ArchiveBackupFiles
 
 function CreateDBUser
 {
-    display "Create Database User"
+    echo "Create Database User"
     SUCCESS="Created Database User $DBUSER"
     FAILED="Creating database user $DBUSER failed"
     mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
@@ -479,7 +523,7 @@ function CreateDBUser
 
 function DropDatabase
 {
-    display "droping $DBNAME database"
+    echo "droping $DBNAME database"
     SUCCESS="Dropped database $DBNAME"
     FAILED="Droping database $DBNAME failed"
     mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
@@ -488,11 +532,13 @@ function DropDatabase
 
 function createDatabase
 {
-    display "create database $DBNAME"
+    echo "create database $DBNAME"
     SUCCESS="Created database $DBNAME"
     FAILED="Creating database $DBNAME failed"
     mysql -u root -e "CREATE DATABASE $DBNAME;" 2>>$ERRORFILE
     checkCritical
+
+    echo "Granting privileges for $DBNAME to $DBUSER"
     SUCCESS="Granted Privileges to $DBUSER"
     FAILED="Granting privileges to $DBUSER failed"
     mysql -u root -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER;" 2>>$ERRORFILE
@@ -501,7 +547,7 @@ function createDatabase
 
 function ImportDatabase
 {
-    display "importing database from $DBFILE"
+    echo "importing database from $DBFILE"
     SUCCESS="Imported $DBFILE to database $DBNAME"
     FAILED="Importing $DBFILE to database $DBNAME failed"
     mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE
@@ -516,15 +562,18 @@ function BackupRemoveUnecessaryBackFiles
 		read -p "Remove unecessary files? [Y/N]" YN
 		case $YN in [yY]|[yY][eE][sS])
 			#REMOVE ARCHIVED FILES
+
 			echo "removing unnecessary files..."
             SUCCESS="Removed $DBFILE"
             FAILED="Removing $DBFILE failed"
-			rm $DBFILE)
+			rm $DBFILE 2>>$ERRORFILE
             check
+
             SUCCESS="Removed $BKFILE"
             FAILED="Removing $BKFILE failed"
-			rm $BKFILE)
+			rm $BKFILE 2>>$ERRORFILE
             check
+
 			break
 			;;
 		[nN]|[nN][oO])
@@ -539,6 +588,7 @@ function BackupRemoveUnecessaryBackFiles
 
 function RestoreRemoveFiles
 {
+    echo "Removing $BKFILE $DBFILE $FINAL"
     SUCCESS="Removed $BKFILE $DBFLE $FINAL"
     FAILED="Removing $BKFILE $DBFILE $FINAL failed"
     rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
@@ -577,24 +627,26 @@ function RemoveDatabase
 {
     while true;
     do
-            display "Remove Database"
-            read -p "This will remove database $DBNAME permanently [Y/N]: " YN
-            case $YN in
-                [yY]|[yY][eE][sS])
-                    SUCCESS="Removed $DBNAME"
-                    FAILED="Removing $DBNAME failed"
-                    mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
-                    checkCritical
-                    break
-                    ;;
-                [nN]|[nN][oO])
-                    showresult "skipp removing database $DBNAME"
-                    break
-                    ;;
-                *)
-                    echo "Please answer Y/N"
-                    ;;
-            esac
+        display "Remove Database"
+        read -p "This will remove database $DBNAME permanently [Y/N]: " YN
+        case $YN in
+            [yY]|[yY][eE][sS])
+                echo "Removing $DBNAME"
+                SUCCESS="Removed $DBNAME"
+                FAILED="Removing $DBNAME failed"
+                mysql -u root -e "DROP DATABASE $DBNAME;" 2>> $ERRORFILE
+                checkCritical
+
+                break
+                ;;
+            [nN]|[nN][oO])
+                showresult "skipp removing database $DBNAME"
+                break
+                ;;
+            *)
+                echo "Please answer Y/N"
+                ;;
+        esac
     done
 }
 
@@ -607,10 +659,12 @@ function RemoveDatabaseUser
             read -p "Do you want to remove database user $DBUSER [Y/N]: " YN
             case $YN in
                     [yY]|[yY][eE][sS])
+                        echo "Removing $DBUSER"
                         SUCCESS="Removed Database User $DBUSER"
                         FAILED="Removing database user $DBUSER failed"
                         mysql -u root -e "DROP USER $DBUSER;" 2>> $ERRORFILE
                         checkCritical
+
                         break
                         ;;
                     [nN]|[nN][oO])
@@ -633,22 +687,27 @@ function showURL
 
 function UpdateURL
 {
-    display "Modifying HomeURL and SiteURL"
+    echo "Modifying HomeURL and SiteURL"
     SUCCESS="Retrieved Table prefix '$TABLEPREF'"
     FAILED="Retrieving Table Prefix failed"
     TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
     checkCritical
+
     DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
     SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
+
+    echo "Updating homeURL/siteURL to $URL"
     SUCCESS="Updated homeurl/siteURL to $URL"
     FAILED="Updating homeurl/siteURL failed"
     mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE
     checkCritical
+
     showURL
 }
 
 function discourageSearchEnging
 {
+    echo "Discouraging search engines from indexing the site"
     SUCCESS="Discouraged search engines from indexing the site"
     FAILED="Discoruaging search engines failed"
     wp option set blog_public 0 --allow-root 2>> $ERRORFILE
@@ -668,6 +727,7 @@ function disablePlugins
         then
             break
         else
+            echo "Deactivate Plugin $PLUGIN"
             SUCCESS="Disabled plugin $PLUGIN"
             FAILED="Disabling plugin $Plugin failed"
             wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE
@@ -690,11 +750,13 @@ function updatePlugins
             break
         elif  [ "$PLUGIN" == "ALL" ]
         then
+            echo "Update all plugins"
             SUCCESS="Updated all plugins"
             FAILED="Updating all plugins failed"
             wp plugin update --all --allow-root 2>> $ERRORFILE
             check
         else
+            echo "Updating plugin $PLUGIN"
             SUCCESS="Updated plugin $PLUGIN"
             FAILED="Updating plugin $PLUGIN failed"
             wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE
@@ -742,17 +804,27 @@ function completeURLChanged
                 echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
                 echo "*** Please check and recheck before press ENTER" 
                 read -p "Please input your original website url with http/https: " ORIGINALURL
-                if [ -z $URL ]
-                then
+                while [ -z $URL ]
+                do
                     read -p "Please input your new website url with http/https: " URL
-                fi
-                if [ -z $FILEDIR ]
-                then
-                    read -p "Please input working wordpress directory: " FILEDIR
-                fi
+                done
+                while [ ! -d $FILELOC/$FILEDIR ]
+                do
+                    if [ -z $FILEDIR ]
+                    then
+                        read -p "Please input working wordpress directory: " FILEDIR
+                    fi
+                    
+                done
                 cd $FILELOC/$FILEDIR
-                echo "working .."
+
+
+                echo "Replacing $ORIGINALURL to $URL"
+                SUCCESS="Searched and Replaced $ORIGINALURL to $URL"
+                FAILED="Search and Replace $ORIGINALURL to $URL failed"
                 wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
+                check
+
                 showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
                 pauseandclear
                 ConfigureTestSite
@@ -775,24 +847,29 @@ function CustomMOTD
     FAILED="Update server failed" 
     apt update -y 2>>$ERRORFILE
     check
+
     echo "Installing ScreenFetch"
     SUCCESS="Installed screenfetch"
     FAILED="Install screenfetch failed"
     apt install screenfetch -y 2>> $ERRORFILE
     check
+
     echo "#! $(which bash)" > /etc/update-motd.d/motd
     echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
     echo "$(which screenfetch)" >> /etc/update-motd.d/motd
+
     echo "Disabling Old Message of the Day"
     SUCCESS="Changed Permission to files"
     FAILED="Change permission to files failed"
-    chmod -x /etc/update-motd.d/*)
+    chmod -x /etc/update-motd.d/*
     check
+
     echo "Enable New Message of the Day (MOTD)"
     SUCCESS="Added execute permission to motd"
     FAILED="Add execute permission to motd failed"
-    chmod +x /etc/update-motd.d/motd)
+    chmod +x /etc/update-motd.d/motd
     check
+
     showresult "Created New Message of the day (MOTD)"
 }
 
@@ -813,37 +890,45 @@ function installswap
                 while true;
                 do
                     display "Install Swap"
-                    read -p "Install Swap Size in GB: " SWAPSIZE
-                    case $SWAPSIZE in [1]|[2]|[3]|[4]|[5]|[6]|[7]|[8]|[9])
+                    read -p "Install Swap Size in GB: (0 to skip) " SWAPSIZE
+                    case $SWAPSIZE in 
+                        [1]|[2]|[3]|[4]|[5]|[6]|[7]|[8]|[9])
                             echo "Configuring Swap ..."
                             SUCCESS="Fallocated"
                             FAILED="Fallocated failed"
                             fallocate -l ${SWAPSIZE}G /swapfile 2>>$ERRORFILE
                             checkCritical
+
                             SUCCESS="dd for swapfile"
                             FAILED="dd failed"
                             dd if=/dev/zero of=/swapfile bs=1024 count=$((1048576 * SWAPSIZE)) 2>>$ERRORFILE
                             checkCritical
+
                             SUCCESS="Locked swap location"
                             FAILED="Locking swap location failed"
                             chmod 600 /swapfile 2>>$ERRORFILE
                             checkCritical
+
                             SUCCESS="Created swap"
                             FAILED="Create swap failed"
                             mkswap /swapfile 2>>$ERRORFILE
                             checkCritical
+
                             SUCCESS="Enabled swap"
                             FAILED="Enable swap failed" 
                             swapon /swapfile 2>>$ERRORFILE
                             checkCritical
+
                             SUCCESS="Added swap at system start"
                             FAILED="Add swap to system start failed"
                             echo "/swapfile swap swap defaults 0 0" >> /etc/fstab)
                             checkCritical
+
                             SUCCESS="Mounted swap"
                             FAILED="Mount swap failed"
                             mount -a 2>>$ERRORFILE
                             check
+
                             showresult "Swap is setted to $SWAPSIZE GB" 
                             break
                             ;;
@@ -852,7 +937,7 @@ function installswap
                             ;;
                         *) 
                             echo "Please, identify 1-9"
-                        ;;
+                            ;;
                     esac
                 done
                 break
@@ -882,11 +967,13 @@ function UpdateUpgrade
                 FAILED="Update Server failed"
                 apt update -y 2>>$ERRORFILE
                 checkCritical
+
                 echo "Upgrading server, this will take minutes or hours ..."
                 SUCCESS="Upgraded server"
                 FAILED="Upgrade Server Failed"
                 apt upgrade -y 2>>$ERRORFILE
                 checkCritical
+
                 showresult "Update, Upgrade Done" 
                 pauseandclear
                 break
@@ -914,10 +1001,12 @@ function ConfigHostName
                 then 
                     HOSTNAME=HostName 
                 fi
+                echo "Setting hostname to $HOSTNAME"
                 SUCCESS="Setted hostname to $HOSTNAME"
                 FAILED="Set hostname failed"
                 hostnamectl set-hostname $HOSTNAME 2>>$ERRORFILE
                 checkCritical
+
                 pauseandclear
                 break
                 ;;
@@ -944,10 +1033,12 @@ function ConfigTimeZone
                 then 
                     TIMEZONE=Asia/Bangkok 
                 fi
+                echo "Setting timezone to $TIMEZONE"
                 SUCCESS="Setted timezone to $TIMEZONE"
                 FAILED="Set timezone failed"
                 timedatectl set-timezone $TIMEZONE 2>>$ERRORFILE
                 checkCritical
+
                 pauseandclear
                 break
                 ;;
@@ -969,10 +1060,13 @@ function InstallZipUnzip
         read -p "Install Zip and Unzip Now? [Y/N]: " ZIP
         case $ZIP in 
             [yY]|[yY][eE][sS])
+                
+                echo "Installing zip/unzip to the system"
                 SUCCESS="Installed zip/unzip"
                 FAILED="Install zip/unzip failed"
                 apt install -y zip unzip 2>>$ERRORFILE
                 checkCritical
+
                 pauseandclear
                 break
                 ;;
@@ -998,10 +1092,13 @@ function InstallFirewall
                 then
                     showresult "UFW firewall already installed"
                 else
+
+                    echo "Installing UFW firewall"
                     SUCCESS="Installed UFW Firewall"
                     FAILED="Install UFW failed"
                     apt install -y ufw)
                     checkCritical
+
                 fi
                 while true;
                 do
@@ -1016,8 +1113,12 @@ function InstallFirewall
                             echo "This might interupt server connection please be sure."
                             read -p "Please specify port number to allow: " ALLOWPORT
                             if [[ $ALLOWPORT =~ $RGXNUMERIC ]] ; then
+                                echo "Allowing port $ALLOWPORT"
+                                SUCCESS="Allowed port $ALLOWPORT"
+                                FAILED="Allowing port $ALLOWPORT failed"
 	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
-                                showresult "UFW allowed port: $ALLOWPORT"
+                                check
+
                             else    
                                 echo "please specify port number"
                             fi
@@ -1026,8 +1127,13 @@ function InstallFirewall
                             echo "This might interupt server connection please be sure."
                             read -p "Please specify port number to deny: " DENYPORT
                             if [[ $DENYPORT =~ $RGXNUMERIC ]] ; then
-	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
-                                showresult "UFW denied port: $DENYPORT"
+
+                                echo "Denying port $DENYPORT"
+                                SUCCESS="Denied port $DENYPORT"
+                                FAILED="Denying port $DENYPORT failed"
+	                            ufw deny $DENYPORT 2>> $ERRORFILE
+                                check
+
                             else    
                                 echo "please specify port number"
                             fi
@@ -1037,13 +1143,21 @@ function InstallFirewall
                                 read -p "This might interupt server connection, do you want to continue? [Y/N]: " CONTINUE
                                 if [[ $CONTINUE =~ $RGXYES ]]
                                 then
+
+                                    echo "Enabling UFW"
+                                    SUCCESS="UFW Enabled"
+                                    FAILED="UFW Enabling failed"
                                     ufw enable 2>> $ERRORFILE
-                                    showresult "UFW Activated"
+                                    check
+
                                 fi
                             ;;
                         [dD][iI][sS][aA][bB][lL][eE])
+                            echo "Disabling UFW"
+                            SUCCESS="UFW Disabled"
+                            FAILED="UFW Disabling failed"
                             ufw disable 2>> $ERRORFILE
-                            showresult "UFW Deactivated"
+                            check
                             ;;
                         [dD][eE][fF][aA][uU][lL][tT])
                             RGXALLOW="^[aA][lL][lL][oO][wW]$"
@@ -1052,12 +1166,18 @@ function InstallFirewall
                             read -p "Please specify default ports actions ALLOW or DENY? [Y/N]: " DEFAULT
                             if [[ $DEFAULT =~ $RGXALLOW ]] ; 
                             then
+                                echo "Setting UFW default to Allow"
+                                SUCCESS="Setted UFW default to Allow"
+                                FAILED="Failed setting UFW default to Allow "
 	                            ufw default allow 2>> $ERRORFILE
-                                showresult "UFW default action: Allow"
+                                check
                             elif [[ $DEFAULT =~ $RGXDENY ]]
                             then
+                                echo "Setting UFW default to Deny"
+                                SUCCESS="Setted UFW default to Deny"
+                                FAILED="Failed setting UFW default to Deny "
                                 ufw default deny 2>> $ERRORFILE
-                                showresult "UFW default action: Deny"
+                                check
                             else    
                                 echo "Please Specify 'ALLOW' or 'DENY'"
                             fi
@@ -1092,30 +1212,43 @@ function InstallWebmin
         read -p "Install Webmin Now? [Y/N]: " WEBMIN
         case $WEBMIN in 
             [yY]|[yY][eE][sS])
+
+                echo "Add webmin repository"
                 SUCCESS="Added webmin repository"
                 FAILED="Add webmin repository failed"
                 echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list)
                 checkCritical
+
+                echo "Download jcameron-key"
                 SUCCESS="Downloaded jcameron-key"
                 FAILED="Download jcameron-key failed"
                 wget https://download.webmin.com/jcameron-key.asc 2>>$ERRORFILE
                 checkCritical
+
+                echo "Add jcameron-key"
                 SUCCESS="Added jcameron-key to system"
                 FAILED="Add jcameron-key failed"
                 apt-key add jcameron-key.asc 2>> $ERRORFILE
                 checkCritical
+
+                echo "Install apt-transport-htps"
                 SUCCESS="Installed apt-transport-https"
                 FAILED="Install apt-transport-htps failed"
                 apt-get install apt-transport-https 2>>$ERRORFILE
                 checkCritical
+
+                echo "Update server"
                 SUCCESS="Updated server"
                 FAILED="Update server failed"
                 apt-get -y update  2>> $ERRORFILE
                 checkCritical
+
+                echo "Install webmin"
                 SUCCESS="Installed webmin"
                 FAILED="Install webmin failed"
                 apt-get install webmin 2>>$ERRORFILE
                 checkCritical
+
                 showresult "Webmin Installed"
                 pauseandclear
                 break
@@ -1138,11 +1271,13 @@ function InstallNetDATA
         read -p "Install NetData Now? [Y/N]: " NETDATA
         case $NETDATA in 
             [yY]|[yY][eE][sS])
+
+                echo "Install NetData"
                 SUCCESS="Installed NetData"
                 FAILED="Install Netdata failed"
                 bash <(curl -Ss https://my-netdata.io/kickstart.sh))
                 checkCritical
-                showresult "NetDATA Installed"
+                
                 pauseandclear
                 break
                 ;;
@@ -1179,11 +1314,12 @@ function InstallMariadb
         read -p "Install Mariadb Server Now? [Y/N]: " MDB
         case $MDB in 
             [yY]|[yY][eE][sS])
+                echo "Installing MariaDB"
                 SUCCESS="Installed Mariadb-server"
                 FAILED="Install Mariadb failed"
                 apt install -y mariadb-server  2>>$ERRORFILE
-                checkCritical
-                showresult "MariaDB installed"
+                check
+
                 securemysql
                 pauseandclear
                 break
@@ -1202,19 +1338,24 @@ function InstallMariadb
 
 function InstallApacheWPCLI
 {
-    display "Installing Wordpress Console Line Interfacie (WP-CLI)"
+    echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
     SUCCESS="Downloaded wpcli"
     FAILED="Download wpcli failed"
     curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
     checkCritical
+
+    echo "Add execute permission to wpcli"
     SUCCESS="Added execute permission to wpcli"
     FAILED="Add execute permission to wpcli failed"
     chmod +x wp-cli.phar 2>>$ERRORFILE
     checkCritical
-    SUCCESS="Moved file for all users"
-    FAILED="Move file to all users failed"
+
+    echo "Move file to default folder"
+    SUCCESS="Moved file to default folder"
+    FAILED="Move file to default folder failed"
     mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
     checkCritical
+
     showresult "WP-CLI for Apache Installed"
 }
 
@@ -1227,24 +1368,39 @@ function InstallWordpressApache
         case $WPAPCHE in 
             [yY]|[yY][eE][sS])
                 SITELOC=/var/www/html
+
+                echo "Create Folder $SITELOC"
+                SUCCESS="Created Folder $SITELOC"
+                FAILED="Create Folder $SITELOC failed"
                 mkdir $SITELOC 2>>$ERRORFILE
+                checkCritical
+
                 cd $SITELOC 2>>$ERRORFILE
+
+                echo "Download wordpress"
                 SUCCESS="Downloaded wordpress" 
                 FAILED="Download wordpress failed"
                 wget https://wordpress.org/latest.zip 2>>$ERRORFILE
                 checkCritical
+
+                echo "Extract wordpress"
                 SUCCESS="Extracted wordpress"
                 FAILED="Extract wordpress failed"
                 unzip latest.zip 2>>$ERRORFILE
                 checkCritical
+
+                echo "Change wordpress folder permission"
                 SUCCESS="Changed wordpress folder owner"
                 FAILED="Change wordpress folder owner failed"
                 chown -R www-data:www-data wordpress 2>>$ERRORFILE
                 checkCritical
+
+                echo "Remove archive file"
                 SUCCESS="Removed archive file"
                 FAILED="Remove archive file failed"
                 rm latest.zip 2>>$ERRORFILE
                 checkCritical
+
                 showresult "Wordpress Installed at $SITELOC"
                 InstallApacheWPCLI
                 pauseandclear
@@ -1269,11 +1425,13 @@ function InstallApache
         case $APCHE in 
             [yY]|[yY][eE][sS])
                 InstallMariadb 
+
+                echo "Install Apache2"
                 SUCCESS="Installed Apache2"
                 FAILED="Install Apache2 failed"
                 apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE
                 checkCritical
-                showresult "Apache installed"
+
                 pauseandclear
                 InstallWordpressApache
                 break
@@ -1290,23 +1448,30 @@ function InstallApache
 
 function InstallOLSWPCLI
 {
-    display "Installing Wordpress Console Line Interfacie (WP-CLI)"
+    echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
     SUCCESS="Downloaded wpcli"
     FAILED="Download wpcli failed"
     curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
     checkCritical
+
+    echo "Add execute permission to wpcli"
     SUCCESS="Added execute permission to wpcli"
     FAILED="Add execute permission to wpcli failed"
     chmod +x wp-cli.phar 2>>$ERRORFILE
     checkCritical
-    SUCCESS="Moved file for all users"
-    FAILED="Move file to all users failed"
+
+    echo "Move file to default folder"
+    SUCCESS="Moved file to default folder"
+    FAILED="Move file to default folder failed"
     mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
     checkCritical
+
+    echo "Copy php file"
     SUCCESS="Copied php"
     FAILED="Copy php failed"
     cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
     checkCritical
+
     showresult "WP-CLI for Apache Installed"
 }
 
@@ -1321,22 +1486,31 @@ function InstallWordpressOLS
                 SITELOC=/usr/local/lsws/sites
                 mkdir $SITELOC 2>>$ERRORFILE
                 cd $SITELOC 2>>$ERRORFILE
+
+                echo "Download wordpress"
                 SUCCESS="Downloaded wordpress"
                 FAILED="Download wordpress failed"
                 wget https://wordpress.org/latest.zip 2>>$ERRORFILE
                 checkCritical
+
+                echo "Extract wordpress"
                 SUCCESS="Extracted wordpress"
                 FAILED="Extract wordpress failed"
                 unzip latest.zip 2>>$ERRORFILE
                 checkCritical
+
+                echo "Configure wordpress folder permission"
                 SUCCESS="Changed wordpress folder owner"
                 FAILED="Change wordpress folder owner failed"
                 chown -R nobody:nogroup wordpress 2>>$ERRORFILE
                 checkCritical
+
+                echo "Remove archive file"
                 SUCCESS="Removed archive file"
                 FAILED="Remove archive file failed"
                 rm latest.zip 2>>$ERRORFILE
                 checkCritical
+
                 showresult "Wordpress Installed at $SITELOC"
                 InstallOLSWPCLI
                 pauseandclear
@@ -1363,19 +1537,27 @@ function InstallOpenLiteSpeed
         case $OLS in 
             [yY]|[yY][eE][sS])
                 InstallMariadb
+
+                echo "Download and install Openlitespeed"
                 SUCCESS="Downloaded and installed Openlitespeed"
                 FAILED="Download and install Openlitespeed failed"
                 wget --no-check-certificate https://raw.githubusercontent.com/litespeedtech/ols1clk/master/ols1clk.sh && bash ols1clk.sh 2>>$ERRORFILE
                 checkCritical
+
+                echo "Install PHP73"
                 SUCCESS="Installed PHP73"
                 FAILED="Install PHP73 failed"
                 apt-get install -y lsphp73 lsphp73-curl lsphp73-imap lsphp73-mysql lsphp73-intl lsphp73-pgsql lsphp73-sqlite3 lsphp73-tidy lsphp73-snmp lsphp73-json lsphp73-common lsphp73-ioncube 2>>$ERRORFILE
                 checkCritical
+
+                echo "Remove OLS installation script"
                 SUCCESS="Removed Openlitespeed installation script"
                 FAILED="Remove Openlitespeed installation script failed"
                 rm ols1clk.sh 2>>$ERRORFILE 
                 checkCritical
+
                 showresult "OpenLiteSpeed installed"
+                cat /usr/local/lsws/password
                 cat /usr/local/lsws/password >> $RESULTFILE
                 pauseandclear
                 InstallWordpressOLS
@@ -1401,23 +1583,33 @@ function InstallCron
             [yY]|[yY][eE][sS])
                 if [ $(crontab -l) -eq 0 ]
                 then
+                    echo "Importing previous cron jobs"
+                    SUCCESS="Imported Previous cron jobs"
+                    FAILED="Importing previous cron jobs failed"
                     crontab -l > mycron 2>>$ERRORFILE
+                    check
                 fi
                 
                 #echo new cron into cron file
-                SUCCESS="Added new cron file"
-                FAILED="Add new cron file failed"
+                echo "Adding cron jobs to file"
+                SUCCESS="Added new cron to file"
+                FAILED="Add new cron to file failed"
                 echo "30 3 * * * shutdown -r now" >> mycron)
                 checkCritical
+
                 #install new cron file
+                echo "Apply cron file"
                 SUCCESS="Applied cron file to cron"
                 FAILED="Apply cron file to cron failed"
                 crontab mycron 2>>$ERRORFILE
                 checkCritical
-                SUCCESS="Remove cron file"
-                FAILED="Remove cron file failed"
+
+                echo "Remove applied cron file"
+                SUCCESS="Removed applied cron file"
+                FAILED="Removing applied cron file failed"
                 rm mycron 2>>$ERRORFILE
                 checkCritical
+
                 showresult "Cron Installed"
                 break
                 ;;

@@ -165,49 +165,28 @@ function RetrieveDatabaseUser
     checkCritical
 }
 
-function CheckFolderCritical
+function CheckCritical
 {
     if [ -e $FOCUS ]
     then
         return 0
     else
-        showresult "Folder $FOCUS not found"
+        showresult "$FOCUS not found"
         exit 1
     fi
 }
-function CheckFolderOptional
+function CheckOptional
 {
     if [ -e $FOCUS ]
     then
         return 0
     else
-        showresult "Folder $FOCUS not found"
+        showresult "$FOCUS not found"
         return -1
     fi
 }
 
-function CheckFileCritical
-{
-    if [ -e $FOCUS ]
-    then
-        return 0
-    else
-        showresult "File $FOCUS not found"
-        exit 1
 
-    fi
-}
-
-function CheckFileOptional
-{
-    if [ -e $FOCUS ]
-    then
-        return 0
-    else
-        showresult "File $FOCUS not found"
-        return -1
-    fi
-}
 
 
 
@@ -243,7 +222,7 @@ function getRemoveInformation
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
 
-    if $(CheckFileCritical) 
+    if $(CheckCritical) 
     then
             RetrieveDatabaseName
             RetrieveDatabaseUser
@@ -254,7 +233,7 @@ function getRemoveInformation
 function checkBackupVariables
 {
     FOCUS=$FILELOC
-    if ($(CheckFolderCritical))
+    if ($(CheckCritical))
     then
 		echo "Directory $FILELOC CHECKED"
     fi
@@ -265,7 +244,7 @@ function checkBackupVariables
 		exit 1
 	else
         FOCUS=$FILELOC/$FILEDIR
-        if ($(CheckFolderCritical))
+        if ($(CheckCritical))
 		then
 			echo "$FILELOC/$FILEDIR CHECKED"
 		fi
@@ -294,7 +273,7 @@ function checkRestorevariables
 
     WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
-    CheckFileCritical
+    CheckCritical
 
     if [ -z $URL ]
     then
@@ -302,13 +281,13 @@ function checkRestorevariables
             exit 1
     fi
     FOCUS=$CURDIR/$FINAL
-    if  $(CheckFileCritical)
+    if  $(CheckCritical)
     then
             echo "Original Backup $CURDIR/$FINAL Found"
     fi
 
     FOCUS=$FILELOC
-    if $(CheckFolderCritical)
+    if $(CheckCritical)
     then
             echo "$FILELOC Found"
     fi
@@ -321,7 +300,7 @@ function backupbackup
 {
 	# BACKUP FINAL FILE
     FOCUS=$FINAL
-    if $(CheckFileOptional ) 
+    if $(CheckOptional) 
     then
 		echo "Found Previous Backup File '$FINAL'"
         SUCCESS="Backed up previous backup file $FINAL to $BKFINAL"
@@ -332,7 +311,7 @@ function backupbackup
 	fi
 	# BACKUP FINAL FILE
     FOCUS=$FINAL.md5
-    if $(CheckFileOptional ) 
+    if $(CheckOptional) 
 	then
 		echo "Found Previous Backup Hash File '$FINAL.md5'"
         SUCCESS="Backed up previous backup file $FINAL.md5 to $BKFINAL.md5"
@@ -366,7 +345,7 @@ function ArchiveDirectory
 function CheckMD5
 {
     FOCUS=$CURDIR/$FINAL.md5
-    if  $(CheckFileOptional   )
+    if  $(CheckOptional   )
     then
         echo "MD5 file found, attempt to check agaist it"
         if [ $(md5sum -c ${FINAL}.md5) -eq 0 ]
@@ -383,7 +362,7 @@ function CheckMD5
 function PrepareEnvironment
 {
     FOCUS=$CURDIR/$FINAL
-    if  $(CheckFileCritical) 
+    if  $(CheckCritical) 
     then
         CheckMD5
         
@@ -399,7 +378,7 @@ function PrepareEnvironment
 function RemoveExistedDirectory
 {
     FOCUS=$FILELOC/$FILEDIR
-    if $(CheckFolderCritical )
+    if $(CheckCritical )
     then
         read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
         if [[ $YN =~ [nN]|[nN][oO] ]]
@@ -488,7 +467,7 @@ function configurewpconfig
 
     DBFILE=$ORIGINALDB.sql
     FOCUS=$DBFILE
-    CheckFileCritical
+    CheckCritical
     
     if [ ! "$ORIGINALDB" == "$DBNAME" ]
     then
@@ -633,7 +612,7 @@ function RestoreRemoveFiles
 function RemoveFiles
 {
     FOCUS=$FILELOC/$FILEDIR
-    if $(CheckFileCritical )
+    if $(CheckCritical )
     then
         while true;
         do

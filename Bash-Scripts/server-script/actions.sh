@@ -108,11 +108,11 @@ function check
     if [ $PROCESSED == 0 ]
     then
         # Successfully Executed
-        showresult $SUCCESS
+        showresult "$SUCCESS"
         return 0
     else
         # Execution Failed
-        showresult $FAILED
+        showresult "$FAILED"
         return 1
     fi
 
@@ -124,11 +124,11 @@ function checkCritical
     if [ $PROCESSED == 0 ]
     then
         # Successfully Executed
-        showresult $SUCCESS
+        showresult "$SUCCESS"
         return 0
     else
         # Execution Failed
-        showresult $FAILED
+        showresult "$FAILED"
         exit 1
     fi
 

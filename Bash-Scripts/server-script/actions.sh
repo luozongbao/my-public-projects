@@ -169,13 +169,18 @@ function CheckFolder
         return 0
     else
         showresult "Folder $1 not found"
-        if [ "$2" == "critical" ]
-        then
-            exit 1
-        fi
+        exit 1
+    fi
+}
+function CheckFolderOptional
+{
+    if [ -e $1 ]
+    then
+        return 0
+    else
+        showresult "Folder $1 not found"
         return -1
     fi
-    
 }
 
 function CheckFile
@@ -185,13 +190,23 @@ function CheckFile
         return 0
     else
         showresult "File $1 not found"
-        if [ "$2" == "critical" ]
-        then
-            exit 1
-        fi
+        exit 1
+
+    fi
+}
+
+function CheckFileOptional
+{
+    if [ -e $1 ]
+    then
+        return 0
+    else
+        showresult "File $1 not found"
         return -1
     fi
 }
+
+
 
 function getBackupInformation
 {
@@ -296,7 +311,7 @@ function checkRestorevariables
 function backupbackup
 {
 	# BACKUP FINAL FILE
-    if ( $(CheckFile $FINAL "Optional" ) ) 
+    if ( $(CheckFileOptional $FINAL  ) ) 
     then
 		echo "Found Previous Backup File '$FINAL'"
         SUCCESS="Backed up previous backup file $FINAL to $BKFINAL"
@@ -306,7 +321,7 @@ function backupbackup
 
 	fi
 	# BACKUP FINAL FILE
-    if ( $(CheckFile $FINAL.md5 "Optional") )
+    if ( $(CheckFileOptional $FINAL.md5 ) )
 	then
 		echo "Found Previous Backup Hash File '$FINAL.md5'"
         SUCCESS="Backed up previous backup file $FINAL.md5 to $BKFINAL.md5"
@@ -381,7 +396,7 @@ function RemoveExistedDirectory
         echo "removing existing directory"
         SUCCESS="$FILELOC/$FILEDIR found and removed"
         FAILED="removing $FILELOC/$FILEDIR failed"
-        rm -r $FILELOC/$FILEDIR) 2>>$ERRORFILE
+        rm -r $FILELOC/$FILEDIR 2>>$ERRORFILE
         checkCritical
     fi
 }
@@ -925,7 +940,7 @@ function installswap
 
                             SUCCESS="Added swap at system start"
                             FAILED="Add swap to system start failed"
-                            echo "/swapfile swap swap defaults 0 0" >> /etc/fstab)
+                            echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
                             checkCritical
 
                             SUCCESS="Mounted swap"
@@ -1100,7 +1115,7 @@ function InstallFirewall
                     echo "Installing UFW firewall"
                     SUCCESS="Installed UFW Firewall"
                     FAILED="Install UFW failed"
-                    apt install -y ufw)
+                    apt install -y ufw
                     checkCritical
 
                 fi
@@ -1220,7 +1235,7 @@ function InstallWebmin
                 echo "Add webmin repository"
                 SUCCESS="Added webmin repository"
                 FAILED="Add webmin repository failed"
-                echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list)
+                echo "deb https://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list
                 checkCritical
 
                 echo "Download jcameron-key"
@@ -1279,7 +1294,7 @@ function InstallNetDATA
                 echo "Install NetData"
                 SUCCESS="Installed NetData"
                 FAILED="Install Netdata failed"
-                bash <(curl -Ss https://my-netdata.io/kickstart.sh))
+                bash <(curl -Ss https://my-netdata.io/kickstart.sh)
                 checkCritical
                 
                 pauseandclear
@@ -1598,7 +1613,7 @@ function InstallCron
                 echo "Adding cron jobs to file"
                 SUCCESS="Added new cron to file"
                 FAILED="Add new cron to file failed"
-                echo "30 3 * * * shutdown -r now" >> mycron)
+                echo "30 3 * * * shutdown -r now" >> mycron
                 checkCritical
 
                 #install new cron file

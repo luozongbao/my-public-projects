@@ -367,7 +367,7 @@ function CheckMD5
         md5sum -c ${FINAL}.md5
         if [ $? -eq 0 ]
         then
-            return true
+            return 0
         else
             showresult "Backup File corrupted or not the same as encrypted MD5"
             exit 1
@@ -379,13 +379,13 @@ function CheckMD5
 function PrepareEnvironment
 {
     FOCUS=$CURDIR/$FINAL
-    checkFileCritical
+    CheckFileCritical
     CheckMD5
     
     echo "copying $FINAL to $FILELOC"...
     SUCCESS="$FINAL Copied to $FILELOC"
     FAILED="Copying $FINAL to $FILELOC failed"
-    cp $FINAL $FILELOC 2>> $ERRORFILE
+    cp -rf $FINAL $FILELOC 2>> $ERRORFILE
     checkCritical
 }
 
@@ -394,13 +394,14 @@ function RemoveExistedDirectory
     FOCUS=$FILELOC/$FILEDIR
     if $(CheckFileCritical )
     then
+        echo "Remove $FILELOC/$FILEDIR"
         read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
         if [[ $YN =~ [nN]|[nN][oO] ]]
         then
             exit 
         fi
 
-        echo "removing existing directory"
+        echo "removing $FILELOC/$FILEDIR"
         SUCCESS="$FILELOC/$FILEDIR found and removed"
         FAILED="removing $FILELOC/$FILEDIR failed"
         rm -r $FILELOC/$FILEDIR 2>>$ERRORFILE
@@ -460,7 +461,7 @@ function RestoringFileDirectory
     SUCCESS="$FILELOC/$TEMPDIR removed"
     FAILED="Removing $FILELOC/$TEMPDIR failed"
     rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
-    check
+    checkOptional
 
     if [ WEBSERVER == "OLS" ]
     then
@@ -486,7 +487,7 @@ function RestoringFileDirectory
 function configurewpconfig
 {
 
-
+    cd $FILELOC
 
     DBFILE=$ORIGINALDB.sql
     FOCUS=$DBFILE
@@ -518,6 +519,8 @@ function configurewpconfig
             checkCritical
     fi
 
+    cd $CURDIR
+
 }
 
 # EXPORT DATABASE
@@ -544,7 +547,7 @@ function ArchiveBackupFiles
     SUCCESS="Created MD5 checksum for $FINAL > $FINAL.md5"
     FAILED="Creating MD5 Checksum for $FINAL failed"
     md5sum $FINAL > $FINAL.md5 2>>$ERRORFILE
-    check
+    checkOptional
 }
 
 
@@ -638,7 +641,6 @@ function RemoveFiles
     then
         while true;
         do
-
             echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
             read -p "Continue [Y/N]: " YN
             case $YN in

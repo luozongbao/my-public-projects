@@ -550,23 +550,25 @@ function ArchiveBackupFiles
     checkOptional
 }
 
-function checkuser
+function checkDBUser
 {
-    echo "Checking $DBUSER exist"
+    echo "Check $DBUSER"
     # SUCCESS="User $DBUSER found"
     # FAILED="USER $UDBUSER not found"
-    mysql -u root mysql -e "select user from user where user='w$DBUSER';" | grep $DBUSER
-    return $?
+    mysql -u root mysql -e "SELECT user FROM user WHERE user='$DBUSER';" | grep $DBUSER 2>>$ERRORFILE
+    RESULT=$?
+    return $RESULT
 }
 
 
 function CreateDBUser
 {
-    if $(checkuser)
+    echo "Create Database User $DBUSER"
+    mysql -u root mysql -e "SELECT user FROM user WHERE user='$DBUSER';" | grep $DBUSER 2>>$ERRORFILE
+    if [ $? -eq 0 ]
     then
-        showresult "$DBUSER already exist"
+        echo "$DBUSER already exist"
     else
-        echo "Create Database User"
         SUCCESS="Created Database User $DBUSER"
         FAILED="Creating database user $DBUSER failed"
         mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
@@ -580,8 +582,9 @@ function checkDB
     echo "Check Database"
     # SUCCESS="Database $DBNAME found"
     # FAILED="Database $DBNAME not found"
-    mysql -u root -e "use $DBNAME;" 
-    return $?
+    mysql -u root -e "USE $DBNAME;" 2>>$ERRORFILE
+    RESULT=$?
+    return $RESULT
 }
 
 function DropDatabase
@@ -595,13 +598,16 @@ function DropDatabase
 
 function createDatabase
 {
-    while $(checkDB)
-    then
+    echo "Create Database $DBNAME"
+    mysql -u root -e "USE $DBNAME;" 2>>$ERRORFILE
+    while [ $? -eq 0 ]
+    do
         echo "Database $DBNAME already exist"
         read -p "Do you want to drop and replace? [y/n]: " YN
         if [[ $YN =~ [yY]|[yY][eE][sS] ]]
         then
             DropDatabase
+            break
         else
             read -p "Do you want to change new database name? [y/n]: " YN
             if [[ $YN =~ [yY]|[yY][eE][sS] ]]
@@ -610,11 +616,11 @@ function createDatabase
                 while [ -z $DBNAME ]
                 do
                     read -p "Please, specify new Database Name: " DBNAME
+                    mysql -u root -e "USE $DBNAME;" 2>>$ERRORFILE
                 done
             fi
         fi
-    do
-    echo "create database $DBNAME"
+    done
     SUCCESS="Created database $DBNAME"
     FAILED="Creating database $DBNAME failed"
     mysql -u root -e "CREATE DATABASE $DBNAME;" 2>>$ERRORFILE
@@ -626,7 +632,6 @@ function createDatabase
     mysql -u root -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER;" 2>>$ERRORFILE
     checkCritical
     
-
 }
 
 function ImportDatabase
@@ -650,12 +655,12 @@ function BackupRemoveUnecessaryBackFiles
             SUCCESS="Removed $DBFILE"
             FAILED="Removing $DBFILE failed"
 			rm $DBFILE 2>>$ERRORFILE
-            check
+            checkOptional
 
             SUCCESS="Removed $BKFILE"
             FAILED="Removing $BKFILE failed"
 			rm $BKFILE 2>>$ERRORFILE
-            check
+            checkOptional
 
 			break
 			;;
@@ -1787,8 +1792,8 @@ function Restore
     configurewpconfig
     
     CreateDBUser
-    #
-    DropDatabase
+
+    #DropDatabase
     #
     createDatabase
     #

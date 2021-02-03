@@ -862,7 +862,6 @@ function ConfigureTestSite
         case $YN in
             [yY]|[yY][eE][sS])
                 cd $FILELOC/$FILEDIR
-                completeURLChanged
                 discourageSearchEnging
                 disablePlugins
                 updatePlugins
@@ -911,11 +910,10 @@ function completeURLChanged
                 SUCCESS="Searched and Replaced $ORIGINALURL to $URL"
                 FAILED="Search and Replace $ORIGINALURL to $URL failed"
                 wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
-                check
+                checkOptional
 
                 showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
                 
-                ConfigureTestSite
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1805,6 +1803,9 @@ function Restore
     UpdateURL
     
     completeURLChanged
+
+    ConfigureTestSite
+    
     Finalize
     echo "***************** WP INFO *****************"
     wp --info

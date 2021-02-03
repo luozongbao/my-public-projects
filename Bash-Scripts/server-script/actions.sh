@@ -550,14 +550,38 @@ function ArchiveBackupFiles
     checkOptional
 }
 
+function checkuser
+{
+    echo "Checking $DBUSER exist"
+    # SUCCESS="User $DBUSER found"
+    # FAILED="USER $UDBUSER not found"
+    mysql -u root mysql -e "select user from user where user='w$DBUSER';" | grep $DBUSER
+    return $?
+}
+
 
 function CreateDBUser
 {
-    echo "Create Database User"
-    SUCCESS="Created Database User $DBUSER"
-    FAILED="Creating database user $DBUSER failed"
-    mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
-    checkCritical
+    if $(checkuser)
+    then
+        showresult "$DBUSER already exist"
+    else
+        echo "Create Database User"
+        SUCCESS="Created Database User $DBUSER"
+        FAILED="Creating database user $DBUSER failed"
+        mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
+        checkCritical
+    fi
+
+}
+
+function checkDB
+{
+    echo "Check Database"
+    # SUCCESS="Database $DBNAME found"
+    # FAILED="Database $DBNAME not found"
+    mysql -u root -e "use $DBNAME;" 
+    return $?
 }
 
 function DropDatabase
@@ -571,6 +595,25 @@ function DropDatabase
 
 function createDatabase
 {
+    while $(checkDB)
+    then
+        echo "Database $DBNAME already exist"
+        read -p "Do you want to drop and replace? [y/n]: " YN
+        if [[ $YN =~ [yY]|[yY][eE][sS] ]]
+        then
+            DropDatabase
+        else
+            read -p "Do you want to change new database name? [y/n]: " YN
+            if [[ $YN =~ [yY]|[yY][eE][sS] ]]
+            then
+                $DBNAME=""
+                while [ -z $DBNAME ]
+                do
+                    read -p "Please, specify new Database Name: " DBNAME
+                done
+            fi
+        fi
+    do
     echo "create database $DBNAME"
     SUCCESS="Created database $DBNAME"
     FAILED="Creating database $DBNAME failed"
@@ -582,6 +625,8 @@ function createDatabase
     FAILED="Granting privileges to $DBUSER failed"
     mysql -u root -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER;" 2>>$ERRORFILE
     checkCritical
+    
+
 }
 
 function ImportDatabase

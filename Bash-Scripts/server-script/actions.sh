@@ -857,11 +857,69 @@ function UpdateURL
 
 function discourageSearchEnging
 {
-    echo "Discouraging search engines from indexing the site"
-    SUCCESS="Discouraged search engines from indexing the site"
-    FAILED="Discoruaging search engines failed"
-    wp option set blog_public 0 --allow-root 2>> $ERRORFILE
-    checkOptional
+    read -p "Discourage search engines from indexing the site? [y/n]: " YN
+    if [[ $YN =~ [yY]|[yY][eE][sS] ]]
+    then
+        SUCCESS="Discouraged search engines from indexing the site"
+        FAILED="Discoruaging search engines failed"
+        wp option set blog_public 0 --allow-root 2>> $ERRORFILE
+        checkOptional
+    fi
+
+}
+
+
+
+function disableThemes
+{
+    while true;
+    do
+        echo
+        echo " List Themes and status "
+        wp theme list --allow-root
+        echo
+        read -p "(Type 'DONE' to exit) Type theme name to activate: " THEME
+        if [ "$THEME" == "DONE" ]
+        then
+            break
+        else
+            echo "Deactivate theme $THEME"
+            SUCCESS="Disabled theme $THEME"
+            FAILED="Disabling theme $THEME failed"
+            wp theme activate $THEME --allow-root 2>> $ERRORFILE
+            checkOptional
+        fi
+    done
+}
+
+function updateThemes
+{
+    while true;
+    do
+        echo
+        echo " List Themes and status "
+        sudo wp theme list --allow-root
+        echo
+        read -p "Type 'DONE' to exit, Type 'ALL' update all themes, or type theme name to Update: " THEME
+        if [ "$THEME" == "DONE" ]
+        then
+            break
+        elif  [ "$THEME" == "ALL" ]
+        then
+            echo "Update all themes"
+            SUCCESS="Updated all themes"
+            FAILED="Updating all themes failed"
+            wp theme update --all --allow-root 2>> $ERRORFILE
+            checkOptional
+        else
+            echo "Updating theme $THEME"
+            SUCCESS="Updated theme $THEME"
+            FAILED="Updating theme $THEME failed"
+            wp theme update $THEME --allow-root 2>> $ERRORFILE
+            checkOptional
+        fi
+    done
+
 }
 
 function disablePlugins
@@ -916,6 +974,60 @@ function updatePlugins
 
 }
 
+function ManagePlugins
+{
+    while [ -z $FILEDIR ]
+    do
+        read -p "Please specify wordpress directory: " FILEDIR 
+
+        FOCUS=$FILELOC/$FILEDIR/wp-config.php
+        if $(CheckFileOptional)
+        then
+            cd $FILELOC/$FILEDIR
+            disablePlugins
+            updatePlugins
+            wp plugin list --allow-root
+            cd $CURDIR
+        else
+            echo "$FILEDIR is not a valid wordpress directory"
+            FILEDIR=""
+        fi
+
+
+    done
+
+
+
+    
+
+}
+
+function ManageThemes
+{
+    while [ -z $FILEDIR ]
+    do
+        read -p "Please specify wordpress directory: " FILEDIR 
+
+        FOCUS=$FILELOC/$FILEDIR/wp-config.php
+        if $(CheckFileOptional)
+        then
+            cd $FILELOC/$FILEDIR
+            disableThemes
+            updateThemes
+            wp theme list --allow-root
+            cd $CURDIR
+        else
+            echo "$FILEDIR is not a valid wordpress directory"
+            FILEDIR=""
+        fi
+
+
+    done
+
+
+
+}
+
 function ConfigureTestSite
 {
     while true;
@@ -925,9 +1037,8 @@ function ConfigureTestSite
             [yY]|[yY][eE][sS])
                 cd $FILELOC/$FILEDIR
                 discourageSearchEnging
-                disablePlugins
-                updatePlugins
-                wp plugin status --allow-root
+                ManagePlugins
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1949,8 +2060,8 @@ function main
         echo "=============="
         echo
         echo "   New)       NEW Server Setup                     Rollback)  Rollback Final Backup"
-        echo "   MOTD)      Install new MOTD"
-        echo "   PROMPT)    My Custom Prompt"
+        echo "   MOTD)      Install new MOTD                     Plugins)   Manage WP Plugins"
+        echo "   PROMPT)    My Custom Prompt                     Themes)    Manage WP Themes"
         echo "   Backup)    BACKUP Website"
         echo "   Restore)   RESTORE Website"
         echo "   Remove)    REMOVE Website"
@@ -2026,19 +2137,33 @@ function main
                 
                 ;;
             [uU][fF][wW])
+                display "Install Firewall"
                 InstallFirewall
                 cat $RESULTFILE
                 
                 ;;
+
+            [pP]|[lL][uU][gG][iI][nN][sS])
+                display "Manage Plugins"
+                ManagePlugins
+                wp --info
+                
+                ;;
+
+            [tT][hH][eE][mM][eE][sS])
+                display "Manage Themes"
+                ManageThemes
+                wp --info
+                
+                ;;
+
             [tT][eE][sS][tT])
-                initialize
                 ConfigureTestSite
                 cat $RESULTFILE
                 wp --info
                 
                 ;;
             [xX]|[eE][xX][iI][tT])
-                display "Exit Program"
                 break
                 ;;
             *)

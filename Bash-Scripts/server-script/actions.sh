@@ -214,17 +214,20 @@ function getBackupInformation
 	read -p "Please input files directory:" FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
-    if [ ! $(CheckOptional) ]
-    then
-        return 1
-    fi
-    
+    CheckCritical
+    echo "$WPCONFIG found"
+
 	RetrieveDatabaseName
     DBNAME=$ORIGINALDB
-    
-	FINAL=latest.$FILEDIR.zip
+
+    FINAL=latest.$FILEDIR.zip
+    FOCUS=$FINAL
+    CheckCritical
+    echo "$FINAL found"
+
 	DBFILE=$DBNAME.sql
 	BKFILE=$FILEDIR.zip
+
 	BKFINAL=old.$FILEDIR.zip
 }
 
@@ -238,7 +241,9 @@ function getRestoreInformation
     read -p "Please, input target database password for '$DBUSER' (Blank for same as original): " DBPASS
     read -p "Please, input new website URL with http/https: " URL
     FINAL=latest.$ORIGINALDIR.zip
+    BKFINAL=old.$ORIGINALDIR.zip
     BKFILE=$ORIGINALDIR.zip
+
     if [ -z $FILEDIR ]
     then
         FILEDIR=$ORIGINALDIR
@@ -254,24 +259,20 @@ function getRemoveInformation
     read -p "Please input the website File Directory: " FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
+    CheckCritical
+    RetrieveDatabaseName
+    DBNAME=$ORIGINALDB
+    RetrieveDatabaseUser
+    DBUSER=$ORIGINALUSR
 
-    if $(CheckCritical) 
-    then
-            RetrieveDatabaseName
-            DBNAME=$ORIGINALDB
-            RetrieveDatabaseUser
-            DBUSER=$ORIGINALUSR
-    fi
 }
 
 # CHCEK VALID VARIABLES
 function checkBackupVariables
 {
     FOCUS=$FILELOC
-    if $(CheckCritical)
-    then
-		echo "Directory $FILELOC CHECKED"
-    fi
+    CheckCritical
+	echo "Directory $FILELOC CHECKED"
 
 	if [ -z "$FILEDIR" ];
 	then
@@ -279,10 +280,8 @@ function checkBackupVariables
 		exit 1
 	else
         FOCUS=$FILELOC/$FILEDIR
-        if $(CheckCritical)
-		then
-			echo "$FILELOC/$FILEDIR CHECKED"
-		fi
+        CheckCritical
+	    echo "$FILELOC/$FILEDIR CHECKED"
 	fi
 
 	showresult "Input Information CHECKED.  Start Backing up $FILELOC/$FILEDIR Files"
@@ -299,16 +298,13 @@ function checkRestorevariables
     fi
 
     FOCUS=$CURDIR/$FINAL
-    if  $(CheckCritical)
-    then
-            echo "Original Backup $CURDIR/$FINAL Found"
-    fi
+    CheckCritical
+    echo "Original Backup $CURDIR/$FINAL Found"
 
     FOCUS=$FILELOC
-    if $(CheckCritical)
-    then
-            echo "$FILELOC Found"
-    fi
+    CheckCritical
+    echo "$FILELOC Found"
+    
 
     showresult "Variables Checked"
 }
@@ -325,7 +321,6 @@ function backupbackup
         FAILED="Backup Prevouse Backup $FINAL to $BKFINAL Failed"
 		mv $FINAL $BKFINAL
         checkCritical
-
 	fi
 	# BACKUP FINAL FILE
     FOCUS=$FINAL.md5

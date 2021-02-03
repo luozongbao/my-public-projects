@@ -248,8 +248,19 @@ function getRestoreInformation
     then
         FILEDIR=$ORIGINALDIR
         echo "Recover to the same directory '$ORIGINALDIR'"
+        echo "This may cause some conflict in file system of the websites"
     fi
 
+    if [ -z $DBNAME ]
+    then
+        echo "This may cause some conflict between websites with the same database"
+    fi
+
+    read -p "Do you want to continue? [Y/N]: " YN
+    if [[ ! $YN =~ [yY]|[yY][eE][sS] ]]
+    then
+        exit 
+    fi
 
 }
 
@@ -1793,10 +1804,8 @@ function Restore
     
     CreateDBUser
 
-    #DropDatabase
-    #
     createDatabase
-    #
+    
     ImportDatabase
     RestoreRemoveFiles
     
@@ -1805,7 +1814,7 @@ function Restore
     completeURLChanged
 
     ConfigureTestSite
-    
+
     Finalize
     echo "***************** WP INFO *****************"
     wp --info

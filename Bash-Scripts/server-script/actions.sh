@@ -55,7 +55,7 @@ function initialize
     if [ -d /var/www ]
     then
         FILELOC=/var/www
-        wEBSERVER="Apache"
+        WEBSERVER="Apache"
     fi
 
     clear
@@ -394,7 +394,7 @@ function PrepareEnvironment
     CheckMD5
     
     echo "copying $FINAL to $FILELOC"...
-    SUCCESS="$FINAL Copied to $FILELOC"
+    SUCCESS="Copied $FINAL to $FILELOC"
     FAILED="Copying $FINAL to $FILELOC failed"
     cp -rf $FINAL $FILELOC 2>> $ERRORFILE
     checkCritical
@@ -430,7 +430,6 @@ function RestoringFileDirectory
     unzip -o $FINAL 2>> $ERRORFILE
     checkCritical
 
-
     echo "Recover Directory from Backup $FILELOC/$TEMPDIR"
     SUCCESS="Recovered $BKFILE to $FILELOC/$TEMPDIR"
     FAILED="Recovered $BKFILE to $FILELOC/$TEMPDIR Failed" 
@@ -443,45 +442,43 @@ function RestoringFileDirectory
     mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
     checkCritical
 
+    echo "Remove Temp folder $FILELOC/$TEMPDIR"
+    SUCCESS="Removed $FILELOC/$TEMPDIR"
+    FAILED="Removing $FILELOC/$TEMPDIR failed"
+    rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
+    checkOptional
+
     WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
     CheckFileCritical
 
+    RetrieveDatabaseUser
+    RetrieveDatabaseName
+    RetrieveDatabasePassword
+
     if [ -z $DBUSER ]
     then
-        RetrieveDatabaseUser
         DBUSER=$ORIGINALUSR
     fi
 
     if [ -z $DBNAME ]
     then
-        RetrieveDatabaseName
         DBNAME=$ORIGINALDB
     fi
 
     if [ -z $DBPASS ]
     then
-        RetrieveDatabasePassword
         DBPASS=$ORIGINALPASS
     fi
 
-    WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-
-
-    echo "Removing Temp folder $FILELOC/$TEMPDIR"
-    SUCCESS="$FILELOC/$TEMPDIR removed"
-    FAILED="Removing $FILELOC/$TEMPDIR failed"
-    rm -r $FILELOC/$TEMPDIR 2>>$ERRORFILE
-    checkOptional
-
-    if [ WEBSERVER == "OLS" ]
+    if [ $WEBSERVER == "OLS" ]
     then
         echo "Adding Permission nobody:nogroup to $FILEDIR"
         SUCCESS="Setted Permission to $FILEDIR"
         FAILED="Setting Permission to $FILEDIR failed"
         chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
         checkCritical
-    elif [ WEBSERVER == "Apache" ]
+    elif [ $WEBSERVER == "Apache" ]
     then
         echo "Adding Permission www-data:www-data to $FILEDIR"
         SUCCESS="Setted Permission to $FILEDIR"

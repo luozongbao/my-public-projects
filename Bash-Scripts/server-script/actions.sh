@@ -680,7 +680,7 @@ function RestoreRemoveFiles
     SUCCESS="Removed $BKFILE $DBFLE $FINAL"
     FAILED="Removing $BKFILE $DBFILE $FINAL failed"
     rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
-    check
+    checkOptional
 }
 
 

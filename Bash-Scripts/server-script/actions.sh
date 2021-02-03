@@ -207,7 +207,7 @@ function CheckFileOptional
 
 function RollbackFinalBackup
 {
-    read -p "Pleae input the Original Backup Directory" FILEDIR
+    read -p "Pleae input the Original Backup Directory: " FILEDIR
     FINAL=latest.$FILEDIR.zip
     BKFINAL=old.$FILEDIR.zip
     FINALMD5=$FINAL.md5
@@ -220,7 +220,7 @@ function RollbackFinalBackup
     FOCUS=$FINAL
     if $(CheckFileOptional)
     then
-        echo "This will permanently remove $FINAL, continue? [y/n]: " YN
+        read -p "This will permanently remove $FINAL, continue? [y/n]: " YN
         if [[ $YN =~ [yY]|[yY][eE][sS] ]]
         then
 
@@ -247,10 +247,11 @@ function RollbackFinalBackup
                 FAILED="Removing $FINALMD5 failed"
                 mv -f $BKFINALMD5 $FINALMD5 2>>$ERRORFILE
             fi
+            showresult "Rolled Back $FINAL backup"
         fi
     fi
 
-    showresult "Rolled Back $FINAL backup"
+    
 
 }
 

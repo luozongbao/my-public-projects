@@ -210,7 +210,7 @@ function CheckOptional
 
 function getBackupInformation
 {
-	display "Collect Information for backup"
+	echo "Collect Information for backup"
 	read -p "Please input files directory:" FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
@@ -233,7 +233,7 @@ function getBackupInformation
 
 function getRestoreInformation
 {
-    display "Collecting information for the job"
+
     read -p "Please, input backup original folder name: " ORIGINALDIR
     read -p "Please, input target directory (Blank for same as original): " FILEDIR
     read -p "Please, input target database name (Blank for same as original): " DBNAME
@@ -255,7 +255,7 @@ function getRestoreInformation
 
 function getRemoveInformation
 {
-    display "Collect Information For Website Removal"
+
     read -p "Please input the website File Directory: " FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
@@ -595,7 +595,6 @@ function BackupRemoveUnecessaryBackFiles
 {
 	while true;
 	do
-		display "Unnecessary Files"
 		read -p "Remove unecessary files? [Y/N]" YN
 		case $YN in [yY]|[yY][eE][sS])
 			#REMOVE ARCHIVED FILES
@@ -640,9 +639,9 @@ function RemoveFiles
     then
         while true;
         do
-            display "Remove File Folder"
+
             echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
-            read -p " Continue [Y/N]: " YN
+            read -p "Continue [Y/N]: " YN
             case $YN in
                     [yY]|[yY][eE][sS])
                         RemoveExistedDirectory
@@ -665,8 +664,7 @@ function RemoveDatabase
 {
     while true;
     do
-        display "Remove Database"
-        read -p "This will remove database $DBNAME permanently [Y/N]: " YN
+        read -p "Remove database $DBNAME permanently [Y/N]: " YN
         case $YN in
             [yY]|[yY][eE][sS])
                 echo "Removing $DBNAME"
@@ -692,7 +690,6 @@ function RemoveDatabaseUser
 {
     while true;
     do
-            display "Remove Database User"
             echo "Your Database User might be used with other database.  "
             read -p "Do you want to remove database user $DBUSER [Y/N]: " YN
             case $YN in
@@ -927,7 +924,6 @@ function installswap
             [yY]|[yY][eE][sS])
                 while true;
                 do
-                    display "Install Swap"
                     read -p "Install Swap Size in GB: (0 to skip) " SWAPSIZE
                     case $SWAPSIZE in 
                         [1]|[2]|[3]|[4]|[5]|[6]|[7]|[8]|[9])
@@ -994,7 +990,6 @@ function installswap
 
 function UpdateUpgrade
 {
-    display "Update and Upgrade Server"
     while true;
     do
         read -p "Unpdate and Upgrade Server Now? [Y/N]: " UP
@@ -1028,7 +1023,6 @@ function UpdateUpgrade
 
 function ConfigHostName
 {
-    display "Set Host name"
     while true;
     do
         read -p "Congfigure HostName? [Y/N]: " HN
@@ -1060,7 +1054,6 @@ function ConfigHostName
 
 function ConfigTimeZone
 {
-    display "Configure Time Zone"
     while true;
     do
         read -p "Congfigure Timezone? [Y/N]: " TZ
@@ -1092,7 +1085,6 @@ function ConfigTimeZone
 
 function InstallZipUnzip
 {
-    display "Install Zip/Unzip"
     while true;
     do
         read -p "Install Zip and Unzip Now? [Y/N]: " ZIP
@@ -1120,7 +1112,6 @@ function InstallZipUnzip
 
 function InstallFirewall
 {
-    display "Install Firewall"
     while true;
     do
         read -p "Do you want to install firewall Now? [Y/N]: " FIREWALL
@@ -1244,7 +1235,6 @@ function InstallFirewall
 
 function InstallWebmin
 {
-    display "Install Webmin"
     while true;
     do
         read -p "Install Webmin Now? [Y/N]: " WEBMIN
@@ -1303,7 +1293,6 @@ function InstallWebmin
 
 function InstallNetDATA
 {
-    display "Install NetDATA"
     while true;
     do
         read -p "Install NetData Now? [Y/N]: " NETDATA
@@ -1346,7 +1335,6 @@ showresult "Database mysql installation secured"
 
 function InstallMariadb
 {
-    display "Install MariaDB"
     while true;
     do
         read -p "Install Mariadb Server Now? [Y/N]: " MDB
@@ -1399,7 +1387,7 @@ function InstallApacheWPCLI
 
 function InstallWordpressApache
 {
-    display $'Wordpress for Apache Server \n*   This will install Following \n*     - wordpress \n*     - wp-cli'
+
     while true;
     do
         read -p "Install Wordpress Now? [Y/N]: " WPAPCHE
@@ -1440,6 +1428,8 @@ function InstallWordpressApache
                 checkCritical
 
                 showresult "Wordpress Installed at $SITELOC"
+
+                display "Install Wordpress CLI for Apache"
                 InstallApacheWPCLI
                 
                 break
@@ -1456,7 +1446,6 @@ function InstallWordpressApache
 
 function InstallApache
 {
-    display "Install Apache Virtual Server"
     while true;
     do
         read -p "Install Apache Web Server Now? [Y/N]: " APCHE
@@ -1470,7 +1459,7 @@ function InstallApache
                 apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE
                 checkCritical
 
-                
+                display "Install Wordpress for Apache"
                 InstallWordpressApache
                 break
                 ;;
@@ -1515,7 +1504,6 @@ function InstallOLSWPCLI
 
 function InstallWordpressOLS
 {
-    display $'Wordpress for Apache Server \n*   This will install Following \n*     - wordpress \n*     - wp-cli'
     while true;
     do
         read -p "Install Wordpress Now? [Y/N]: " WPOLS
@@ -1550,6 +1538,8 @@ function InstallWordpressOLS
                 checkCritical
 
                 showresult "Wordpress Installed at $SITELOC"
+
+                display "Install Wordpress CLI for Openlitespeed"
                 InstallOLSWPCLI
                 
                 break
@@ -1568,12 +1558,12 @@ function InstallWordpressOLS
 
 function InstallOpenLiteSpeed
 {
-    display "Installing OpenLiteSpeed Virtual Server"
     while true;
     do
         read -p "Install OpenLiteSpeed Web Server Now? [Y/N]: " OLS
         case $OLS in 
             [yY]|[yY][eE][sS])
+                display "Install MariaDB"
                 InstallMariadb
 
                 echo "Download and install Openlitespeed"
@@ -1598,6 +1588,7 @@ function InstallOpenLiteSpeed
                 cat /usr/local/lsws/password
                 cat /usr/local/lsws/password >> $RESULTFILE
                 
+                display "Install Wordpress for Openlitespeed"
                 InstallWordpressOLS
                 break
                 ;;
@@ -1613,7 +1604,6 @@ function InstallOpenLiteSpeed
 
 function InstallCron
 {
-    display "Install Server Cron Schedule"
     while true;
     do
         read -p "Install reset cron schedule Now? [Y/N]: " CRON
@@ -1663,7 +1653,6 @@ function InstallCron
 
 function SelectVirtualHostServer
 {
-    display "Select Vertual Host Server Type"
     while true;
     do
         read -p "Select your virtual host server 'Apache' Or 'OpenLiteSpeed'? (A/O/C)" AOC
@@ -1690,12 +1679,12 @@ function SelectVirtualHostServer
 
 function InstallWebServer
 {
-    display "Install Web Server"
     while true;
     do
         read -p "Do you want to install Web Server Now? [Y/N]: " WS
         case $WS in 
             [yY]|[yY][eE][sS])
+                display "Select Virtual Host server"
                 SelectVirtualHostServer
                 InstallCron
                 break
@@ -1865,42 +1854,54 @@ function main
         read -p "What is your action?: " ANS
         case $ANS in 
             [nN][eE][wW])
+                display "Set New server"
                 Newsvr
                 ;;
             [mM][oO][tT][dD])
+                display "Install Login welcome"
                 CustomMOTD
                 ;;
             [pP][rR][oO][mM][pP][tT])
+                display "Install custom prompt"
                 CustomPrompt
                 ;;
             [bB][aA][cC][kK][uU][pP])
+                display "Backup website"
                 Backup
                 ;;
             [rR][eE][sS][tT][oO][rR][eE])
+                display "Restore from Backup"
                 Restore
                 ;;
             [rR][eE][mM][oO][vV][eE])
+                display "Removing Webiste"
                 Remove
                 ;;
             [dD][bB][sS][eE][rR][vV][eE][rR])
+                display "Install MariaDB"
                 InstallMariadb
                 ;;
             [wW][eE][bB][sS][eE][rR][vV][eE][rR])
+                display "Install Virtual Host Server"
                 InstallWebServer
                 ;;
             [wW][eE][bB][mM][iI][nN])
+                display "Install Webmin"
                 InstallWebmin
                 ;;
             [nN][eE][tT][dD][aA][tT][aA])
+                display "Install NetDATA"
                 InstallNetDATA
                 ;;
             [wW][oO][rR][dD][pP][rR][eE][sS][sS])
+                display 'Wordpress for Apache Server \n*   This will install Following \n*     - wordpress \n*     - wp-cli'
                 InstallWordpress
                 cat $RESULTFILE
                 wp --info
                 
                 ;;
             [wW][pP][cC][lL][iI])
+                display "Install Wordpress CLI"
                 InstallWPCLI
                 cat $RESULTFILE
                 wp --info

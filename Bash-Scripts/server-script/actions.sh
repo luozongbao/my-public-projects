@@ -556,15 +556,13 @@ function checkDBUser
     # SUCCESS="User $DBUSER found"
     # FAILED="USER $UDBUSER not found"
     mysql -u root mysql -e "SELECT user FROM user WHERE user='$DBUSER';" | grep $DBUSER 2>>$ERRORFILE
-    RESULT=$?
-    return $RESULT
 }
 
 
 function CreateDBUser
 {
     echo "Create Database User $DBUSER"
-    mysql -u root mysql -e "SELECT user FROM user WHERE user='$DBUSER';" | grep $DBUSER 2>>$ERRORFILE
+    checkDBUser
     if [ $? -eq 0 ]
     then
         echo "$DBUSER already exist"
@@ -583,8 +581,6 @@ function checkDB
     # SUCCESS="Database $DBNAME found"
     # FAILED="Database $DBNAME not found"
     mysql -u root -e "USE $DBNAME;" 2>>$ERRORFILE
-    RESULT=$?
-    return $RESULT
 }
 
 function DropDatabase
@@ -598,8 +594,9 @@ function DropDatabase
 
 function createDatabase
 {
-    echo "Create Database $DBNAME"
-    mysql -u root -e "USE $DBNAME;" 2>>$ERRORFILE
+    
+    #
+    checkDB
     while [ $? -eq 0 ]
     do
         echo "Database $DBNAME already exist"
@@ -616,11 +613,12 @@ function createDatabase
                 while [ -z $DBNAME ]
                 do
                     read -p "Please, specify new Database Name: " DBNAME
-                    mysql -u root -e "USE $DBNAME;" 2>>$ERRORFILE
+                    checkDB
                 done
             fi
         fi
     done
+    echo "Create Database $DBNAME"
     SUCCESS="Created database $DBNAME"
     FAILED="Creating database $DBNAME failed"
     mysql -u root -e "CREATE DATABASE $DBNAME;" 2>>$ERRORFILE
@@ -636,11 +634,13 @@ function createDatabase
 
 function ImportDatabase
 {
+    cd $FILELOC
     echo "importing database from $DBFILE"
     SUCCESS="Imported $DBFILE to database $DBNAME"
     FAILED="Importing $DBFILE to database $DBNAME failed"
     mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE
     checkCritical
+    cd $CURDIR
 }
 
 function BackupRemoveUnecessaryBackFiles
@@ -676,11 +676,13 @@ function BackupRemoveUnecessaryBackFiles
 
 function RestoreRemoveFiles
 {
+    cd $FILELOC
     echo "Removing $BKFILE $DBFILE $FINAL"
     SUCCESS="Removed $BKFILE $DBFLE $FINAL"
     FAILED="Removing $BKFILE $DBFILE $FINAL failed"
     rm $BKFILE $DBFILE $FINAL 2>>$ERRORFILE
     checkOptional
+    cd $CURDIR
 }
 
 

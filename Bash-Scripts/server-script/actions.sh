@@ -103,8 +103,8 @@ function showresult
 
 function pauseandclear
 {
-        read -p "Press ENTER to continue" ENTER
-        clear
+    read -p "Press ENTER to continue" ENTER
+    clear
 }
 
 function check
@@ -152,8 +152,9 @@ function RetrieveDatabaseName
     echo "Retrieving Database Name from $WPCONFIG"
     SUCCESS="Retrieved Database Name from $WPCONFIG"
     FAILED="Could not Retrieve Database Name from $WPCONFIG"
-    DBNAME=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
+    ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
+
 }
 
 function RetrieveDatabaseUser
@@ -161,9 +162,26 @@ function RetrieveDatabaseUser
     echo "Retrieving Database Username from $WPCONFIG"
     SUCCESS="Retrieved Database User from $WPCONFIG"
     FAILED="Could not retrieve Database User from $WPCONFIG"
-    DBUSER=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
+    ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
 }
+
+function RetrieveDatabasePassword
+{
+    echo "Retrieving Original Database Password from $WPCONFIG"
+    SUCCESS="Retrieved Database Password"
+    FAILED="Retrieving Database Password failed"
+    ORIGINALPASS=$(cat $WPCONFIG | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE
+    checkCritical
+}
+
+
+
+
+
+
+
+
 
 function CheckCritical
 {
@@ -195,7 +213,15 @@ function getBackupInformation
 	display "Collect Information for backup"
 	read -p "Please input files directory:" FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+    FOCUS=$WPCONFIG
+    if [ ! $(CheckOptional) ]
+    then
+        return 1
+    fi
+    
 	RetrieveDatabaseName
+    DBNAME=$ORIGINALDB
+    
 	FINAL=latest.$FILEDIR.zip
 	DBFILE=$DBNAME.sql
 	BKFILE=$FILEDIR.zip
@@ -204,15 +230,22 @@ function getBackupInformation
 
 function getRestoreInformation
 {
-        display "Collecting information for the job"
-        read -p "Please, input backup original folder name: " ORIGINALDIR
-        read -p "Please, input target directory (Blank for same as original): " FILEDIR
-        read -p "Please, input target database name (Blank for same as original): " DBNAME
-        read -p "Please, input target database username (Blank for same as original): " DBUSER
-        read -p "Please, input target database password for '$DBUSER' (Blank for same as original): " DBPASS
-        read -p "Please, input new website URL with http/https: " URL
-        FINAL=latest.$ORIGINALDIR.zip
-        BKFILE=$ORIGINALDIR.zip
+    display "Collecting information for the job"
+    read -p "Please, input backup original folder name: " ORIGINALDIR
+    read -p "Please, input target directory (Blank for same as original): " FILEDIR
+    read -p "Please, input target database name (Blank for same as original): " DBNAME
+    read -p "Please, input target database username (Blank for same as original): " DBUSER
+    read -p "Please, input target database password for '$DBUSER' (Blank for same as original): " DBPASS
+    read -p "Please, input new website URL with http/https: " URL
+    FINAL=latest.$ORIGINALDIR.zip
+    BKFILE=$ORIGINALDIR.zip
+    if [ -z $FILEDIR ]
+    then
+        FILEDIR=$ORIGINALDIR
+        echo "Recover to the same directory '$ORIGINALDIR'"
+    fi
+
+
 }
 
 function getRemoveInformation
@@ -225,7 +258,9 @@ function getRemoveInformation
     if $(CheckCritical) 
     then
             RetrieveDatabaseName
+            DBNAME=$ORIGINALDB
             RetrieveDatabaseUser
+            DBUSER=$ORIGINALUSR
     fi
 }
 
@@ -251,35 +286,18 @@ function checkBackupVariables
 	fi
 
 	showresult "Input Information CHECKED.  Start Backing up $FILELOC/$FILEDIR Files"
+
 }
 
 function checkRestorevariables
 {
-    if [ -z $DBUSER ]
-    then
-        RetrieveDatabaseUser
-    fi
-
-    if [ -z $DBNAME ]
-    then
-        RetrieveDatabaseName
-    fi
-
-    if [ -z $FILEDIR ]
-    then
-            FILEDIR=$ORIGINALDIR
-            echo "Recover to the same directory '$ORIGINALDIR'"
-    fi
-
-    WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-    FOCUS=$WPCONFIG
-    CheckCritical
 
     if [ -z $URL ]
     then
             showresult "URL input error: $URL"
             exit 1
     fi
+
     FOCUS=$CURDIR/$FINAL
     if  $(CheckCritical)
     then
@@ -348,7 +366,7 @@ function CheckMD5
     if  $(CheckOptional   )
     then
         echo "MD5 file found, attempt to check agaist it"
-        if [ $(md5sum -c ${FINAL}.md5) -eq 0 ]
+        if $(md5sum -c ${FINAL}.md5) 
         then
             return true
         else
@@ -371,7 +389,6 @@ function PrepareEnvironment
         FAILED="Copying $FINAL to $FILELOC failed"
         cp $FINAL $FILELOC 2>> $ERRORFILE
         checkCritical
-
     fi
 }
 
@@ -417,6 +434,31 @@ function RestoringFileDirectory
     mv $FILELOC/$TEMPDIR/$ORIGINALDIR $FILELOC/$FILEDIR 2>>$ERRORFILE
     checkCritical
 
+    WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+    FOCUS=$WPCONFIG
+    CheckCritical
+
+    if [ -z $DBUSER ]
+    then
+        RetrieveDatabaseUser
+        DBUSER=$ORIGINALUSR
+    fi
+
+    if [ -z $DBNAME ]
+    then
+        RetrieveDatabaseName
+        DBNAME=$ORIGINALDB
+    fi
+
+    if [ -z $DBPASS ]
+    then
+        RetrieveDatabasePassword
+        DBPASS=$ORIGINALPASS
+    fi
+
+    WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+
+
     echo "Removing Temp folder $FILELOC/$TEMPDIR"
     SUCCESS="$FILELOC/$TEMPDIR removed"
     FAILED="Removing $FILELOC/$TEMPDIR failed"
@@ -446,23 +488,7 @@ function RestoringFileDirectory
 
 function configurewpconfig
 {
-    echo "Retrieving Original Database Name from $WPCONFIG"
-    SUCCESS="Original Database Name '$ORIGINALDB' retrieved"
-    FAILED="Original Database Name retrieving failed"
-    ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>> $ERRORFILE
-    checkCritical
 
-    echo "Retrieving Original Database user from $WPCONFIG"
-    SUCCESS="Original Database User '$ORIGINALUSR' retrieved"
-    FAILED="Retrieving Original Database Username failed"
-    ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
-    checkCritical
-
-    echo "Retrieving Original Database Password from $WPCONFIG"
-    SUCCESS="Retrieved Database Password"
-    FAILED="Retrieving Database Password failed"
-    ORIGINALPASS=$(cat $WPCONFIG | grep DB_PASSWORD | cut -d \' -f 4) 2>>$ERRORFILE
-    checkCritical
 
 
     DBFILE=$ORIGINALDB.sql

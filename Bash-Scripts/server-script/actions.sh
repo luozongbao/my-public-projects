@@ -205,7 +205,54 @@ function CheckFileOptional
 }
 
 
+function RollbackFinalBackup
+{
+    read -p "Pleae input the Original Backup Directory" FILEDIR
+    FINAL=latest.$FILEDIR.zip
+    BKFINAL=old.$FILEDIR.zip
+    FINALMD5=$FINAL.md5
+    BKFINALMD5=$BKFINAL.md5
+    
+    FOCUS=$BKFINAL
+    CheckFileCritical
+    echo "$BKFINAL found"
 
+    FOCUS=$FINAL
+    if $(CheckFileOptional)
+    then
+        echo "This will permanently remove $FINAL, continue? [y/n]: " YN
+        if [[ $YN =~ [yY]|[yY][eE][sS] ]]
+        then
+
+            SUCCESS="Renamed $BKFINAL to $FINAL"
+            FAILED="Rename $BKFINAL to $FINAL failed"
+            mv -f $BKFINAL $FINAL 2>>$ERRORFILE
+            checkCritical
+
+            FOCUS=$FINALMD5
+            if $(CheckFileOptional)
+            then
+                echo "Old $FINAL also associated with $FINALMD5 no longer needed, removing.. " 
+                SUCCESS="Removed $FINALMD5"
+                FAILED="Removing $FINALMD5 failed"
+                rm $FINALMD5 2>>$ERRORFILE
+                checkOptional
+            fi
+
+            FOCUS=$BKFINALMD5
+            if $(CheckFileOptional)
+            then
+                echo "$BKFINALMD5 found, rolling back"
+                SUCCESS="Removed $FINALMD5"
+                FAILED="Removing $FINALMD5 failed"
+                mv -f $BKFINALMD5 $FINALMD5 2>>$ERRORFILE
+            fi
+        fi
+    fi
+
+    showresult "Rolled Back $FINAL backup"
+
+}
 
 
 function getBackupInformation
@@ -227,7 +274,6 @@ function getBackupInformation
 
 	DBFILE=$DBNAME.sql
 	BKFILE=$FILEDIR.zip
-
 	BKFINAL=old.$FILEDIR.zip
 }
 
@@ -244,23 +290,27 @@ function getRestoreInformation
     BKFINAL=old.$ORIGINALDIR.zip
     BKFILE=$ORIGINALDIR.zip
 
-    if [ -z $FILEDIR ]
+    if [ -z $FILEDIR ] || [ -z $DBNAME ]
     then
-        FILEDIR=$ORIGINALDIR
-        echo "Recover to the same directory '$ORIGINALDIR'"
-        echo "This may cause some conflict in file system of the websites"
+        if [ -z $FILEDIR ]
+        then
+            FILEDIR=$ORIGINALDIR
+            echo "Recover to the same directory '$ORIGINALDIR'"
+            echo "This may cause some conflict in file system of the websites"
+        fi
+
+        if [ -z $DBNAME ]
+        then
+            echo "This may cause some conflict between websites with the same database"
+        fi
+
+        read -p "Do you want to continue? [Y/N]: " YN
+        if [[ ! $YN =~ [yY]|[yY][eE][sS] ]]
+        then
+            exit 
+        fi
     fi
 
-    if [ -z $DBNAME ]
-    then
-        echo "This may cause some conflict between websites with the same database"
-    fi
-
-    read -p "Do you want to continue? [Y/N]: " YN
-    if [[ ! $YN =~ [yY]|[yY][eE][sS] ]]
-    then
-        exit 
-    fi
 
 }
 
@@ -346,6 +396,8 @@ function backupbackup
 	fi
 
 }
+
+
 
 # ARCHIVING DIRECTORY
 function ArchiveDirectory
@@ -807,7 +859,7 @@ function discourageSearchEnging
     SUCCESS="Discouraged search engines from indexing the site"
     FAILED="Discoruaging search engines failed"
     wp option set blog_public 0 --allow-root 2>> $ERRORFILE
-    check
+    checkOptional
 }
 
 function disablePlugins
@@ -827,7 +879,7 @@ function disablePlugins
             SUCCESS="Disabled plugin $PLUGIN"
             FAILED="Disabling plugin $Plugin failed"
             wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE
-            check
+            checkOptional
         fi
     done
 }
@@ -850,13 +902,13 @@ function updatePlugins
             SUCCESS="Updated all plugins"
             FAILED="Updating all plugins failed"
             wp plugin update --all --allow-root 2>> $ERRORFILE
-            check
+            checkOptional
         else
             echo "Updating plugin $PLUGIN"
             SUCCESS="Updated plugin $PLUGIN"
             FAILED="Updating plugin $PLUGIN failed"
             wp plugin update $PLUGIN --allow-root 2>> $ERRORFILE
-            check
+            checkOptional
         fi
     done
 
@@ -1894,7 +1946,7 @@ function main
         echo "Select Actions"
         echo "=============="
         echo
-        echo "   New)       NEW Server Setup"
+        echo "   New)       NEW Server Setup                     Rollback)  Rollback Final Backup"
         echo "   MOTD)      Install new MOTD"
         echo "   PROMPT)    My Custom Prompt"
         echo "   Backup)    BACKUP Website"
@@ -1916,6 +1968,10 @@ function main
             [nN][eE][wW])
                 display "Set New server"
                 Newsvr
+                ;;
+            [rR][oO][lL][lL][bB][aA][cC][kK])
+                display "Rollback Backup"
+                RollbackFinalBackup
                 ;;
             [mM][oO][tT][dD])
                 display "Install Login welcome"

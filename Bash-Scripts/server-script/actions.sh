@@ -284,7 +284,8 @@ function checkBackupVariables
 	    echo "$FILELOC/$FILEDIR CHECKED"
 	fi
 
-	showresult "Input Information CHECKED.  Start Backing up $FILELOC/$FILEDIR Files"
+	showresult "Information CHECKED."  
+
 
 }
 
@@ -338,6 +339,8 @@ function backupbackup
 # ARCHIVING DIRECTORY
 function ArchiveDirectory
 {
+
+    echo "Start Backing up $FILELOC/$FILEDIR Files"
 	cd $FILELOC
 
     echo "Archiving $FILELOC/$FILEDIR ..."
@@ -861,7 +864,7 @@ function completeURLChanged
                 check
 
                 showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
-                pauseandclear
+                
                 ConfigureTestSite
                 break
                 ;;
@@ -1010,7 +1013,7 @@ function UpdateUpgrade
                 checkCritical
 
                 showresult "Update, Upgrade Done" 
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1042,7 +1045,7 @@ function ConfigHostName
                 hostnamectl set-hostname $HOSTNAME 2>>$ERRORFILE
                 checkCritical
 
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1074,7 +1077,7 @@ function ConfigTimeZone
                 timedatectl set-timezone $TIMEZONE 2>>$ERRORFILE
                 checkCritical
 
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1102,7 +1105,7 @@ function InstallZipUnzip
                 apt install -y zip unzip 2>>$ERRORFILE
                 checkCritical
 
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1226,7 +1229,7 @@ function InstallFirewall
                     esac
 
                 done
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1285,7 +1288,7 @@ function InstallWebmin
                 checkCritical
 
                 showresult "Webmin Installed"
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1313,7 +1316,7 @@ function InstallNetDATA
                 bash <(curl -Ss https://my-netdata.io/kickstart.sh)
                 checkCritical
                 
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1356,7 +1359,7 @@ function InstallMariadb
                 check
 
                 securemysql
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1438,7 +1441,7 @@ function InstallWordpressApache
 
                 showresult "Wordpress Installed at $SITELOC"
                 InstallApacheWPCLI
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1467,7 +1470,7 @@ function InstallApache
                 apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE
                 checkCritical
 
-                pauseandclear
+                
                 InstallWordpressApache
                 break
                 ;;
@@ -1548,7 +1551,7 @@ function InstallWordpressOLS
 
                 showresult "Wordpress Installed at $SITELOC"
                 InstallOLSWPCLI
-                pauseandclear
+                
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1594,7 +1597,7 @@ function InstallOpenLiteSpeed
                 showresult "OpenLiteSpeed installed"
                 cat /usr/local/lsws/password
                 cat /usr/local/lsws/password >> $RESULTFILE
-                pauseandclear
+                
                 InstallWordpressOLS
                 break
                 ;;
@@ -1723,15 +1726,15 @@ function Backup
     getBackupInformation
     checkBackupVariables
     backupbackup
-    pauseandclear
+    
     ArchiveDirectory
-    pauseandclear
+    
     exportDatabase
-    pauseandclear
+    
     ArchiveBackupFiles
-    pauseandclear
+    
     BackupRemoveUnecessaryBackFiles
-    pauseandclear
+    
     Finalize
 }
 
@@ -1740,25 +1743,25 @@ function Restore
     clear
     getRestoreInformation
     checkRestorevariables
-    pauseandclear
+    
     PrepareEnvironment
     RemoveExistedDirectory
-    pauseandclear
+    
     RestoringFileDirectory
-    pauseandclear
+    
     configurewpconfig
-    pauseandclear
+    
     CreateDBUser
-    #pauseandclear
+    #
     DropDatabase
-    #pauseandclear
+    #
     createDatabase
-    #pauseandclear
+    #
     ImportDatabase
     RestoreRemoveFiles
-    pauseandclear
+    
     UpdateURL
-    pauseandclear
+    
     completeURLChanged
     Finalize
     echo "***************** WP INFO *****************"
@@ -1771,9 +1774,9 @@ function Remove
     clear
     getRemoveInformation
     RemoveFiles
-    pauseandclear
+    
     RemoveDatabase
-    pauseandclear
+    
     RemoveDatabaseUser
     Finalize
 }
@@ -1792,7 +1795,7 @@ function Newsvr
     InstallWebmin
     InstallNetDATA
     InstallWebServer
-    pauseandclear
+    
     Finalize
     echo "***************** WP INFO *****************"
     wp --info
@@ -1895,25 +1898,25 @@ function main
                 InstallWordpress
                 cat $RESULTFILE
                 wp --info
-                pauseandclear
+                
                 ;;
             [wW][pP][cC][lL][iI])
                 InstallWPCLI
                 cat $RESULTFILE
                 wp --info
-                pauseandclear
+                
                 ;;
             [uU][fF][wW])
                 InstallFirewall
                 cat $RESULTFILE
-                pauseandclear
+                
                 ;;
             [tT][eE][sS][tT])
                 initialize
                 ConfigureTestSite
                 cat $RESULTFILE
                 wp --info
-                pauseandclear
+                
                 ;;
             [xX]|[eE][xX][iI][tT])
                 display "Exit Program"
@@ -1921,7 +1924,7 @@ function main
                 ;;
             *)
                 display "Please use specific letter or the word written in uppercase"
-                pauseandclear
+                
                 ;; 
         esac          
     done

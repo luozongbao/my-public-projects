@@ -107,7 +107,7 @@ function pauseandclear
     clear
 }
 
-function check
+function checkOptional
 {
     PROCESSED=$?
     if [ $PROCESSED == 0 ]
@@ -183,7 +183,7 @@ function RetrieveDatabasePassword
 
 
 
-function CheckCritical
+function CheckFileCritical
 {
     if [ -e $FOCUS ]
     then
@@ -193,7 +193,7 @@ function CheckCritical
         exit 1
     fi
 }
-function CheckOptional
+function CheckFileOptional
 {
     if [ -e $FOCUS ]
     then
@@ -214,7 +214,7 @@ function getBackupInformation
 	read -p "Please input files directory:" FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
-    CheckCritical
+    CheckFileCritical
     echo "$WPCONFIG found"
 
 	RetrieveDatabaseName
@@ -222,7 +222,7 @@ function getBackupInformation
 
     FINAL=latest.$FILEDIR.zip
     FOCUS=$FINAL
-    CheckCritical
+    CheckFileCritical
     echo "$FINAL found"
 
 	DBFILE=$DBNAME.sql
@@ -259,7 +259,7 @@ function getRemoveInformation
     read -p "Please input the website File Directory: " FILEDIR
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
-    CheckCritical
+    CheckFileCritical
     RetrieveDatabaseName
     DBNAME=$ORIGINALDB
     RetrieveDatabaseUser
@@ -271,7 +271,7 @@ function getRemoveInformation
 function checkBackupVariables
 {
     FOCUS=$FILELOC
-    CheckCritical
+    CheckFileCritical
 	echo "Directory $FILELOC CHECKED"
 
 	if [ -z "$FILEDIR" ];
@@ -280,7 +280,7 @@ function checkBackupVariables
 		exit 1
 	else
         FOCUS=$FILELOC/$FILEDIR
-        CheckCritical
+        CheckFileCritical
 	    echo "$FILELOC/$FILEDIR CHECKED"
 	fi
 
@@ -299,11 +299,11 @@ function checkRestorevariables
     fi
 
     FOCUS=$CURDIR/$FINAL
-    CheckCritical
+    CheckFileCritical
     echo "Original Backup $CURDIR/$FINAL Found"
 
     FOCUS=$FILELOC
-    CheckCritical
+    CheckFileCritical
     echo "$FILELOC Found"
     
 
@@ -315,7 +315,7 @@ function backupbackup
 {
 	# BACKUP FINAL FILE
     FOCUS=$FINAL
-    if $(CheckOptional) 
+    if $(CheckFileOptional) 
     then
 		echo "Found Previous Backup File '$FINAL'"
         SUCCESS="Backed up previous backup file $FINAL to $BKFINAL"
@@ -325,7 +325,7 @@ function backupbackup
 	fi
 	# BACKUP FINAL FILE
     FOCUS=$FINAL.md5
-    if $(CheckOptional) 
+    if $(CheckFileOptional) 
 	then
 		echo "Found Previous Backup Hash File '$FINAL.md5'"
         SUCCESS="Backed up previous backup file $FINAL.md5 to $BKFINAL.md5"
@@ -361,10 +361,11 @@ function ArchiveDirectory
 function CheckMD5
 {
     FOCUS=$CURDIR/$FINAL.md5
-    if  $(CheckOptional   )
+    if  $(CheckFileOptional)
     then
         echo "MD5 file found, attempt to check agaist it"
-        if $(md5sum -c ${FINAL}.md5) 
+        md5sum -c ${FINAL}.md5
+        if [ $? -eq 0 ]
         then
             return true
         else
@@ -378,22 +379,20 @@ function CheckMD5
 function PrepareEnvironment
 {
     FOCUS=$CURDIR/$FINAL
-    if  $(CheckCritical) 
-    then
-        CheckMD5
-        
-        echo "copying $FINAL to $FILELOC"...
-        SUCCESS="$FINAL Copied to $FILELOC"
-        FAILED="Copying $FINAL to $FILELOC failed"
-        cp $FINAL $FILELOC 2>> $ERRORFILE
-        checkCritical
-    fi
+    checkFileCritical
+    CheckMD5
+    
+    echo "copying $FINAL to $FILELOC"...
+    SUCCESS="$FINAL Copied to $FILELOC"
+    FAILED="Copying $FINAL to $FILELOC failed"
+    cp $FINAL $FILELOC 2>> $ERRORFILE
+    checkCritical
 }
 
 function RemoveExistedDirectory
 {
     FOCUS=$FILELOC/$FILEDIR
-    if $(CheckCritical )
+    if $(CheckFileCritical )
     then
         read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
         if [[ $YN =~ [nN]|[nN][oO] ]]
@@ -434,7 +433,7 @@ function RestoringFileDirectory
 
     WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
-    CheckCritical
+    CheckFileCritical
 
     if [ -z $DBUSER ]
     then
@@ -491,7 +490,7 @@ function configurewpconfig
 
     DBFILE=$ORIGINALDB.sql
     FOCUS=$DBFILE
-    CheckCritical
+    CheckFileCritical
     
     if [ ! "$ORIGINALDB" == "$DBNAME" ]
     then
@@ -635,7 +634,7 @@ function RestoreRemoveFiles
 function RemoveFiles
 {
     FOCUS=$FILELOC/$FILEDIR
-    if $(CheckCritical )
+    if $(CheckFileCritical )
     then
         while true;
         do
@@ -881,13 +880,13 @@ function CustomMOTD
     SUCCESS="Updated Server"
     FAILED="Update server failed" 
     apt update -y 2>>$ERRORFILE
-    check
+    checkOptional
 
     echo "Installing ScreenFetch"
     SUCCESS="Installed screenfetch"
     FAILED="Install screenfetch failed"
     apt install screenfetch -y 2>> $ERRORFILE
-    check
+    checkOptional
 
     echo "#! $(which bash)" > /etc/update-motd.d/motd
     echo "echo 'GENERAL INFORMATION'" >> /etc/update-motd.d/motd
@@ -897,13 +896,13 @@ function CustomMOTD
     SUCCESS="Changed Permission to files"
     FAILED="Change permission to files failed"
     chmod -x /etc/update-motd.d/*
-    check
+    checkOptional
 
     echo "Enable New Message of the Day (MOTD)"
     SUCCESS="Added execute permission to motd"
     FAILED="Add execute permission to motd failed"
     chmod +x /etc/update-motd.d/motd
-    check
+    checkOptional
 
     showresult "Created New Message of the day (MOTD)"
 }
@@ -961,7 +960,7 @@ function installswap
                             SUCCESS="Mounted swap"
                             FAILED="Mount swap failed"
                             mount -a 2>>$ERRORFILE
-                            check
+                            checkOptional
 
                             showresult "Swap is setted to $SWAPSIZE GB" 
                             break
@@ -1146,7 +1145,7 @@ function InstallFirewall
                                 SUCCESS="Allowed port $ALLOWPORT"
                                 FAILED="Allowing port $ALLOWPORT failed"
 	                            ufw allow $ALLOWPORT 2>> $ERRORFILE
-                                check
+                                checkOptional
 
                             else    
                                 echo "please specify port number"
@@ -1161,7 +1160,7 @@ function InstallFirewall
                                 SUCCESS="Denied port $DENYPORT"
                                 FAILED="Denying port $DENYPORT failed"
 	                            ufw deny $DENYPORT 2>> $ERRORFILE
-                                check
+                                checkOptional
 
                             else    
                                 echo "please specify port number"
@@ -1177,7 +1176,7 @@ function InstallFirewall
                                     SUCCESS="UFW Enabled"
                                     FAILED="UFW Enabling failed"
                                     ufw enable 2>> $ERRORFILE
-                                    check
+                                    checkOptional
 
                                 fi
                             ;;
@@ -1186,7 +1185,7 @@ function InstallFirewall
                             SUCCESS="UFW Disabled"
                             FAILED="UFW Disabling failed"
                             ufw disable 2>> $ERRORFILE
-                            check
+                            checkOptional
                             ;;
                         [dD][eE][fF][aA][uU][lL][tT])
                             RGXALLOW="^[aA][lL][lL][oO][wW]$"
@@ -1199,14 +1198,14 @@ function InstallFirewall
                                 SUCCESS="Setted UFW default to Allow"
                                 FAILED="Failed setting UFW default to Allow "
 	                            ufw default allow 2>> $ERRORFILE
-                                check
+                                checkOptional
                             elif [[ $DEFAULT =~ $RGXDENY ]]
                             then
                                 echo "Setting UFW default to Deny"
                                 SUCCESS="Setted UFW default to Deny"
                                 FAILED="Failed setting UFW default to Deny "
                                 ufw default deny 2>> $ERRORFILE
-                                check
+                                checkOptional
                             else    
                                 echo "Please Specify 'ALLOW' or 'DENY'"
                             fi
@@ -1344,7 +1343,7 @@ function InstallMariadb
                 SUCCESS="Installed Mariadb-server"
                 FAILED="Install Mariadb failed"
                 apt install -y mariadb-server  2>>$ERRORFILE
-                check
+                checkOptional
 
                 securemysql
                 
@@ -1615,7 +1614,7 @@ function InstallCron
                     SUCCESS="Imported Previous cron jobs"
                     FAILED="Importing previous cron jobs failed"
                     crontab -l > mycron 2>>$ERRORFILE
-                    check
+                    checkOptional
                 fi
                 
                 #echo new cron into cron file

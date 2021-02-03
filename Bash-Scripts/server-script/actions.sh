@@ -242,10 +242,11 @@ function RollbackFinalBackup
             FOCUS=$BKFINALMD5
             if $(CheckFileOptional)
             then
-                echo "$BKFINALMD5 found, rolling back"
-                SUCCESS="Removed $FINALMD5"
-                FAILED="Removing $FINALMD5 failed"
+                echo "$BKFINALMD5 found, rolling back..."
+                SUCCESS="Renamed $BKFINALMD5 to $FINALMD5"
+                FAILED="Removing $BKFINALMD5 to $FINALMD5 failed"
                 mv -f $BKFINALMD5 $FINALMD5 2>>$ERRORFILE
+                checkCritical
             fi
             showresult "Rolled Back $FINAL backup"
         fi

@@ -166,6 +166,7 @@ function RetrieveDatabaseName
     FAILED="Could not Retrieve Database Name from $WPCONFIG"
     ORIGINALDB=$(cat $WPCONFIG | grep DB_NAME | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
+    echo "Database Name '$ORIGINALDB'"
 
 }
 
@@ -176,6 +177,7 @@ function RetrieveDatabaseUser
     FAILED="Could not retrieve Database User from $WPCONFIG"
     ORIGINALUSR=$(cat $WPCONFIG | grep DB_USER | cut -d \' -f 4) 2>>$ERRORFILE
     checkCritical
+    echo "Database User '$ORIGINALUSR'"
 }
 
 function RetrieveDatabasePassword
@@ -207,6 +209,7 @@ function RetrieveURL
     checkCritical
     URL=$(echo $URL | grep -oP '\s(.*)$') 2>>$ERRORFILE
     checkCritical
+    echo "URL: '$URL'"
 
 }
 
@@ -663,7 +666,6 @@ function configurewpconfig
     if [ -z $URL]
     then
         RetrieveURL
-        echo $URL
     fi
     
     if [ ! "$ORIGINALDB" == "$DBNAME" ]

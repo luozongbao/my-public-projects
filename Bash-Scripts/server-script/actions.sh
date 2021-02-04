@@ -187,6 +187,15 @@ function RetrieveDatabasePassword
     checkCritical
 }
 
+function RetrieveTablePrefix
+{
+    echo "Retrieve Table prefix"
+    SUCCESS="Retrieved Table prefix '$TABLEPREF'"
+    FAILED="Retrieving Table Prefix failed"
+    TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
+    checkCritical
+}
+
 function RetrieveURL
 {
     echo "Retrieve URL from database"
@@ -309,7 +318,7 @@ function getRestoreInformation
     read -p "Please, input target database name (Blank for same as original): " DBNAME
     read -p "Please, input target database username (Blank for same as original): " DBUSER
     read -p "Please, input target database password for '$DBUSER' (Blank for same as original): " DBPASS
-    read -p "Please, input new website URL with http/https (Blacnk for no update): " URL
+    read -p "Please, input new website URL with http/https (Blank for no update): " URL
     FINAL=latest.$ORIGINALDIR.zip
     BKFINAL=old.$ORIGINALDIR.zip
     BKFILE=$ORIGINALDIR.zip
@@ -490,6 +499,34 @@ function RemoveExistedDirectory
     fi
 }
 
+function RetrieveFromWPConfig
+{
+    RetrieveTablePrefix
+    RetrieveDatabaseUser
+    RetrieveDatabaseName
+    RetrieveDatabasePassword
+
+    if [ -z $DBUSER ]
+    then
+        DBUSER=$ORIGINALUSR
+    fi
+
+    if [ -z $DBNAME ]
+    then
+        DBNAME=$ORIGINALDB
+    fi
+
+    if [ -z $DBPASS ]
+    then
+        DBPASS=$ORIGINALPASS
+    fi
+
+    if [ -z $URL]
+    then
+        RetrieveURL
+    fi
+}
+
 function RestoringFileDirectory
 {
     cd $FILELOC
@@ -522,29 +559,7 @@ function RestoringFileDirectory
     FOCUS=$WPCONFIG
     CheckFileCritical
 
-    RetrieveDatabaseUser
-    RetrieveDatabaseName
-    RetrieveDatabasePassword
-
-    if [ -z $DBUSER ]
-    then
-        DBUSER=$ORIGINALUSR
-    fi
-
-    if [ -z $DBNAME ]
-    then
-        DBNAME=$ORIGINALDB
-    fi
-
-    if [ -z $DBPASS ]
-    then
-        DBPASS=$ORIGINALPASS
-    fi
-
-    if [ -z $URL]
-    then
-        RetrieveURL
-    fi
+    RetrieveFromWPConfig
 
     if [ $WEBSERVER == "OLS" ]
     then
@@ -859,10 +874,6 @@ function showURL
 function UpdateURL
 {
     echo "Modifying HomeURL and SiteURL"
-    SUCCESS="Retrieved Table prefix '$TABLEPREF'"
-    FAILED="Retrieving Table Prefix failed"
-    TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
-    checkCritical
 
     DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
     SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"

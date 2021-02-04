@@ -190,10 +190,11 @@ function RetrieveDatabasePassword
 function RetrieveTablePrefix
 {
     echo "Retrieve Table prefix"
-    SUCCESS="Retrieved Table prefix '$TABLEPREF'"
+    SUCCESS="Retrieved Table prefix"
     FAILED="Retrieving Table Prefix failed"
     TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
     checkCritical
+    echo "Table Prefix '$TABLEPREF'"
 }
 
 function RetrieveURL
@@ -658,10 +659,7 @@ function createDatabase
 
 function configurewpconfig
 {
-
     cd $FILELOC
-
-
     if [ -z $URL]
     then
         RetrieveURL
@@ -693,9 +691,7 @@ function configurewpconfig
             sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG 2>>$ERRORFILE
             checkCritical
     fi
-
     cd $CURDIR
-
 }
 
 function SetFolderPermisson
@@ -745,12 +741,6 @@ function ArchiveBackupFiles
     md5sum $FINAL > $FINAL.md5 2>>$ERRORFILE
     checkOptional
 }
-
-
-
-
-
-
 
 function BackupRemoveUnecessaryBackFiles
 {

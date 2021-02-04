@@ -665,6 +665,7 @@ function configurewpconfig
     if [ -z $URL]
     then
         RetrieveURL
+        echo $URL
     fi
     
     if [ ! "$ORIGINALDB" == "$DBNAME" ]
@@ -699,6 +700,7 @@ function configurewpconfig
 
 function SetFolderPermisson
 {
+    cd $FILELOC
     if [ $WEBSERVER == "OLS" ]
     then
         echo "Adding Permission nobody:nogroup to $FILEDIR"
@@ -714,6 +716,7 @@ function SetFolderPermisson
         chown -R www-data:www-data $FILEDIR 2>>$ERRORFILE
         checkCritical
     fi
+    cd $CURDIR
 }
 
 # EXPORT DATABASE

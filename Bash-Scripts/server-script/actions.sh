@@ -2134,7 +2134,7 @@ function main
                 
                 ;;
 
-            [pP]|[lL][uU][gG][iI][nN][sS])
+            [pP][lL][uU][gG][iI][nN][sS])
                 display "Manage Plugins"
                 ManagePlugins
                 wp --info

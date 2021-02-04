@@ -521,10 +521,6 @@ function RetrieveFromWPConfig
         DBPASS=$ORIGINALPASS
     fi
 
-    if [ -z $URL]
-    then
-        RetrieveURL
-    fi
 }
 
 function RestoringFileDirectory
@@ -561,98 +557,29 @@ function RestoringFileDirectory
 
     RetrieveFromWPConfig
 
-    if [ $WEBSERVER == "OLS" ]
-    then
-        echo "Adding Permission nobody:nogroup to $FILEDIR"
-        SUCCESS="Setted Permission to $FILEDIR"
-        FAILED="Setting Permission to $FILEDIR failed"
-        chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
-        checkCritical
-    elif [ $WEBSERVER == "Apache" ]
-    then
-        echo "Adding Permission www-data:www-data to $FILEDIR"
-        SUCCESS="Setted Permission to $FILEDIR"
-        FAILED="Setting Permission to $FILEDIR failed"
-        chown -R www-data:www-data $FILEDIR 2>>$ERRORFILE
-        checkCritical
-    fi
-
 
     cd $CURDIR
 }
 
-
-function configurewpconfig
+function ImportDatabase
 {
-
     cd $FILELOC
 
     DBFILE=$ORIGINALDB.sql
     FOCUS=$DBFILE
     CheckFileCritical
-    
-    if [ ! "$ORIGINALDB" == "$DBNAME" ]
-    then
-            echo "Database Name change, configuring $WPCONFIG"
-            SUCCESS="Edited database name to ($DBNAME) in $WPCONFIG"
-            FAILED="Editing Database name failed"
-            sed -i "/DB_NAME/s/'[^']*'/'$DBNAME'/2" $WPCONFIG 2>>$ERRORFILE
-            checkCritical
-    fi
 
-    if [ ! "$ORIGINALUSR" == "$DBUSER" ]
-    then
-            echo "Database username change, configuring $WPCONFIG"
-            SUCCESS="Edited database username to ($DBUSER) in $WPCONFIG"
-            FAILED="Editing database username in $WPCONFIG failed"
-            sed -i "/DB_USER/s/'[^']*'/'$DBUSER'/2" $WPCONFIG 2>>$ERRORFILE
-            checkCritical
-    fi
-    if [ ! "$ORIGINALPASS" == "$DBPASS" ]
-    then
-            echo "Database password change, configuring $WPCONFIG"
-            SUCCESS="Edited database password to ($DBPASS) in $WPCONFIG"
-            FAILED="Editing database password in $WPCONFIG failed"
-            sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG 2>>$ERRORFILE
-            checkCritical
-    fi
-
+    echo "importing database from $DBFILE"
+    SUCCESS="Imported $DBFILE to database $DBNAME"
+    FAILED="Importing $DBFILE to database $DBNAME failed"
+    mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE
+    checkCritical
     cd $CURDIR
-
-}
-
-# EXPORT DATABASE
-function exportDatabase
-{
-	echo "Dumping Database $DBNAME to $DBFILE"
-	# mysqldump -u $DBUSER --password="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
-    SUCCESS="Database exported to $DBFILE"
-    FAILED="Exporting database failed"
-	mysqldump -u root $DBNAME > $DBFILE 2>>$ERRORFILE
-    checkCritical
-}
-
-# ARCHIVE BACKUP FILES
-function ArchiveBackupFiles
-{
-	echo "Archiving files..."
-    SUCCESS="Archived $BKFILE and $DBFILE to $FINAL"
-    FAILED="Archiving $BKFILE and $DBFILE to $FINAL failed"
-	zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE
-    checkCritical
-
-    echo "Creating MD5 Hash File"
-    SUCCESS="Created MD5 checksum for $FINAL > $FINAL.md5"
-    FAILED="Creating MD5 Checksum for $FINAL failed"
-    md5sum $FINAL > $FINAL.md5 2>>$ERRORFILE
-    checkOptional
 }
 
 function checkDBUser
 {
     echo "Check $DBUSER"
-    # SUCCESS="User $DBUSER found"
-    # FAILED="USER $UDBUSER not found"
     mysql -u root mysql -e "SELECT user FROM user WHERE user='$DBUSER';" | grep $DBUSER 2>>$ERRORFILE
 }
 
@@ -676,8 +603,6 @@ function CreateDBUser
 function checkDB
 {
     echo "Check Database"
-    # SUCCESS="Database $DBNAME found"
-    # FAILED="Database $DBNAME not found"
     mysql -u root -e "USE $DBNAME;" 2>>$ERRORFILE
 }
 
@@ -730,16 +655,99 @@ function createDatabase
     
 }
 
-function ImportDatabase
+
+function configurewpconfig
 {
+
     cd $FILELOC
-    echo "importing database from $DBFILE"
-    SUCCESS="Imported $DBFILE to database $DBNAME"
-    FAILED="Importing $DBFILE to database $DBNAME failed"
-    mysql -u $DBUSER --password="$DBPASS" $DBNAME < $DBFILE 2>>$ERRORFILE
-    checkCritical
+
+
+    if [ -z $URL]
+    then
+        RetrieveURL
+    fi
+    
+    if [ ! "$ORIGINALDB" == "$DBNAME" ]
+    then
+            echo "Database Name change, configuring $WPCONFIG"
+            SUCCESS="Edited database name to ($DBNAME) in $WPCONFIG"
+            FAILED="Editing Database name failed"
+            sed -i "/DB_NAME/s/'[^']*'/'$DBNAME'/2" $WPCONFIG 2>>$ERRORFILE
+            checkCritical
+    fi
+
+    if [ ! "$ORIGINALUSR" == "$DBUSER" ]
+    then
+            echo "Database username change, configuring $WPCONFIG"
+            SUCCESS="Edited database username to ($DBUSER) in $WPCONFIG"
+            FAILED="Editing database username in $WPCONFIG failed"
+            sed -i "/DB_USER/s/'[^']*'/'$DBUSER'/2" $WPCONFIG 2>>$ERRORFILE
+            checkCritical
+    fi
+    if [ ! "$ORIGINALPASS" == "$DBPASS" ]
+    then
+            echo "Database password change, configuring $WPCONFIG"
+            SUCCESS="Edited database password to ($DBPASS) in $WPCONFIG"
+            FAILED="Editing database password in $WPCONFIG failed"
+            sed -i "/DB_PASSWORD/s/'[^']*'/'$DBPASS'/2" $WPCONFIG 2>>$ERRORFILE
+            checkCritical
+    fi
+
     cd $CURDIR
+
 }
+
+function SetFolderPermisson
+{
+    if [ $WEBSERVER == "OLS" ]
+    then
+        echo "Adding Permission nobody:nogroup to $FILEDIR"
+        SUCCESS="Setted Permission to $FILEDIR"
+        FAILED="Setting Permission to $FILEDIR failed"
+        chown -R nobody:nogroup $FILEDIR 2>>$ERRORFILE
+        checkCritical
+    elif [ $WEBSERVER == "Apache" ]
+    then
+        echo "Adding Permission www-data:www-data to $FILEDIR"
+        SUCCESS="Setted Permission to $FILEDIR"
+        FAILED="Setting Permission to $FILEDIR failed"
+        chown -R www-data:www-data $FILEDIR 2>>$ERRORFILE
+        checkCritical
+    fi
+}
+
+# EXPORT DATABASE
+function exportDatabase
+{
+	echo "Dumping Database $DBNAME to $DBFILE"
+	# mysqldump -u $DBUSER --password="$DBPASS" $DBNAME > $DBFILE 2>>$ERRORFILE
+    SUCCESS="Database exported to $DBFILE"
+    FAILED="Exporting database failed"
+	mysqldump -u root $DBNAME > $DBFILE 2>>$ERRORFILE
+    checkCritical
+}
+
+# ARCHIVE BACKUP FILES
+function ArchiveBackupFiles
+{
+	echo "Archiving files..."
+    SUCCESS="Archived $BKFILE and $DBFILE to $FINAL"
+    FAILED="Archiving $BKFILE and $DBFILE to $FINAL failed"
+	zip $FINAL $BKFILE $DBFILE 2>>$ERRORFILE
+    checkCritical
+
+    echo "Creating MD5 Hash File"
+    SUCCESS="Created MD5 checksum for $FINAL > $FINAL.md5"
+    FAILED="Creating MD5 Checksum for $FINAL failed"
+    md5sum $FINAL > $FINAL.md5 2>>$ERRORFILE
+    checkOptional
+}
+
+
+
+
+
+
 
 function BackupRemoveUnecessaryBackFiles
 {
@@ -1950,14 +1958,19 @@ function Restore
     RemoveExistedDirectory
     
     RestoringFileDirectory
-    
-    configurewpconfig
-    
-    CreateDBUser
 
+
+    CreateDBUser
     createDatabase
-    
     ImportDatabase
+
+    configurewpconfig
+
+    SetFolderPermisson
+    
+
+    
+
     RestoreRemoveFiles
     
     UpdateURL

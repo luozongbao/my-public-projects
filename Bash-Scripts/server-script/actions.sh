@@ -179,11 +179,11 @@ function RetrieveURL
     SUCCESS="Retrieved URL from database"
     FAILED="Retrieve URL from database failed"
     URLCOMMAND="SELECT option_value FROM ${TABLEPREF}options WHERE option_id=1;"
-    URL=$(mysql -u root $DBNAME -e "$URLCOMMAND") 2>>$ERRORFILE
+    ORIGINALURL=$(mysql -u root $DBNAME -e "$URLCOMMAND") 2>>$ERRORFILE
     checkCritical
-    URL=$(echo $URL | grep -oP '\s(.*)$') 2>>$ERRORFILE
+    ORIGINALURL=$(echo $ORIGINALURL | grep -oP '\s(.*)$') 2>>$ERRORFILE
     checkCritical
-    echo "URL: '$URL'"
+    echo "URL: '$ORIGINALURL'"
 
 }
 
@@ -584,6 +584,7 @@ function configurewpconfig
     if [ -z $URL]
     then
         RetrieveURL
+        URL=$ORIGINALURL
     fi
     
     if [ ! "$ORIGINALDB" == "$DBNAME" ]
@@ -951,48 +952,51 @@ function ManageThemes
 
 function completeURLChanged
 {
-    while true;
-    do
-        read -p "Do you want to update the site URL? [Y/N]: " YN
-        case $YN in
-            [yY]|[yY][eE][sS])
-                
-                echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
-                echo "*** Please check and recheck before press ENTER" 
-                read -p "Please input your original website url with http/https: " ORIGINALURL
-                while [ -z $URL ]
-                do
-                    read -p "Please input your new website url with http/https: " URL
-                done
-                while [ ! -d $FILELOC/$FILEDIR ]
-                do
-                    if [ -z $FILEDIR ]
-                    then
-                        read -p "Please input working wordpress directory: " FILEDIR
-                    fi
+    if [ ! $ORIGINALURL == $URL ]
+    then
+        while true;
+        do
+            read -p "Do you want to update the site URL? [Y/N]: " YN
+            case $YN in
+                [yY]|[yY][eE][sS])
                     
-                done
-                cd $FILELOC/$FILEDIR
+                    echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
+                    echo "*** Please check and recheck before press ENTER" 
+                    read -p "Please input your original website url with http/https: " ORIGINALURL
+                    while [ -z $URL ]
+                    do
+                        read -p "Please input your new website url with http/https: " URL
+                    done
+                    while [ ! -d $FILELOC/$FILEDIR ]
+                    do
+                        if [ -z $FILEDIR ]
+                        then
+                            read -p "Please input working wordpress directory: " FILEDIR
+                        fi
+                        
+                    done
+                    cd $FILELOC/$FILEDIR
 
 
-                echo "Replacing $ORIGINALURL to $URL"
-                SUCCESS="Searched and Replaced $ORIGINALURL to $URL"
-                FAILED="Search and Replace $ORIGINALURL to $URL failed"
-                wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
-                checkOptional
+                    echo "Replacing $ORIGINALURL to $URL"
+                    SUCCESS="Searched and Replaced $ORIGINALURL to $URL"
+                    FAILED="Search and Replace $ORIGINALURL to $URL failed"
+                    wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
+                    checkOptional
 
-                showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
-                
-                break
-                ;;
-            [nN]|[nN][oO])
-                break
-                ;;
-            *)
-                echo "please answer yes or no"
-                ;;
-        esac
-    done
+                    showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
+                    
+                    break
+                    ;;
+                [nN]|[nN][oO])
+                    break
+                    ;;
+                *)
+                    echo "please answer yes or no"
+                    ;;
+            esac
+        done
+    fi
 }
 
 function CustomMOTD

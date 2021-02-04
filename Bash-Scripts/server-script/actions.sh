@@ -400,6 +400,14 @@ function CheckMD5
 # MOVE ARCHIVED FILE TO DIRECTORY
 function PrepareEnvironment
 {
+    if [ ! -e $FILELOC ]
+    then
+        SUCCESS="Created $FILELOC"
+        FAILED="Creat $FILELOC failed"
+        mkdir $FILELOC 2>>$ERRORFILE
+        checkCritical
+    fi
+
     CheckFileCritical $CURDIR/$FINAL
     CheckMD5
     
@@ -976,7 +984,6 @@ function completeURLChanged
                         
                     done
                     cd $FILELOC/$FILEDIR
-
 
                     echo "Replacing $ORIGINALURL to $URL"
                     SUCCESS="Searched and Replaced $ORIGINALURL to $URL"

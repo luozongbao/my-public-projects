@@ -980,15 +980,8 @@ function ManagePlugins
     do
         read -p "Please specify wordpress directory: " FILEDIR 
 
-        FOCUS=$FILELOC/$FILEDIR/wp-config.php
-        if $(CheckFileOptional)
+        if [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
         then
-            cd $FILELOC/$FILEDIR
-            disablePlugins
-            updatePlugins
-            wp plugin list --allow-root
-            cd $CURDIR
-        else
             echo "$FILEDIR is not a valid wordpress directory"
             FILEDIR=""
         fi
@@ -996,7 +989,15 @@ function ManagePlugins
 
     done
 
-
+    FOCUS=$FILELOC/$FILEDIR/wp-config.php
+    if $(CheckFileOptional)
+    then
+        cd $FILELOC/$FILEDIR
+        disablePlugins
+        updatePlugins
+        wp plugin list --allow-root
+        cd $CURDIR
+    fi
 
     
 
@@ -1008,15 +1009,8 @@ function ManageThemes
     do
         read -p "Please specify wordpress directory: " FILEDIR 
 
-        FOCUS=$FILELOC/$FILEDIR/wp-config.php
-        if $(CheckFileOptional)
+        if [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
         then
-            cd $FILELOC/$FILEDIR
-            disableThemes
-            updateThemes
-            wp theme list --allow-root
-            cd $CURDIR
-        else
             echo "$FILEDIR is not a valid wordpress directory"
             FILEDIR=""
         fi
@@ -1024,7 +1018,15 @@ function ManageThemes
 
     done
 
-
+    FOCUS=$FILELOC/$FILEDIR/wp-config.php
+    if $(CheckFileOptional)
+    then
+        cd $FILELOC/$FILEDIR
+        disableThemes
+        updateThemes
+        wp theme list --allow-root
+        cd $CURDIR
+    fi
 
 }
 
@@ -2062,7 +2064,7 @@ function main
         echo "   New)       NEW Server Setup                     Rollback)  Rollback Final Backup"
         echo "   MOTD)      Install new MOTD                     Plugins)   Manage WP Plugins"
         echo "   PROMPT)    My Custom Prompt                     Themes)    Manage WP Themes"
-        echo "   Backup)    BACKUP Website"
+        echo "   Backup)    BACKUP Website                       "
         echo "   Restore)   RESTORE Website"
         echo "   Remove)    REMOVE Website"
         echo "   DBServer)  Install DBSERVER - Mariadb"

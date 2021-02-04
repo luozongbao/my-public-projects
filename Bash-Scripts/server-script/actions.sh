@@ -212,7 +212,7 @@ function CheckFileOptional
         return 0
     else
         showresult "$FOCUS not found"
-        return -1
+        return 1
     fi
 }
 
@@ -281,14 +281,14 @@ function getBackupInformation
 	RetrieveDatabaseName
     DBNAME=$ORIGINALDB
 
-    FINAL=latest.$FILEDIR.zip
-    FOCUS=$FINAL
-    CheckFileCritical
-    echo "$FINAL found"
-
 	DBFILE=$DBNAME.sql
 	BKFILE=$FILEDIR.zip
+    FINAL=latest.$FILEDIR.zip
 	BKFINAL=old.$FILEDIR.zip
+
+    # FOCUS=$FINAL
+    # CheckFileOptional
+    # echo "$FINAL found"
 }
 
 function getRestoreInformation
@@ -395,7 +395,7 @@ function backupbackup
 		echo "Found Previous Backup File '$FINAL'"
         SUCCESS="Backed up previous backup file $FINAL to $BKFINAL"
         FAILED="Backup Prevouse Backup $FINAL to $BKFINAL Failed"
-		mv $FINAL $BKFINAL
+		mv $FINAL $BKFINAL 2>>$ERRORFILE
         checkCritical
 	fi
 	# BACKUP FINAL FILE
@@ -405,7 +405,7 @@ function backupbackup
 		echo "Found Previous Backup Hash File '$FINAL.md5'"
         SUCCESS="Backed up previous backup file $FINAL.md5 to $BKFINAL.md5"
         FAILED="Backup Prevouse Backup $FINAL.md5 to $BKFINAL.md5 Failed"
-		mv $FINAL.md5 $BKFINAL.md5
+		mv $FINAL.md5 $BKFINAL.md5 2>>$ERRORFILE
         checkCritical
 	fi
 

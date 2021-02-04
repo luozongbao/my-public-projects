@@ -1,10 +1,10 @@
 #! /bin/bash
 ###################################################################
-# Script Name	: Backup Website                                                                                             
+# Script Name	: Wordpress webserver actions                                                                                     
 # Description	: Script to set new server                                                                 
-# Args         	:                       
-# Date          :
-# Version       :                                                                                           
+# Args         	:               
+# Date          : 20210205
+# Version       : 1.0                                                                                
 # Author       	: Atipat Lorwongam                                           
 # Email        	: asecondsun@outlook.com                               
 ###################################################################
@@ -28,11 +28,8 @@ BKFILE=""
 BKFINAL=""
 WPCONFIG=""
 
-
-
 SUCCESS=""
 FAILED=""
-CRITICAL=""
 WEBSERVER=""
 RGXNUMERIC='^[0-9]+$'
 
@@ -57,16 +54,8 @@ function initialize
     echo "Make sure you run program in user home directory"
     echo "Current Directory=$PWD"
     echo "Virtual Web Hosting Server= $WEBSERVER"
-    # read -p "Do you want to continue? [y/n]: " CONTINUE
-    # if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
-    # then
-    #     exit 
-    # fi
     echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 }
-
-
-
 
 function display
 {
@@ -82,7 +71,6 @@ function display
     echo
 }
 
-
 function showresult
 {
     HLINE="****************************************************************************************************"
@@ -92,8 +80,6 @@ function showresult
     echo 
     echo $1 >> $RESULTFILE
 }
-
-
 
 function pauseandclear
 {
@@ -115,8 +101,6 @@ function checkOptional
     echo "$FAILED"
     echo "$FAILED" >> $RESULTFILE
     return 1
-    
-
 }
 
 function checkCritical
@@ -133,8 +117,6 @@ function checkCritical
     echo "$FAILED"
     echo "$FAILED" >> $RESULTFILE
     exit 1
-
-
 }
 
 function getFILEDIRFromUser
@@ -150,8 +132,6 @@ function getFILEDIRFromUser
         fi
     done
 }
-
-
 
 function RetrieveDatabaseName
 {
@@ -217,8 +197,6 @@ function CheckFileCritical
     exit 1
 }
 
-
-
 function RollbackFinalBackup
 {
     read -p "Pleae input the Original Backup Directory: " FILEDIR
@@ -261,9 +239,6 @@ function RollbackFinalBackup
             showresult "Rolled Back $FINAL backup"
         fi
     fi
-
-    
-
 }
 
 
@@ -319,13 +294,10 @@ function getRestoreInformation
             exit 
         fi
     fi
-
-
 }
 
 function getRemoveInformation
 {
-
     getFILEDIRFromUser
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     CheckFileCritical $WPCONFIG
@@ -333,7 +305,6 @@ function getRemoveInformation
     DBNAME=$ORIGINALDB
     RetrieveDatabaseUser
     DBUSER=$ORIGINALUSR
-
 }
 
 # CHCEK VALID VARIABLES
@@ -351,10 +322,7 @@ function checkBackupVariables
     CheckFileCritical $FILELOC/$FILEDIR
     echo "$FILELOC/$FILEDIR CHECKED"
 
-
 	showresult "Information CHECKED."  
-
-
 }
 
 function checkRestorevariables
@@ -365,7 +333,6 @@ function checkRestorevariables
 
     CheckFileCritical $FILELOC
     echo "$FILELOC Found"
-    
 
     showresult "Variables Checked"
 }
@@ -394,12 +361,9 @@ function backupbackup
 
 }
 
-
-
 # ARCHIVING DIRECTORY
 function ArchiveDirectory
 {
-
     echo "Start Backing up $FILELOC/$FILEDIR Files"
 	cd $FILELOC
 
@@ -463,9 +427,6 @@ function RemoveExistedDirectory
         rm -r $FILELOC/$FILEDIR 2>>$ERRORFILE
         checkCritical
     fi
-
-
-    
 }
 
 function RetrieveFromWPConfig
@@ -525,7 +486,6 @@ function RestoringFileDirectory
 
     RetrieveFromWPConfig
 
-
     cd $CURDIR
 }
 
@@ -550,7 +510,6 @@ function checkDBUser
     mysql -u root mysql -e "SELECT user FROM user WHERE user='$DBUSER';" | grep $DBUSER 2>>$ERRORFILE
 }
 
-
 function CreateDBUser
 {
     echo "Create Database User $DBUSER"
@@ -564,7 +523,6 @@ function CreateDBUser
         mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
         checkCritical
     fi
-
 }
 
 function checkDB
@@ -584,8 +542,6 @@ function DropDatabase
 
 function createDatabase
 {
-    
-    #
     checkDB
     while [ $? -eq 0 ]
     do
@@ -619,7 +575,6 @@ function createDatabase
     FAILED="Granting privileges to $DBUSER failed"
     mysql -u root -e "GRANT ALL PRIVILEGES ON $DBNAME.* TO $DBUSER;" 2>>$ERRORFILE
     checkCritical
-    
 }
 
 
@@ -749,7 +704,6 @@ function RestoreRemoveFiles
     cd $CURDIR
 }
 
-
 function RemoveFiles
 {
     CheckFileCritical $FILELOC/$FILEDIR
@@ -772,7 +726,6 @@ function RemoveFiles
                     ;;
         esac
     done
-
 }
 
 function RemoveDatabase
@@ -865,8 +818,6 @@ function discourageSearchEnging
 
 }
 
-
-
 function disableThemes
 {
     while true;
@@ -916,7 +867,6 @@ function updateThemes
             checkOptional
         fi
     done
-
 }
 
 function disablePlugins
@@ -971,8 +921,6 @@ function updatePlugins
 
 }
 
-
-
 function ManagePlugins
 {
     getFILEDIRFromUser
@@ -999,13 +947,10 @@ function ManageThemes
         wp theme list --allow-root
         cd $CURDIR
     fi
-
 }
-
 
 function completeURLChanged
 {
-
     while true;
     do
         read -p "Do you want to update the site URL? [Y/N]: " YN
@@ -1088,7 +1033,6 @@ function CustomPrompt
     echo "PS1='\[\e[0m\][\[\e[0;95m\]\d\[\e[0m\]:\[\e[0;95m\]\t\[\e[0m\]]\[\e[0m\]@\[\e[0;96m\]\h\[\e[m\] \[\e[0m\]<\[\e[0;92m\]\w\[\e[0m\]>\[\e[m\]\n\[\e[0m\][\[\e[0;38;5;208m\]\j\[\e[0m\]]\[\e[0;93m\]\u\[\e[m\] \[\e[0;97m\]\$\[\e[m\] \[\e0'" >> $CURDIR/.bashrc
     showresult "Created Custom Prompt"
 }
-
 
 function installswap
 {
@@ -1271,7 +1215,6 @@ function InstallZipUnzip
                 FAILED="Install zip/unzip failed"
                 apt install -y zip unzip 2>>$ERRORFILE
                 checkCritical
-
                 
                 break
                 ;;
@@ -1759,6 +1702,12 @@ function InstallOpenLiteSpeed
                 rm ols1clk.sh 2>>$ERRORFILE 
                 checkCritical
 
+                echo "Create site folder"
+                SUCCESS="Created /usr/local/lsws/sites"
+                FAILED="Creating /usr/local/lsws/sites failed"
+                mkdir /usr/local/lsws/sites 2>> $ERRORFILE
+                checkCritical
+
                 showresult "OpenLiteSpeed installed"
                 cat /usr/local/lsws/password
                 cat /usr/local/lsws/password >> $RESULTFILE
@@ -1890,15 +1839,10 @@ function Backup
     getBackupInformation
     checkBackupVariables
     backupbackup
-    
     ArchiveDirectory
-    
     exportDatabase
-    
     ArchiveBackupFiles
-    
     BackupRemoveUnecessaryBackFiles
-    
     Finalize
 }
 
@@ -1907,37 +1851,20 @@ function Restore
     clear
     getRestoreInformation
     checkRestorevariables
-    
     PrepareEnvironment
     RemoveExistedDirectory
-    
     RestoringFileDirectory
-
-
     CreateDBUser
     createDatabase
     ImportDatabase
-
     configurewpconfig
-
     SetFolderPermisson
-    
-
-    
-
     RestoreRemoveFiles
-    
     UpdateURL
-    
     completeURLChanged
-
     discourageSearchEnging
-
     ManagePlugins
-
     ManageThemes
-
-
     Finalize
     echo "***************** WP INFO *****************"
     wp --info
@@ -1949,9 +1876,7 @@ function Remove
     clear
     getRemoveInformation
     RemoveFiles
-    
     RemoveDatabase
-    
     RemoveDatabaseUser
     Finalize
 }

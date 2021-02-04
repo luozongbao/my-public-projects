@@ -785,7 +785,7 @@ function RestoreRemoveFiles
 function RemoveFiles
 {
     FOCUS=$FILELOC/$FILEDIR
-    if $(CheckFileCritical )
+    if $(CheckFileCritical)
     then
         while true;
         do
@@ -2094,14 +2094,17 @@ function main
             [bB][aA][cC][kK][uU][pP])
                 display "Backup website"
                 Backup
+                FILEDIR=""
                 ;;
             [rR][eE][sS][tT][oO][rR][eE])
                 display "Restore from Backup"
                 Restore
+                FILEDIR=""
                 ;;
             [rR][eE][mM][oO][vV][eE])
                 display "Removing Webiste"
                 Remove
+                FILEDIR=""
                 ;;
             [dD][bB][sS][eE][rR][vV][eE][rR])
                 display "Install MariaDB"

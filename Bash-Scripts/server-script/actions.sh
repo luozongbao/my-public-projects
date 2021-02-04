@@ -39,11 +39,6 @@ RGXNUMERIC='^[0-9]+$'
 RESULTFILE="$CURDIR/result.txt"
 ERRORFILE="$CURDIR/error.txt"
 
-
-
-
-
-
 function initialize
 {
     if [ -d /usr/local/lsws ]
@@ -453,20 +448,23 @@ function PrepareEnvironment
 
 function RemoveExistedDirectory
 {
-    CheckFileCritical $FILELOC/$FILEDIR
-
-    echo "Remove $FILELOC/$FILEDIR"
-    read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
-    if [[ $YN =~ [nN]|[nN][oO] ]]
+    if [ -e $FILELOC/$FILEDIR ]
     then
-        exit 
+        echo "Remove $FILELOC/$FILEDIR"
+        read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
+        if [[ $YN =~ [nN]|[nN][oO] ]]
+        then
+            exit 
+        fi
+
+        echo "removing $FILELOC/$FILEDIR"
+        SUCCESS="$FILELOC/$FILEDIR found and removed"
+        FAILED="removing $FILELOC/$FILEDIR failed"
+        rm -r $FILELOC/$FILEDIR 2>>$ERRORFILE
+        checkCritical
     fi
 
-    echo "removing $FILELOC/$FILEDIR"
-    SUCCESS="$FILELOC/$FILEDIR found and removed"
-    FAILED="removing $FILELOC/$FILEDIR failed"
-    rm -r $FILELOC/$FILEDIR 2>>$ERRORFILE
-    checkCritical
+
     
 }
 

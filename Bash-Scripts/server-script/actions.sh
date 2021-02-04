@@ -2144,14 +2144,14 @@ function main
                 display "Manage Plugins"
                 ManagePlugins
                 wp --info
-                
+                FILEDIR=""
                 ;;
 
             [tT][hH][eE][mM][eE][sS])
                 display "Manage Themes"
                 ManageThemes
                 wp --info
-                
+                FILEDIR=""
                 ;;
 
             [dD][iI][sS][cC][oO][uU][rR][aA][gG][eE])
@@ -2159,7 +2159,7 @@ function main
                 discourageSearchEnging
                 cat $RESULTFILE
                 wp --info
-                
+                FILEDIR=""
                 ;;
             [xX]|[eE][xX][iI][tT])
                 break

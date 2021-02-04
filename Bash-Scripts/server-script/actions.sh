@@ -479,21 +479,21 @@ function PrepareEnvironment
 function RemoveExistedDirectory
 {
     FOCUS=$FILELOC/$FILEDIR
-    if $(CheckFileCritical)
-    then
-        echo "Remove $FILELOC/$FILEDIR"
-        read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
-        if [[ $YN =~ [nN]|[nN][oO] ]]
-        then
-            exit 
-        fi
+    CheckFileCritical
 
-        echo "removing $FILELOC/$FILEDIR"
-        SUCCESS="$FILELOC/$FILEDIR found and removed"
-        FAILED="removing $FILELOC/$FILEDIR failed"
-        rm -r $FILELOC/$FILEDIR 2>>$ERRORFILE
-        checkCritical
+    echo "Remove $FILELOC/$FILEDIR"
+    read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
+    if [[ $YN =~ [nN]|[nN][oO] ]]
+    then
+        exit 
     fi
+
+    echo "removing $FILELOC/$FILEDIR"
+    SUCCESS="$FILELOC/$FILEDIR found and removed"
+    FAILED="removing $FILELOC/$FILEDIR failed"
+    rm -r $FILELOC/$FILEDIR 2>>$ERRORFILE
+    checkCritical
+    
 }
 
 function RetrieveFromWPConfig
@@ -783,28 +783,27 @@ function RestoreRemoveFiles
 function RemoveFiles
 {
     FOCUS=$FILELOC/$FILEDIR
-    if $(CheckFileCritical)
-    then
-        while true;
-        do
-            echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
-            read -p "Continue [Y/N]: " YN
-            case $YN in
-                    [yY]|[yY][eE][sS])
-                        RemoveExistedDirectory
-                        break
-                        ;;
-                    [nN]|[nN][oO])
-                        echo "skipped removing $FILELOC/$FILEDIR"
-                        break
-                        ;;
-                    *)
-                        echo "Please answer Y/N"
-                        ;;
-            esac
-        done
+    CheckFileCritical
 
-    fi
+    while true;
+    do
+        echo "This will remove directory $FILELOC/$FILEDIR and files within it permanently"
+        read -p "Continue [Y/N]: " YN
+        case $YN in
+                [yY]|[yY][eE][sS])
+                    RemoveExistedDirectory
+                    break
+                    ;;
+                [nN]|[nN][oO])
+                    echo "skipped removing $FILELOC/$FILEDIR"
+                    break
+                    ;;
+                *)
+                    echo "Please answer Y/N"
+                    ;;
+        esac
+    done
+
 }
 
 function RemoveDatabase

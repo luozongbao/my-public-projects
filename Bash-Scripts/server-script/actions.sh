@@ -213,15 +213,9 @@ function RetrieveURL
 
 }
 
-
-
-
-
-
-
-
 function CheckFileCritical
 {
+    echo "Check $FOCUS"
     if [ -e $FOCUS ]
     then
         return 0
@@ -232,6 +226,7 @@ function CheckFileCritical
 }
 function CheckFileOptional
 {
+    echo "Check $FOCUS"
     if [ -e $FOCUS ]
     then
         return 0

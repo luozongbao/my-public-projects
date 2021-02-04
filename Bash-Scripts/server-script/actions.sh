@@ -187,6 +187,18 @@ function RetrieveDatabasePassword
     checkCritical
 }
 
+function RetrieveURL
+{
+    echo "Retrieve URL from database"
+    SUCCESS="Retrieved URL from database"
+    FAILED="Retrieve URL from database failed"
+    URLCOMMAND="SELECT option_value FROM ${TABLEPREF}options WHERE option_id=1;"
+    URL=$(mysql -u root $DBNAME -e "$URLCOMMAND") 2>>$ERRORFILE
+    checkCritical
+    URL=$(echo $URL | grep -oP '\s(.*)$') 2>>$ERRORFILE
+    checkCritical
+
+}
 
 
 
@@ -273,6 +285,7 @@ function getBackupInformation
 {
 	echo "Collect Information for backup"
 	getFILEDIRFromUser
+
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
     CheckFileCritical
@@ -286,9 +299,6 @@ function getBackupInformation
     FINAL=latest.$FILEDIR.zip
 	BKFINAL=old.$FILEDIR.zip
 
-    # FOCUS=$FINAL
-    # CheckFileOptional
-    # echo "$FINAL found"
 }
 
 function getRestoreInformation
@@ -299,7 +309,7 @@ function getRestoreInformation
     read -p "Please, input target database name (Blank for same as original): " DBNAME
     read -p "Please, input target database username (Blank for same as original): " DBUSER
     read -p "Please, input target database password for '$DBUSER' (Blank for same as original): " DBPASS
-    read -p "Please, input new website URL with http/https: " URL
+    read -p "Please, input new website URL with http/https (Blacnk for no update): " URL
     FINAL=latest.$ORIGINALDIR.zip
     BKFINAL=old.$ORIGINALDIR.zip
     BKFILE=$ORIGINALDIR.zip
@@ -366,12 +376,6 @@ function checkBackupVariables
 
 function checkRestorevariables
 {
-
-    if [ -z $URL ]
-    then
-            showresult "URL input error: $URL"
-            exit 1
-    fi
 
     FOCUS=$CURDIR/$FINAL
     CheckFileCritical
@@ -469,7 +473,7 @@ function PrepareEnvironment
 function RemoveExistedDirectory
 {
     FOCUS=$FILELOC/$FILEDIR
-    if $(CheckFileCritical )
+    if $(CheckFileCritical)
     then
         echo "Remove $FILELOC/$FILEDIR"
         read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
@@ -535,6 +539,11 @@ function RestoringFileDirectory
     if [ -z $DBPASS ]
     then
         DBPASS=$ORIGINALPASS
+    fi
+
+    if [ -z $URL]
+    then
+        RetrieveURL
     fi
 
     if [ $WEBSERVER == "OLS" ]
@@ -1020,32 +1029,6 @@ function ManageThemes
 
 }
 
-# function ConfigureTestSite
-# {
-
-#     while true;
-#     do
-#         read -p "Is this a test site? [Y/N]: " YN
-#         case $YN in
-#             [yY]|[yY][eE][sS])
-#                 getFILEDIRFromUser
-#                 cd $FILELOC/$FILEDIR
-#                 discourageSearchEnging
-#                 ManagePlugins
-#                 ManageThemes
-#                 cd $CURDIR
-#                 break
-#                 ;;
-#             [nN]|[nN][oO])
-#                 break
-#                 ;;
-#             *)
-#                 echo "Please answer yes or no"
-#                 ;;
-#         esac
-#     done
-
-# }
 
 function completeURLChanged
 {

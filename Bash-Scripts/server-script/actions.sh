@@ -63,11 +63,11 @@ function initialize
     echo "Make sure you run program in user home directory"
     echo "Current Directory=$PWD"
     echo "Virtual Web Hosting Server= $WEBSERVER"
-    read -p "Do you want to continue? [y/n]: " CONTINUE
-    if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
-    then
-        exit 
-    fi
+    # read -p "Do you want to continue? [y/n]: " CONTINUE
+    # if [[ ! $CONTINUE =~ [y]|[yY][eE][sS]  ]]
+    # then
+    #     exit 
+    # fi
     echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 }
 
@@ -869,6 +869,7 @@ function UpdateURL
 
 function discourageSearchEnging
 {
+    getFILEDIRFromUser
     read -p "Discourage search engines from indexing the site? [y/n]: " YN
     if [[ $YN =~ [yY]|[yY][eE][sS] ]]
     then
@@ -1019,29 +1020,32 @@ function ManageThemes
 
 }
 
-function ConfigureTestSite
-{
-    while true;
-    do
-        read -p "Is this a test site? [Y/N]: " YN
-        case $YN in
-            [yY]|[yY][eE][sS])
-                cd $FILELOC/$FILEDIR
-                discourageSearchEnging
-                ManagePlugins
-                
-                break
-                ;;
-            [nN]|[nN][oO])
-                break
-                ;;
-            *)
-                echo "Please answer yes or no"
-                ;;
-        esac
-    done
+# function ConfigureTestSite
+# {
 
-}
+#     while true;
+#     do
+#         read -p "Is this a test site? [Y/N]: " YN
+#         case $YN in
+#             [yY]|[yY][eE][sS])
+#                 getFILEDIRFromUser
+#                 cd $FILELOC/$FILEDIR
+#                 discourageSearchEnging
+#                 ManagePlugins
+#                 ManageThemes
+#                 cd $CURDIR
+#                 break
+#                 ;;
+#             [nN]|[nN][oO])
+#                 break
+#                 ;;
+#             *)
+#                 echo "Please answer yes or no"
+#                 ;;
+#         esac
+#     done
+
+# }
 
 function completeURLChanged
 {
@@ -1966,7 +1970,12 @@ function Restore
     
     completeURLChanged
 
-    ConfigureTestSite
+    discourageSearchEnging
+
+    ManagePlugins
+
+    ManageThemes
+
 
     Finalize
     echo "***************** WP INFO *****************"
@@ -2050,9 +2059,9 @@ function main
         echo "Select Actions"
         echo "=============="
         echo
-        echo "   New)       NEW Server Setup                     Rollback)  Rollback Final Backup"
-        echo "   MOTD)      Install new MOTD                     Plugins)   Manage WP Plugins"
-        echo "   PROMPT)    My Custom Prompt                     Themes)    Manage WP Themes"
+        echo "   New)       NEW Server Setup                     Rollback)  ROLLBACK Final Backup"
+        echo "   MOTD)      Install new MOTD                     Plugins)   Manage WP PLUGINS"
+        echo "   PROMPT)    My Custom PROMPT                     Themes)    Manage WP THEMES"
         echo "   Backup)    BACKUP Website                       "
         echo "   Restore)   RESTORE Website"
         echo "   Remove)    REMOVE Website"
@@ -2063,7 +2072,7 @@ function main
         echo "   Wordpress) Install WORDPRESS"
         echo "   WPCLI)     Install WPCLI"
         echo "   UFW)       Install UFW firewall"
-        echo "   Test)      TEST Environment Configuration"
+        echo "   Discourage)Discourage Search Engine"
         echo "   X)         EXIT Script"
         echo "=================================================="
         echo
@@ -2148,8 +2157,9 @@ function main
                 
                 ;;
 
-            [tT][eE][sS][tT])
-                ConfigureTestSite
+            [dD][iI][sS][cC][oO][uU][rR][aA][gG][eE])
+                display "Discourage Search Engine indexing site"
+                discourageSearchEnging
                 cat $RESULTFILE
                 wp --info
                 

@@ -143,7 +143,19 @@ function checkCritical
 
 }
 
+function getFILEDIRFromUser
+{
+    while [ -z $FILEDIR ]
+    do
+        read -p "Please specify wordpress directory: " FILEDIR 
 
+        if [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
+        then
+            echo "$FILEDIR is not a valid wordpress directory"
+            FILEDIR=""
+        fi
+    done
+}
 
 
 
@@ -260,7 +272,7 @@ function RollbackFinalBackup
 function getBackupInformation
 {
 	echo "Collect Information for backup"
-	read -p "Please input files directory:" FILEDIR
+	getFILEDIRFromUser
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
     CheckFileCritical
@@ -319,7 +331,7 @@ function getRestoreInformation
 function getRemoveInformation
 {
 
-    read -p "Please input the website File Directory: " FILEDIR
+    getFILEDIRFromUser
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
     FOCUS=$WPCONFIG
     CheckFileCritical
@@ -974,20 +986,11 @@ function updatePlugins
 
 }
 
+
+
 function ManagePlugins
 {
-    while [ -z $FILEDIR ]
-    do
-        read -p "Please specify wordpress directory: " FILEDIR 
-
-        if [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
-        then
-            echo "$FILEDIR is not a valid wordpress directory"
-            FILEDIR=""
-        fi
-
-
-    done
+    getFILEDIRFromUser
 
     FOCUS=$FILELOC/$FILEDIR/wp-config.php
     if $(CheckFileOptional)
@@ -998,25 +1001,11 @@ function ManagePlugins
         wp plugin list --allow-root
         cd $CURDIR
     fi
-
-    
-
 }
 
 function ManageThemes
 {
-    while [ -z $FILEDIR ]
-    do
-        read -p "Please specify wordpress directory: " FILEDIR 
-
-        if [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
-        then
-            echo "$FILEDIR is not a valid wordpress directory"
-            FILEDIR=""
-        fi
-
-
-    done
+    getFILEDIRFromUser
 
     FOCUS=$FILELOC/$FILEDIR/wp-config.php
     if $(CheckFileOptional)

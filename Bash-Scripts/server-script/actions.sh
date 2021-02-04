@@ -116,12 +116,12 @@ function checkOptional
         echo "$SUCCESS"
         echo "$SUCCESS" >> $RESULTFILE
         return 0
-    else
-        # Execution Failed
-        echo "$FAILED"
-        echo "$FAILED" >> $RESULTFILE
-        return 1
     fi
+    # Execution Failed
+    echo "$FAILED"
+    echo "$FAILED" >> $RESULTFILE
+    return 1
+    
 
 }
 
@@ -134,12 +134,12 @@ function checkCritical
         echo "$SUCCESS"
         echo "$SUCCESS" >> $RESULTFILE
         return 0
-    else
-        # Execution Failed
-        echo "$FAILED"
-        echo "$FAILED" >> $RESULTFILE
-        exit 1
     fi
+    # Execution Failed
+    echo "$FAILED"
+    echo "$FAILED" >> $RESULTFILE
+    exit 1
+
 
 }
 
@@ -219,10 +219,9 @@ function CheckFileCritical
     if [ -e $FOCUS ]
     then
         return 0
-    else
-        showresult "$FOCUS not found"
-        exit 1
     fi
+    showresult "$FOCUS not found"
+    exit 1
 }
 function CheckFileOptional
 {
@@ -230,10 +229,9 @@ function CheckFileOptional
     if [ -e $FOCUS ]
     then
         return 0
-    else
-        showresult "$FOCUS not found"
-        return 1
     fi
+    showresult "$FOCUS not found"
+    return 1
 }
 
 
@@ -371,11 +369,11 @@ function checkBackupVariables
 	then
 		showresult "Files Directory INPUT IS EMPTY" 
 		exit 1
-	else
-        FOCUS=$FILELOC/$FILEDIR
-        CheckFileCritical
-	    echo "$FILELOC/$FILEDIR CHECKED"
 	fi
+    FOCUS=$FILELOC/$FILEDIR
+    CheckFileCritical
+    echo "$FILELOC/$FILEDIR CHECKED"
+
 
 	showresult "Information CHECKED."  
 
@@ -457,10 +455,10 @@ function CheckMD5
         if [ $? -eq 0 ]
         then
             return 0
-        else
-            showresult "Backup File corrupted or not the same as encrypted MD5"
-            exit 1
         fi
+        showresult "Backup File corrupted or not the same as encrypted MD5"
+        exit 1
+        
     fi
 }
 
@@ -627,18 +625,18 @@ function createDatabase
         then
             DropDatabase
             break
-        else
-            read -p "Do you want to change new database name? [y/n]: " YN
-            if [[ $YN =~ [yY]|[yY][eE][sS] ]]
-            then
-                $DBNAME=""
-                while [ -z $DBNAME ]
-                do
-                    read -p "Please, specify new Database Name: " DBNAME
-                    checkDB
-                done
-            fi
         fi
+        read -p "Do you want to change new database name? [y/n]: " YN
+        if [[ $YN =~ [yY]|[yY][eE][sS] ]]
+        then
+            $DBNAME=""
+            while [ -z $DBNAME ]
+            do
+                read -p "Please, specify new Database Name: " DBNAME
+                checkDB
+            done
+        fi
+        
     done
     echo "Create Database $DBNAME"
     SUCCESS="Created database $DBNAME"
@@ -913,13 +911,13 @@ function disableThemes
         if [ "$THEME" == "DONE" ]
         then
             break
-        else
-            echo "Deactivate theme $THEME"
-            SUCCESS="Disabled theme $THEME"
-            FAILED="Disabling theme $THEME failed"
-            wp theme activate $THEME --allow-root 2>> $ERRORFILE
-            checkOptional
         fi
+        echo "Deactivate theme $THEME"
+        SUCCESS="Disabled theme $THEME"
+        FAILED="Disabling theme $THEME failed"
+        wp theme activate $THEME --allow-root 2>> $ERRORFILE
+        checkOptional
+    
     done
 }
 
@@ -965,13 +963,13 @@ function disablePlugins
         if [ "$PLUGIN" == "DONE" ]
         then
             break
-        else
-            echo "Deactivate Plugin $PLUGIN"
-            SUCCESS="Disabled plugin $PLUGIN"
-            FAILED="Disabling plugin $Plugin failed"
-            wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE
-            checkOptional
         fi
+        echo "Deactivate Plugin $PLUGIN"
+        SUCCESS="Disabled plugin $PLUGIN"
+        FAILED="Disabling plugin $Plugin failed"
+        wp plugin deactivate $PLUGIN --allow-root 2>> $ERRORFILE
+        checkOptional
+        
     done
 }
 

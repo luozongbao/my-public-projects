@@ -34,7 +34,6 @@ SUCCESS=""
 FAILED=""
 CRITICAL=""
 WEBSERVER=""
-FOCUS=""
 RGXNUMERIC='^[0-9]+$'
 
 RESULTFILE="$CURDIR/result.txt"
@@ -215,24 +214,14 @@ function RetrieveURL
 
 function CheckFileCritical
 {
-    echo "Check $FOCUS"
-    if [ -e $FOCUS ]
+    if [ -e $1 ]
     then
         return 0
     fi
-    showresult "$FOCUS not found"
+    showresult "$1 not found"
     exit 1
 }
-function CheckFileOptional
-{
-    echo "Check $FOCUS"
-    if [ -e $FOCUS ]
-    then
-        return 0
-    fi
-    showresult "$FOCUS not found"
-    return 1
-}
+
 
 
 function RollbackFinalBackup
@@ -243,12 +232,10 @@ function RollbackFinalBackup
     FINALMD5=$FINAL.md5
     BKFINALMD5=$BKFINAL.md5
     
-    FOCUS=$BKFINAL
-    CheckFileCritical
+    CheckFileCritical $BKFINAL
     echo "$BKFINAL found"
 
-    FOCUS=$FINAL
-    if $(CheckFileOptional)
+    if [ -e $FINAL ]
     then
         read -p "This will permanently remove $FINAL, continue? [y/n]: " YN
         if [[ $YN =~ [yY]|[yY][eE][sS] ]]
@@ -259,8 +246,7 @@ function RollbackFinalBackup
             mv -f $BKFINAL $FINAL 2>>$ERRORFILE
             checkCritical
 
-            FOCUS=$FINALMD5
-            if $(CheckFileOptional)
+            if [ -e $FINALMD5 ]
             then
                 echo "Old $FINAL also associated with $FINALMD5 no longer needed, removing.. " 
                 SUCCESS="Removed $FINALMD5"
@@ -269,8 +255,7 @@ function RollbackFinalBackup
                 checkOptional
             fi
 
-            FOCUS=$BKFINALMD5
-            if $(CheckFileOptional)
+            if [ -e $BKFINALMD5 ]
             then
                 echo "$BKFINALMD5 found, rolling back..."
                 SUCCESS="Renamed $BKFINALMD5 to $FINALMD5"
@@ -293,8 +278,7 @@ function getBackupInformation
 	getFILEDIRFromUser
 
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-    FOCUS=$WPCONFIG
-    CheckFileCritical
+    CheckFileCritical $WPCONFIG
     echo "$WPCONFIG found"
 
 	RetrieveDatabaseName
@@ -349,8 +333,7 @@ function getRemoveInformation
 
     getFILEDIRFromUser
 	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-    FOCUS=$WPCONFIG
-    CheckFileCritical
+    CheckFileCritical $WPCONFIG
     RetrieveDatabaseName
     DBNAME=$ORIGINALDB
     RetrieveDatabaseUser
@@ -361,8 +344,7 @@ function getRemoveInformation
 # CHCEK VALID VARIABLES
 function checkBackupVariables
 {
-    FOCUS=$FILELOC
-    CheckFileCritical
+    CheckFileCritical $FILELOC
 	echo "Directory $FILELOC CHECKED"
 
 	if [ -z "$FILEDIR" ];
@@ -370,8 +352,8 @@ function checkBackupVariables
 		showresult "Files Directory INPUT IS EMPTY" 
 		exit 1
 	fi
-    FOCUS=$FILELOC/$FILEDIR
-    CheckFileCritical
+
+    CheckFileCritical $FILELOC/$FILEDIR
     echo "$FILELOC/$FILEDIR CHECKED"
 
 
@@ -383,12 +365,10 @@ function checkBackupVariables
 function checkRestorevariables
 {
 
-    FOCUS=$CURDIR/$FINAL
-    CheckFileCritical
+    CheckFileCritical $CURDIR/$FINAL
     echo "Original Backup $CURDIR/$FINAL Found"
 
-    FOCUS=$FILELOC
-    CheckFileCritical
+    CheckFileCritical $FILELOC
     echo "$FILELOC Found"
     
 
@@ -399,8 +379,7 @@ function checkRestorevariables
 function backupbackup
 {
 	# BACKUP FINAL FILE
-    FOCUS=$FINAL
-    if $(CheckFileOptional) 
+    if [ -e $FINAL ] 
     then
 		echo "Found Previous Backup File '$FINAL'"
         SUCCESS="Backed up previous backup file $FINAL to $BKFINAL"
@@ -409,8 +388,7 @@ function backupbackup
         checkCritical
 	fi
 	# BACKUP FINAL FILE
-    FOCUS=$FINAL.md5
-    if $(CheckFileOptional) 
+    if [ -e $FINAL.md5 ]
 	then
 		echo "Found Previous Backup Hash File '$FINAL.md5'"
         SUCCESS="Backed up previous backup file $FINAL.md5 to $BKFINAL.md5"
@@ -447,8 +425,7 @@ function ArchiveDirectory
 
 function CheckMD5
 {
-    FOCUS=$CURDIR/$FINAL.md5
-    if  $(CheckFileOptional)
+    if  [ -e $FINAL.md5 ]
     then
         echo "MD5 file found, attempt to check agaist it"
         md5sum -c ${FINAL}.md5
@@ -458,15 +435,13 @@ function CheckMD5
         fi
         showresult "Backup File corrupted or not the same as encrypted MD5"
         exit 1
-        
     fi
 }
 
 # MOVE ARCHIVED FILE TO DIRECTORY
 function PrepareEnvironment
 {
-    FOCUS=$CURDIR/$FINAL
-    CheckFileCritical
+    CheckFileCritical $CURDIR/$FINAL
     CheckMD5
     
     echo "copying $FINAL to $FILELOC"...
@@ -478,8 +453,7 @@ function PrepareEnvironment
 
 function RemoveExistedDirectory
 {
-    FOCUS=$FILELOC/$FILEDIR
-    CheckFileCritical
+    CheckFileCritical $FILELOC/$FILEDIR
 
     echo "Remove $FILELOC/$FILEDIR"
     read -p "Caution! this will delete your previous files, continue? [y/n]: " YN
@@ -549,8 +523,7 @@ function RestoringFileDirectory
     checkOptional
 
     WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-    FOCUS=$WPCONFIG
-    CheckFileCritical
+    CheckFileCritical $WPCONFIG
 
     RetrieveFromWPConfig
 
@@ -563,8 +536,7 @@ function ImportDatabase
     cd $FILELOC
 
     DBFILE=$ORIGINALDB.sql
-    FOCUS=$DBFILE
-    CheckFileCritical
+    CheckFileCritical $DBFILE
 
     echo "importing database from $DBFILE"
     SUCCESS="Imported $DBFILE to database $DBNAME"
@@ -782,8 +754,7 @@ function RestoreRemoveFiles
 
 function RemoveFiles
 {
-    FOCUS=$FILELOC/$FILEDIR
-    CheckFileCritical
+    CheckFileCritical $FILELOC/$FILEDIR
 
     while true;
     do
@@ -1008,8 +979,7 @@ function ManagePlugins
 {
     getFILEDIRFromUser
 
-    FOCUS=$FILELOC/$FILEDIR/wp-config.php
-    if $(CheckFileOptional)
+    if [ -e $FILELOC/$FILEDIR/wp-config.php ]
     then
         cd $FILELOC/$FILEDIR
         disablePlugins
@@ -1023,8 +993,7 @@ function ManageThemes
 {
     getFILEDIRFromUser
 
-    FOCUS=$FILELOC/$FILEDIR/wp-config.php
-    if $(CheckFileOptional)
+    if [ -e $FILELOC/$FILEDIR/wp-config.php ]
     then
         cd $FILELOC/$FILEDIR
         disableThemes

@@ -133,8 +133,7 @@ function getFILEDIRFromUser
 {
     while [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
     do
-        FILEDIR=""
-        read -p "Please specify wordpress directory: (Type 'Exit' to cancel)" FILEDIR 
+        read -p "Please specify wordpress directory (Type 'Exit' to cancel): " FILEDIR 
         if [ -e "$FILELOC/$FILEDIR/wp-config.php" ]
         then
             WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
@@ -2011,10 +2010,9 @@ function InstallWordpress
     fi
     if [ -e "/usr/local/lsws" ]
     then
-        SITELOC=/usr/local/lsws/sites
-        if [ ! -e $SITELOC ]
+        if [ ! -e /usr/local/lsws/sites ]
         then
-            mkdir $SITELOC
+            mkdir /usr/local/lsws/sites
         fi
         InstallWordpressOLS
     fi
@@ -2028,10 +2026,9 @@ function InstallWPCLI
     fi
     if [ -e "/usr/local/lsws" ]
     then
-        SITELOC=/usr/local/lsws/sites
-        if [ ! -e $SITELOC ]
+        if [ ! -e /usr/local/lsws/sites ]
         then
-            mkdir $SITELOC
+            mkdir /usr/local/lsws/sites
         fi
         
         InstallOLSWPCLI
@@ -2051,7 +2048,10 @@ function main
     do
         FILEDIR=""
         URL=""
-        ORIGINALURL=""  
+        ORIGINALURL=""
+        DBUSER=""
+        DBNAME=""
+        DBPASS=""  
         echo
         echo "Select Actions"
         echo "=============="

@@ -442,6 +442,9 @@ function RetrieveFromWPConfig
 {
     if [ -z $DBUSER ] || [ -z $DBPASS ] || [ -z $DBNAME ] || [ -z $TABLEPREF ]
     then
+
+        getFILEDIRFromUser
+        
         RetrieveTablePrefix
         RetrieveDatabaseUser
         RetrieveDatabaseName
@@ -957,7 +960,7 @@ function UpdateURL
     echo "Modifying HomeURL and SiteURL"
 
     RetrieveFromWPConfig
-    
+
     DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
     SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
 
@@ -1987,8 +1990,8 @@ function main
         echo "   New)       NEW Server Setup                     Rollback)  ROLLBACK Final Backup"
         echo "   MOTD)      Install new MOTD                     Plugins)   Manage WP PLUGINS"
         echo "   PROMPT)    My Custom PROMPT                     Themes)    Manage WP THEMES"
-        echo "   Backup)    BACKUP Website                       SiteURL)   Change Site URL"
-        echo "   Restore)   RESTORE Website"
+        echo "   Backup)    BACKUP Website                       SiteURL)   Change SITEURL"
+        echo "   Restore)   RESTORE Website                      SHOWURL)   SHOWURL"
         echo "   Remove)    REMOVE Website"
         echo "   DBServer)  Install DBSERVER - Mariadb"
         echo "   Webserver) Install Webserver"
@@ -2066,8 +2069,10 @@ function main
                 URL=""
                 ORIGINALURL=""
                 ;;
-
-                
+            [sS][hH][oO][wW][uU][rR][lL])
+                display "This is current site URL/Home URL"
+                showURL
+                ;;
             [wW][pP][cC][lL][iI])
                 display "Install Wordpress CLI"
                 InstallWPCLI

@@ -832,7 +832,7 @@ function disableThemes
     while true;
     do
         echo
-        echo " List Themes and status "
+        echo " List Themes and status for $FILELOC/$FILEDIR/wp-config.php"
         wp theme list --allow-root
         echo
         read -p "(Type 'DONE' to exit) Type theme name to activate: " THEME
@@ -854,7 +854,7 @@ function updateThemes
     while true;
     do
         echo
-        echo " List Themes and status "
+        echo " List Themes and status for $FILELOC/$FILEDIR/wp-config.php"
         sudo wp theme list --allow-root
         echo
         read -p "Type 'DONE' to exit, Type 'ALL' update all themes, or type theme name to Update: " THEME
@@ -883,7 +883,7 @@ function disablePlugins
     while true;
     do
         echo
-        echo " List Plugins and status "
+        echo " List Plugins and status for $FILELOC/$FILEDIR/wp-config.php"
         wp plugin list --allow-root
         echo
         read -p "(Type 'DONE' to exit) Type plugin name to disable: " PLUGIN
@@ -905,7 +905,7 @@ function updatePlugins
     while true;
     do
         echo
-        echo " List Plugins and status "
+        echo " List Plugins and status for $FILELOC/$FILEDIR/wp-config.php"
         sudo wp plugin list --allow-root
         echo
         read -p "Type 'DONE' to exit, Type 'ALL' update all plugins, or type plugin name to Update: " PLUGIN
@@ -2156,13 +2156,13 @@ function main
                 ;;
 
             [pP][lL][uU][gG][iI][nN][sS])
-                display "Manage Plugins"
+                display "Manage Plugins, WP CLI must already been installed"
                 ManagePlugins
                 wp --info
                 ;;
 
             [tT][hH][eE][mM][eE][sS])
-                display "Manage Themes"
+                display "Manage Themes, WP CLI must already been installed"
                 ManageThemes
                 wp --info
                 ;;

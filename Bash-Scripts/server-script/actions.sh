@@ -2047,7 +2047,7 @@ function main
                 wp --info
                 
                 ;;
-            [wW][pP][cC][lL][iI])
+            [sS][iI][tT][eE][uU][rR][lL])
                 display "Change Site URL"
                 completeURLChanged
                 cat $RESULTFILE

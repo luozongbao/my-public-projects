@@ -187,7 +187,11 @@ function RetrieveOriginalURLFromDB
     ORIGINALURL=$(mysql -u root $DBNAME -e "$URLCOMMAND") 2>>$ERRORFILE
     checkCritical
     ORIGINALURL=$(echo $ORIGINALURL | grep -oP '\s(.*)$') 2>>$ERRORFILE
+    SUCCESS="Extracted URL from result"
+    FAILED="Extract URL from result failed"
     checkCritical
+    SUCCESS="Trimed white space from URL"
+    FAILED="Trim white space from URL failed"
     ORIGINALURL=$(echo $ORIGINALURL | xargs) 2>>$ERRORFILE
     checkCritical
     echo "URL: '$ORIGINALURL'"

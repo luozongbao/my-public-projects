@@ -119,17 +119,34 @@ function checkCritical
     exit 1
 }
 
+function CheckFileCritical
+{
+    if [ -e $1 ]
+    then
+        return 0
+    fi
+    showresult "$1 not found"
+    exit 1
+}
+
 function getFILEDIRFromUser
 {
     while [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
     do
         FILEDIR=""
-        read -p "Please specify wordpress directory: " FILEDIR 
-
+        read -p "Please specify wordpress directory: (Type 'Exit' to cancel)" FILEDIR 
         if [ -e "$FILELOC/$FILEDIR/wp-config.php" ]
         then
             WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+            BKFILE=$FILEDIR.zip
+            FINAL=latest.$FILEDIR.zip
+            BKFINAL=old.$FILEDIR.zip
+            break
         else
+            if [[ $FILEDIR =~ [xX]|[eE][xX][iI][tT] ]]
+            then
+                exit 
+            fi
             echo "$FILEDIR is not a valid wordpress directory"
             FILEDIR=""
         fi
@@ -198,15 +215,7 @@ function RetrieveOriginalURLFromDB
 
 }
 
-function CheckFileCritical
-{
-    if [ -e $1 ]
-    then
-        return 0
-    fi
-    showresult "$1 not found"
-    exit 1
-}
+
 
 function RollbackFinalBackup
 {
@@ -262,9 +271,7 @@ function getBackupInformation
     DBNAME=$ORIGINALDB
 
 	DBFILE=$DBNAME.sql
-	BKFILE=$FILEDIR.zip
-    FINAL=latest.$FILEDIR.zip
-	BKFINAL=old.$FILEDIR.zip
+
 
 }
 
@@ -306,8 +313,7 @@ function getRestoreInformation
 function getRemoveInformation
 {
     getFILEDIRFromUser
-	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-    CheckFileCritical $WPCONFIG
+
     RetrieveDatabaseName
     DBNAME=$ORIGINALDB
     RetrieveDatabaseUser
@@ -806,14 +812,18 @@ function RemoveDatabaseUser
 
 function discourageSearchEnging
 {
-    getFILEDIRFromUser
+    
+    
     read -p "Discourage search engines from indexing the site? [y/n]: " YN
     if [[ $YN =~ [yY]|[yY][eE][sS] ]]
     then
+        getFILEDIRFromUser
+        cd $FILELOC/$FILEDIR
         SUCCESS="Discouraged search engines from indexing the site"
         FAILED="Discoruaging search engines failed"
         wp option set blog_public 0 --allow-root 2>> $ERRORFILE
         checkOptional
+        cd $CURDIR
     fi
 
 }
@@ -991,7 +1001,7 @@ function completeURLChanged
     done
     while [ -z $ORIGINALURL ]
     do
-        read -p "Do you want to retriev original url from database? [y/n]: " YN
+        read -p "Do you want to retrieve original url from database? [y/n]: " YN
         case $YN in 
             [yY]|[yY][eE][sS])
             
@@ -1014,7 +1024,7 @@ function completeURLChanged
     then
         while true;
         do
-            echo "$URL and $ORIGINALURL appear not to be the same"
+            echo "$URL (New) and $ORIGINALURL (Original)appear not to be the same"
             read -p "Do you want to update the site URL? [Y/N]: " YN
             case $YN in
                 [yY]|[yY][eE][sS])

@@ -2017,6 +2017,7 @@ function main
             [rR][oO][lL][lL][bB][aA][cC][kK])
                 display "Rollback Backup"
                 RollbackFinalBackup
+                
                 ;;
             [mM][oO][tT][dD])
                 display "Install Login welcome"
@@ -2029,17 +2030,14 @@ function main
             [bB][aA][cC][kK][uU][pP])
                 display "Backup website"
                 Backup
-                FILEDIR=""
                 ;;
             [rR][eE][sS][tT][oO][rR][eE])
                 display "Restore from Backup"
                 Restore
-                FILEDIR=""
                 ;;
             [rR][eE][mM][oO][vV][eE])
                 display "Removing Webiste"
                 Remove
-                FILEDIR=""
                 ;;
             [dD][bB][sS][eE][rR][vV][eE][rR])
                 display "Install MariaDB"
@@ -2069,9 +2067,7 @@ function main
                 completeURLChanged
                 cat $RESULTFILE
                 wp --info
-                FILEDIR=""
-                URL=""
-                ORIGINALURL=""
+
                 ;;
             [sS][hH][oO][wW][uU][rR][lL])
                 display "This is current site URL/Home URL"
@@ -2095,14 +2091,12 @@ function main
                 display "Manage Plugins"
                 ManagePlugins
                 wp --info
-                FILEDIR=""
                 ;;
 
             [tT][hH][eE][mM][eE][sS])
                 display "Manage Themes"
                 ManageThemes
                 wp --info
-                FILEDIR=""
                 ;;
 
             [dD][iI][sS][cC][oO][uU][rR][aA][gG][eE])
@@ -2110,7 +2104,6 @@ function main
                 discourageSearchEnging
                 cat $RESULTFILE
                 wp --info
-                FILEDIR=""
                 ;;
             [xX]|[eE][xX][iI][tT])
                 break
@@ -2119,7 +2112,10 @@ function main
                 display "Please use specific letter or the word written in uppercase"
                 
                 ;; 
-        esac          
+        esac
+        FILEDIR=""
+        URL=""
+        ORIGINALURL=""      
     done
 }
 

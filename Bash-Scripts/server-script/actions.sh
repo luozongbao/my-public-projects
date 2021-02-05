@@ -128,7 +128,7 @@ function getFILEDIRFromUser
 
         if [ -e "$FILELOC/$FILEDIR/wp-config.php" ]
         then
-            $WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+            WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
         else
             echo "$FILEDIR is not a valid wordpress directory"
             FILEDIR=""
@@ -950,6 +950,8 @@ function showURL
 
 
     display "homeurl and siteurl in table ${TABLEPREF}options is shown below"
+    SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
+
     mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
     mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
 
@@ -962,8 +964,7 @@ function UpdateURL
     RetrieveFromWPConfig
 
     DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
-    SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
-
+    
     echo "Updating homeURL/siteURL to $URL"
     SUCCESS="Updated homeurl/siteURL to $URL"
     FAILED="Updating homeurl/siteURL failed"

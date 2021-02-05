@@ -126,8 +126,10 @@ function getFILEDIRFromUser
         FILEDIR=""
         read -p "Please specify wordpress directory: " FILEDIR 
 
-        if [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
+        if [ -e "$FILELOC/$FILEDIR/wp-config.php" ]
         then
+            $WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
+        else
             echo "$FILEDIR is not a valid wordpress directory"
             FILEDIR=""
         fi
@@ -177,7 +179,7 @@ function RetrieveTablePrefix
 function RetrieveOriginalURLFromDB
 {
     RetrieveFromWPConfig
-    
+
     echo "Retrieve URL from database"
     SUCCESS="Retrieved URL from database"
     FAILED="Retrieve URL from database failed"
@@ -249,10 +251,6 @@ function getBackupInformation
 {
 	echo "Collect Information for backup"
 	getFILEDIRFromUser
-
-	WPCONFIG=$FILELOC/$FILEDIR/wp-config.php
-    CheckFileCritical $WPCONFIG
-    echo "$WPCONFIG found"
 
 	RetrieveDatabaseName
     DBNAME=$ORIGINALDB

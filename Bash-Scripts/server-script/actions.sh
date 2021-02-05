@@ -41,6 +41,10 @@ function initialize
     if [ -d /usr/local/lsws ]
     then
         FILELOC=/usr/local/lsws/sites
+        if [ ! -e $FILELOC ]
+        then
+            mkdir $FILELOC
+        fi
         WEBSERVER="OLS"
     fi
     if [ -d /var/www ]
@@ -48,13 +52,6 @@ function initialize
         FILELOC=/var/www
         WEBSERVER="Apache"
     fi
-
-    clear
-    echo
-    echo "Make sure you run program in user home directory"
-    echo "Current Directory=$PWD"
-    echo "Virtual Web Hosting Server= $WEBSERVER"
-    echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
 }
 
 function display
@@ -70,6 +67,7 @@ function display
     echo "$HLINE"
     echo
 }
+
 
 function showresult
 {
@@ -111,9 +109,11 @@ function checkCritical
         # Successfully Executed
         echo "$SUCCESS"
         echo "$SUCCESS" >> $RESULTFILE
+
         return 0
     fi
     # Execution Failed
+    showresult "$FAILED"
     echo "$FAILED"
     echo "$FAILED" >> $RESULTFILE
     exit 1
@@ -1217,6 +1217,8 @@ function ConfigHostName
                 hostnamectl set-hostname $HOSTNAME 2>>$ERRORFILE
                 checkCritical
 
+                showresult "$SUCCESS"
+
                 
                 break
                 ;;
@@ -1248,6 +1250,7 @@ function ConfigTimeZone
                 timedatectl set-timezone $TIMEZONE 2>>$ERRORFILE
                 checkCritical
 
+                showresult "$SUCCESS"
                 
                 break
                 ;;
@@ -1274,6 +1277,8 @@ function InstallZipUnzip
                 FAILED="Install zip/unzip failed"
                 apt install -y zip unzip 2>>$ERRORFILE
                 checkCritical
+
+                showresult "$SUCCESS"
                 
                 break
                 ;;
@@ -1304,6 +1309,8 @@ function InstallFirewall
                     FAILED="Install UFW failed"
                     apt install -y ufw
                     checkCritical
+
+                    showresult "$SUCCESS"
 
                 fi
                 while true;
@@ -1369,7 +1376,7 @@ function InstallFirewall
                             RGXALLOW="^[aA][lL][lL][oO][wW]$"
                             RGXDENY="^[dD][eE][nN][yY]$"
                             echo "This might interupt server connection please be sure."
-                            read -p "Please specify default ports actions ALLOW or DENY? [Y/N]: " DEFAULT
+                            read -p "Please specify default ports actions ALLOW or DENY?: " DEFAULT
                             if [[ $DEFAULT =~ $RGXALLOW ]] ; 
                             then
                                 echo "Setting UFW default to Allow"
@@ -1389,6 +1396,8 @@ function InstallFirewall
                             fi
                             ;;
                         [eE][xX][iI][tT])
+                            showresult "UFW configured"
+                            ufw status
                             break
                             ;;
                         *)
@@ -1541,25 +1550,41 @@ function InstallMariadb
 
 function InstallApacheWPCLI
 {
-    echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
-    SUCCESS="Downloaded wpcli"
-    FAILED="Download wpcli failed"
-    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
-    checkCritical
+    while true;
+    do
+        read -p "Installing WP CLI for Apache continue? [Y/N]: " YN
+        case $YN in
+        [yY]|[yY][eE][sS])
+            echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
+            SUCCESS="Downloaded wpcli"
+            FAILED="Download wpcli failed"
+            curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
+            checkCritical
 
-    echo "Add execute permission to wpcli"
-    SUCCESS="Added execute permission to wpcli"
-    FAILED="Add execute permission to wpcli failed"
-    chmod +x wp-cli.phar 2>>$ERRORFILE
-    checkCritical
+            echo "Add execute permission to wpcli"
+            SUCCESS="Added execute permission to wpcli"
+            FAILED="Add execute permission to wpcli failed"
+            chmod +x wp-cli.phar 2>>$ERRORFILE
+            checkCritical
 
-    echo "Move file to default folder"
-    SUCCESS="Moved file to default folder"
-    FAILED="Move file to default folder failed"
-    mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
-    checkCritical
+            echo "Move file to default folder"
+            SUCCESS="Moved file to default folder"
+            FAILED="Move file to default folder failed"
+            mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+            checkCritical
 
-    showresult "WP-CLI for Apache Installed"
+            showresult "WP-CLI for Apache Installed"
+            break
+            ;;
+        [nN]|[nN][oO])
+            break
+            ;;
+        *)
+            echo "Please anser with Yes or No"
+        ;;
+        esac
+    done
+
 }
 
 function InstallWordpressApache
@@ -1652,31 +1677,46 @@ function InstallApache
 
 function InstallOLSWPCLI
 {
-    echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
-    SUCCESS="Downloaded wpcli"
-    FAILED="Download wpcli failed"
-    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
-    checkCritical
+    while true;
+    do
+        read -p "Installing WP CLI for Openlitespeed continue? [Y/N]: " YN
+        case $YN in
+            [yY]|[yY][eE][sS])
+            echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
+            SUCCESS="Downloaded wpcli"
+            FAILED="Download wpcli failed"
+            curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
+            checkCritical
 
-    echo "Add execute permission to wpcli"
-    SUCCESS="Added execute permission to wpcli"
-    FAILED="Add execute permission to wpcli failed"
-    chmod +x wp-cli.phar 2>>$ERRORFILE
-    checkCritical
+            echo "Add execute permission to wpcli"
+            SUCCESS="Added execute permission to wpcli"
+            FAILED="Add execute permission to wpcli failed"
+            chmod +x wp-cli.phar 2>>$ERRORFILE
+            checkCritical
 
-    echo "Move file to default folder"
-    SUCCESS="Moved file to default folder"
-    FAILED="Move file to default folder failed"
-    mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
-    checkCritical
+            echo "Move file to default folder"
+            SUCCESS="Moved file to default folder"
+            FAILED="Move file to default folder failed"
+            mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+            checkCritical
 
-    echo "Copy php file"
-    SUCCESS="Copied php"
-    FAILED="Copy php failed"
-    cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
-    checkCritical
+            echo "Copy php file"
+            SUCCESS="Copied php"
+            FAILED="Copy php failed"
+            cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
+            checkCritical
 
-    showresult "WP-CLI for Apache Installed"
+            showresult "WP-CLI for Apache Installed"
+            break
+            ;;
+        [nN]|[nN][oO])
+            break
+            ;;
+        *)
+            echo "Please anser with Yes or No"
+        ;;
+        esac
+    done
 }
 
 function InstallWordpressOLS
@@ -1842,10 +1882,12 @@ function SelectVirtualHostServer
         case $AOC in 
             [aA]|[aA][pP][aA][cC][hH][eE])
                 InstallApache
+                initialize
                 break
                 ;;
             [oO]|[oO][pP][eE][nN][lL][iI][tT][eE][sS][pP][eE][eE][dD])
                 InstallOpenLiteSpeed
+                initialize
                 break
                 ;;
             [cC]|[cC][aA][nN][cC][eE][lL])
@@ -1999,8 +2041,17 @@ function InstallWPCLI
 function main
 {
     initialize
+    clear
+    echo
+    echo "Make sure you run program in user home directory"
+    echo "Current Directory=$PWD"
+    echo "Virtual Web Hosting Server= $WEBSERVER"
+    echo " ----==== RESULT INFORMATION ====----" > $RESULTFILE
     while true;
     do
+        FILEDIR=""
+        URL=""
+        ORIGINALURL=""  
         echo
         echo "Select Actions"
         echo "=============="
@@ -2127,9 +2178,7 @@ function main
                 
                 ;; 
         esac
-        FILEDIR=""
-        URL=""
-        ORIGINALURL=""      
+    
     done
 }
 

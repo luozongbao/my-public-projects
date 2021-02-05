@@ -440,26 +440,28 @@ function RemoveExistedDirectory
 
 function RetrieveFromWPConfig
 {
-    RetrieveTablePrefix
-    RetrieveDatabaseUser
-    RetrieveDatabaseName
-    RetrieveDatabasePassword
-
-    if [ -z $DBUSER ]
+    if [ -z $DBUSER ] || [ -z $DBPASS ] || [ -z $DBNAME ] || [ -z $TABLEPREF ]
     then
-        DBUSER=$ORIGINALUSR
-    fi
+        RetrieveTablePrefix
+        RetrieveDatabaseUser
+        RetrieveDatabaseName
+        RetrieveDatabasePassword
 
-    if [ -z $DBNAME ]
-    then
-        DBNAME=$ORIGINALDB
-    fi
+        if [ -z $DBUSER ]
+        then
+            DBUSER=$ORIGINALUSR
+        fi
 
-    if [ -z $DBPASS ]
-    then
-        DBPASS=$ORIGINALPASS
-    fi
+        if [ -z $DBNAME ]
+        then
+            DBNAME=$ORIGINALDB
+        fi
 
+        if [ -z $DBPASS ]
+        then
+            DBPASS=$ORIGINALPASS
+        fi
+    fi
 }
 
 function RestoringFileDirectory
@@ -940,15 +942,22 @@ function ManageThemes
 
 function showURL
 {
+    
+    RetrieveFromWPConfig
+
+
     display "homeurl and siteurl in table ${TABLEPREF}options is shown below"
     mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
     mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
+
 }
 
 function UpdateURL
 {
     echo "Modifying HomeURL and SiteURL"
 
+    RetrieveFromWPConfig
+    
     DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
     SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
 
@@ -994,6 +1003,7 @@ function completeURLChanged
     then
         while true;
         do
+            echo "$URL and $ORIGINALURL appear not to be the same"
             read -p "Do you want to update the site URL? [Y/N]: " YN
             case $YN in
                 [yY]|[yY][eE][sS])
@@ -2052,7 +2062,9 @@ function main
                 completeURLChanged
                 cat $RESULTFILE
                 wp --info
-                
+                FILEDIR=""
+                URL=""
+                ORIGINALURL=""
                 ;;
 
                 

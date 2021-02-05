@@ -597,7 +597,7 @@ function createDatabase
 function configurewpconfig
 {
     cd $FILELOC
-    if [ -z $URL]
+    if [ -z $URL ]
     then
         RetrieveOriginalURLFromDB
         URL=$ORIGINALURL

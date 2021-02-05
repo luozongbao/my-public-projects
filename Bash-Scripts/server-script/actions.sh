@@ -2072,6 +2072,9 @@ function main
         echo "   Discourage)Discourage Search Engine"
         echo "   X)         EXIT Script"
         echo "=================================================="
+        echo " FILELOC=$FILELOC  |  FILEDIR=$FILEDIR"
+        echo " WEBSERVER=$WEBSERVER  | CURDIR=$CURDIR"
+        echo "=================================================="
         echo
         read -p "What is your action?: " ANS
         case $ANS in 

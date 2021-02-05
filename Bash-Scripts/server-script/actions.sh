@@ -176,6 +176,8 @@ function RetrieveTablePrefix
 
 function RetrieveOriginalURLFromDB
 {
+    RetrieveFromWPConfig
+    
     echo "Retrieve URL from database"
     SUCCESS="Retrieved URL from database"
     FAILED="Retrieve URL from database failed"
@@ -444,7 +446,7 @@ function RetrieveFromWPConfig
     then
 
         getFILEDIRFromUser
-        
+
         RetrieveTablePrefix
         RetrieveDatabaseUser
         RetrieveDatabaseName
@@ -987,6 +989,7 @@ function completeURLChanged
         read -p "Do you want to retriev original url from database? [y/n]: " YN
         case $YN in 
             [yY]|[yY][eE][sS])
+            
             RetrieveOriginalURLFromDB
             break
             ;;

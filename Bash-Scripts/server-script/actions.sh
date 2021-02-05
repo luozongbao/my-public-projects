@@ -188,6 +188,8 @@ function RetrieveOriginalURLFromDB
     checkCritical
     ORIGINALURL=$(echo $ORIGINALURL | grep -oP '\s(.*)$') 2>>$ERRORFILE
     checkCritical
+    ORIGINALURL=$(echo $ORIGINALURL | xargs) 2>>$ERRORFILE
+    checkCritical
     echo "URL: '$ORIGINALURL'"
 
 }

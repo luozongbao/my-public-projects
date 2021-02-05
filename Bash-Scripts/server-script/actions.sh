@@ -1041,7 +1041,7 @@ function CustomMOTD
 
 function CustomPrompt
 {
-    echo "PS1='\[\e[0m\][\[\e[0;95m\]\d\[\e[0m\]:\[\e[0;95m\]\t\[\e[0m\]]\[\e[0m\]@\[\e[0;96m\]\h\[\e[m\] \[\e[0m\]<\[\e[0;92m\]\w\[\e[0m\]>\[\e[m\]\n\[\e[0m\][\[\e[0;38;5;208m\]\j\[\e[0m\]]\[\e[0;93m\]\u\[\e[m\] \[\e[0;97m\]\$\[\e[m\] \[\e0'" >> $CURDIR/.bashrc
+    echo "export PS1='{\[$(tput sgr0)\]\[\033[38;5;13m\]\d\t\[$(tput sgr0)\]}@\[$(tput sgr0)\]\[\033[38;5;14m\]\h\[$(tput sgr0)\]:\[$(tput sgr0)\]\[\033[38;5;10m\]\w\[$(tput sgr0)\]\n\[$(tput sgr0)\]\[\033[38;5;11m\]\u\[$(tput sgr0)\] \\$ \[$(tput sgr0)\]'" >> $CURDIR/.bashrc
     showresult "Created Custom Prompt"
 }
 

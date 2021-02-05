@@ -121,8 +121,9 @@ function checkCritical
 
 function getFILEDIRFromUser
 {
-    while [ -z $FILEDIR ]
+    while [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
     do
+        FILEDIR=""
         read -p "Please specify wordpress directory: " FILEDIR 
 
         if [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
@@ -173,7 +174,7 @@ function RetrieveTablePrefix
     echo "Table Prefix '$TABLEPREF'"
 }
 
-function RetrieveURL
+function RetrieveOriginalURLFromDB
 {
     echo "Retrieve URL from database"
     SUCCESS="Retrieved URL from database"
@@ -591,7 +592,7 @@ function configurewpconfig
     cd $FILELOC
     if [ -z $URL]
     then
-        RetrieveURL
+        RetrieveOriginalURLFromDB
         URL=$ORIGINALURL
     fi
     
@@ -790,28 +791,7 @@ function RemoveDatabaseUser
     done
 }
 
-function showURL
-{
-    display "homeurl and siteurl in table ${TABLEPREF}options is shown below"
-    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
-    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
-}
 
-function UpdateURL
-{
-    echo "Modifying HomeURL and SiteURL"
-
-    DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
-    SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
-
-    echo "Updating homeURL/siteURL to $URL"
-    SUCCESS="Updated homeurl/siteURL to $URL"
-    FAILED="Updating homeurl/siteURL failed"
-    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE
-    checkCritical
-
-    showURL
-}
 
 function discourageSearchEnging
 {
@@ -958,8 +938,58 @@ function ManageThemes
     fi
 }
 
+function showURL
+{
+    display "homeurl and siteurl in table ${TABLEPREF}options is shown below"
+    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
+    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
+}
+
+function UpdateURL
+{
+    echo "Modifying HomeURL and SiteURL"
+
+    DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
+    SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
+
+    echo "Updating homeURL/siteURL to $URL"
+    SUCCESS="Updated homeurl/siteURL to $URL"
+    FAILED="Updating homeurl/siteURL failed"
+    mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$DBCOMMAND" 2>>$ERRORFILE
+    checkCritical
+
+    showURL
+}
+
 function completeURLChanged
 {
+
+    getFILEDIRFromUser
+
+    while [ -z $URL ]
+    do
+        read -p "Please input your new website url with http/https: " URL
+    done
+    while [ -z $ORIGINALURL ]
+    do
+        read -p "Do you want to retriev original url from database? [y/n]: " YN
+        case $YN in 
+            [yY]|[yY][eE][sS])
+            RetrieveOriginalURLFromDB
+            break
+            ;;
+            [nN]|[nN][oO])
+                echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
+                echo "*** Please check and recheck before press ENTER" 
+                read -p "Please input your original website url with http/https: " ORIGINALURL
+            break
+            ;;
+            *)
+                echo "Please answer with Yes or No"
+            ;;
+        esac
+    done
+
     if [ ! $ORIGINALURL == $URL ]
     then
         while true;
@@ -968,31 +998,18 @@ function completeURLChanged
             case $YN in
                 [yY]|[yY][eE][sS])
                     
-                    echo "*** THIS IS IMPORTANT DO NOT MISS TYPED ***"
-                    echo "*** Please check and recheck before press ENTER" 
-                    read -p "Please input your original website url with http/https: " ORIGINALURL
-                    while [ -z $URL ]
-                    do
-                        read -p "Please input your new website url with http/https: " URL
-                    done
-                    while [ ! -d $FILELOC/$FILEDIR ]
-                    do
-                        if [ -z $FILEDIR ]
-                        then
-                            read -p "Please input working wordpress directory: " FILEDIR
-                        fi
-                        
-                    done
                     cd $FILELOC/$FILEDIR
 
                     echo "Replacing $ORIGINALURL to $URL"
                     SUCCESS="Searched and Replaced $ORIGINALURL to $URL"
                     FAILED="Search and Replace $ORIGINALURL to $URL failed"
                     wp search-replace $ORIGINALURL $URL --all-tables --allow-root 2>>$ERRORFILE
-                    checkOptional
+                    checkCritical
+
+                    cd $CURDIR
 
                     showresult "Searched and replaced URL in database $ORIGINALURL to $URL" 
-                    
+                    showURL
                     break
                     ;;
                 [nN]|[nN][oO])
@@ -1871,7 +1888,7 @@ function Restore
     configurewpconfig
     SetFolderPermisson
     RestoreRemoveFiles
-    UpdateURL
+    #UpdateURL
     completeURLChanged
     discourageSearchEnging
     ManagePlugins
@@ -1891,6 +1908,7 @@ function Remove
     RemoveDatabaseUser
     Finalize
 }
+
 
 
 function Newsvr
@@ -1959,7 +1977,7 @@ function main
         echo "   New)       NEW Server Setup                     Rollback)  ROLLBACK Final Backup"
         echo "   MOTD)      Install new MOTD                     Plugins)   Manage WP PLUGINS"
         echo "   PROMPT)    My Custom PROMPT                     Themes)    Manage WP THEMES"
-        echo "   Backup)    BACKUP Website                       "
+        echo "   Backup)    BACKUP Website                       SiteURL)   Change Site URL"
         echo "   Restore)   RESTORE Website"
         echo "   Remove)    REMOVE Website"
         echo "   DBServer)  Install DBSERVER - Mariadb"
@@ -2029,6 +2047,15 @@ function main
                 wp --info
                 
                 ;;
+            [wW][pP][cC][lL][iI])
+                display "Change Site URL"
+                completeURLChanged
+                cat $RESULTFILE
+                wp --info
+                
+                ;;
+
+                
             [wW][pP][cC][lL][iI])
                 display "Install Wordpress CLI"
                 InstallWPCLI

@@ -1686,7 +1686,7 @@ function InstallWordpress
                 echo "Download wordpress"
                 SUCCESS="Downloaded wordpress"
                 FAILED="Download wordpress failed"
-                wget -o https://wordpress.org/latest.zip 2>>$ERRORFILE
+                wget -O https://wordpress.org/latest.zip 2>>$ERRORFILE
                 checkCritical
 
                 echo "Extract wordpress"

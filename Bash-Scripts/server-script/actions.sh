@@ -23,7 +23,6 @@ URL=""
 CURDIR=$PWD
 FINAL=""
 DBFILE=""
-TEMPDIR=tempdirKK
 BKFILE=""
 BKFINAL=""
 WPCONFIG=""
@@ -49,7 +48,7 @@ function initialize
     fi
     if [ -d /var/www ]
     then
-        FILELOC=/var/www
+        FILELOC=/var/www/html
         WEBSERVER="Apache"
     fi
 }
@@ -129,7 +128,7 @@ function CheckFileCritical
     exit 1
 }
 
-function getFILEDIRFromUser
+function getWorkingFILEDIRFromUser
 {
     while [ ! -e "$FILELOC/$FILEDIR/wp-config.php" ]
     do
@@ -214,10 +213,51 @@ function RetrieveOriginalURLFromDB
 
 }
 
+function checkDBUser
+{
+    echo "Check $1"
+    mysql -u root mysql -e "SELECT user FROM user WHERE user='$1';" | grep $1 2>>$ERRORFILE
+    return $?
+}
+
+function checkDB
+{
+    echo "Check Database"
+    mysql -u root -e "USE $1;" 2>>$ERRORFILE
+    return $?
+}
+
+function getNewDBNAME
+{
+    while [ -z $DBNAME ] || [ $(checkDB $DBNAME) == 0 ]
+    do
+        echo
+        read -p "Please specify New Database: " DBNAME
+    done
+}
+
+function getNewDBUSER
+{
+    while [ -z $DBUSER ] || [ $(checkDBUser $DBUSER) == 0 ]
+    do
+        echo
+        read -p "Please specify New Database User: " DBUSER
+    done
+
+    while [ -z $DBPASS ] 
+    do
+        echo
+        read -p "Please specify password for $DBUSER: " DBPASS
+    done
+
+
+}
+
 
 
 function RollbackFinalBackup
 {
+
     read -p "Pleae input the Original Backup Directory: " FILEDIR
     FINAL=latest.$FILEDIR.zip
     BKFINAL=old.$FILEDIR.zip
@@ -264,7 +304,7 @@ function RollbackFinalBackup
 function getBackupInformation
 {
 	echo "Collect Information for backup"
-	getFILEDIRFromUser
+	getWorkingFILEDIRFromUser
 
 	RetrieveDatabaseName
     DBNAME=$ORIGINALDB
@@ -311,7 +351,7 @@ function getRestoreInformation
 
 function getRemoveInformation
 {
-    getFILEDIRFromUser
+    getWorkingFILEDIRFromUser
 
     RetrieveDatabaseName
     DBNAME=$ORIGINALDB
@@ -454,7 +494,7 @@ function RetrieveFromWPConfig
     if [ -z $DBUSER ] || [ -z $DBPASS ] || [ -z $DBNAME ] || [ -z $TABLEPREF ]
     then
 
-        getFILEDIRFromUser
+        getWorkingFILEDIRFromUser
 
         RetrieveTablePrefix
         RetrieveDatabaseUser
@@ -487,6 +527,8 @@ function RestoringFileDirectory
     FAILED="Unzip $FINAL failed"
     unzip -o $FINAL 2>> $ERRORFILE
     checkCritical
+
+    TEMPDIR=TempDir$(date '+%Y%m%d%H%M%s')
 
     echo "Recover Directory from Backup $FILELOC/$TEMPDIR"
     SUCCESS="Recovered $BKFILE to $FILELOC/$TEMPDIR"
@@ -529,17 +571,12 @@ function ImportDatabase
     cd $CURDIR
 }
 
-function checkDBUser
-{
-    echo "Check $DBUSER"
-    mysql -u root mysql -e "SELECT user FROM user WHERE user='$DBUSER';" | grep $DBUSER 2>>$ERRORFILE
-}
+
 
 function CreateDBUser
 {
     echo "Create Database User $DBUSER"
-    checkDBUser
-    if [ $? -eq 0 ]
+    if [ $(checkDBUser $DBUSER) -eq 0 ]
     then
         echo "$DBUSER already exist"
     else
@@ -548,12 +585,6 @@ function CreateDBUser
         mysql -u root -e "CREATE USER $DBUSER IDENTIFIED BY '$DBPASS';" 2>>$ERRORFILE
         checkCritical
     fi
-}
-
-function checkDB
-{
-    echo "Check Database"
-    mysql -u root -e "USE $DBNAME;" 2>>$ERRORFILE
 }
 
 function DropDatabase
@@ -567,8 +598,8 @@ function DropDatabase
 
 function createDatabase
 {
-    checkDB
-    while [ $? -eq 0 ]
+    
+    while [ $(checkDB $DBNAME) -eq 0 ]
     do
         echo "Database $DBNAME already exist"
         read -p "Do you want to drop and replace? [y/n]: " YN
@@ -584,7 +615,7 @@ function createDatabase
             while [ -z $DBNAME ]
             do
                 read -p "Please, specify new Database Name: " DBNAME
-                checkDB
+                checkDB $DBNAME
             done
         fi
         
@@ -605,7 +636,7 @@ function createDatabase
 
 function configurewpconfig
 {
-    cd $FILELOC
+    cd $FILELOC/$FILEDIR
     if [ -z $URL ]
     then
         RetrieveOriginalURLFromDB
@@ -816,7 +847,7 @@ function discourageSearchEnging
     read -p "Discourage search engines from indexing the site? [y/n]: " YN
     if [[ $YN =~ [yY]|[yY][eE][sS] ]]
     then
-        getFILEDIRFromUser
+        getWorkingFILEDIRFromUser
         cd $FILELOC/$FILEDIR
         SUCCESS="Discouraged search engines from indexing the site"
         FAILED="Discoruaging search engines failed"
@@ -932,7 +963,7 @@ function updatePlugins
 
 function ManagePlugins
 {
-    getFILEDIRFromUser
+    getWorkingFILEDIRFromUser
 
     if [ -e $FILELOC/$FILEDIR/wp-config.php ]
     then
@@ -946,7 +977,7 @@ function ManagePlugins
 
 function ManageThemes
 {
-    getFILEDIRFromUser
+    getWorkingFILEDIRFromUser
 
     if [ -e $FILELOC/$FILEDIR/wp-config.php ]
     then
@@ -992,7 +1023,7 @@ function UpdateURL
 function completeURLChanged
 {
 
-    getFILEDIRFromUser
+    getWorkingFILEDIRFromUser
 
     while [ -z $URL ]
     do
@@ -1547,103 +1578,6 @@ function InstallMariadb
 
 
 
-function InstallApacheWPCLI
-{
-    while true;
-    do
-        read -p "Installing WP CLI for Apache continue? [Y/N]: " YN
-        case $YN in
-        [yY]|[yY][eE][sS])
-            echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
-            SUCCESS="Downloaded wpcli"
-            FAILED="Download wpcli failed"
-            curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
-            checkCritical
-
-            echo "Add execute permission to wpcli"
-            SUCCESS="Added execute permission to wpcli"
-            FAILED="Add execute permission to wpcli failed"
-            chmod +x wp-cli.phar 2>>$ERRORFILE
-            checkCritical
-
-            echo "Move file to default folder"
-            SUCCESS="Moved file to default folder"
-            FAILED="Move file to default folder failed"
-            mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
-            checkCritical
-
-            showresult "WP-CLI for Apache Installed"
-            break
-            ;;
-        [nN]|[nN][oO])
-            break
-            ;;
-        *)
-            echo "Please anser with Yes or No"
-        ;;
-        esac
-    done
-
-}
-
-function InstallWordpressApache
-{
-
-    while true;
-    do
-        read -p "Install Wordpress Now? [Y/N]: " WPAPCHE
-        case $WPAPCHE in 
-            [yY]|[yY][eE][sS])
-                SITELOC=/var/www/html
-
-                echo "Create Folder $SITELOC"
-                SUCCESS="Created Folder $SITELOC"
-                FAILED="Create Folder $SITELOC failed"
-                mkdir $SITELOC 2>>$ERRORFILE
-                checkCritical
-
-                cd $SITELOC 2>>$ERRORFILE
-
-                echo "Download wordpress"
-                SUCCESS="Downloaded wordpress" 
-                FAILED="Download wordpress failed"
-                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
-                checkCritical
-
-                echo "Extract wordpress"
-                SUCCESS="Extracted wordpress"
-                FAILED="Extract wordpress failed"
-                unzip latest.zip 2>>$ERRORFILE
-                checkCritical
-
-                echo "Change wordpress folder permission"
-                SUCCESS="Changed wordpress folder owner"
-                FAILED="Change wordpress folder owner failed"
-                chown -R www-data:www-data wordpress 2>>$ERRORFILE
-                checkCritical
-
-                echo "Remove archive file"
-                SUCCESS="Removed archive file"
-                FAILED="Remove archive file failed"
-                rm latest.zip 2>>$ERRORFILE
-                checkCritical
-
-                showresult "Wordpress Installed at $SITELOC"
-
-                display "Install Wordpress CLI for Apache"
-                InstallApacheWPCLI
-                
-                break
-                ;;
-            [nN]|[nN][oO])
-                break
-                ;;
-            *) 
-                echo "Please, answer Yes or No"
-            ;;
-        esac
-    done
-}
 
 function InstallApache
 {
@@ -1660,8 +1594,7 @@ function InstallApache
                 apt-get install -y php php-mysql php-zip php-curl php-gd php-mbstring php-xml php-xmlrpc 2>>$ERRORFILE
                 checkCritical
 
-                display "Install Wordpress for Apache"
-                InstallWordpressApache
+ 
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1673,104 +1606,6 @@ function InstallApache
         esac
     done
 }
-
-function InstallOLSWPCLI
-{
-    while true;
-    do
-        read -p "Installing WP CLI for Openlitespeed continue? [Y/N]: " YN
-        case $YN in
-            [yY]|[yY][eE][sS])
-            echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
-            SUCCESS="Downloaded wpcli"
-            FAILED="Download wpcli failed"
-            curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
-            checkCritical
-
-            echo "Add execute permission to wpcli"
-            SUCCESS="Added execute permission to wpcli"
-            FAILED="Add execute permission to wpcli failed"
-            chmod +x wp-cli.phar 2>>$ERRORFILE
-            checkCritical
-
-            echo "Move file to default folder"
-            SUCCESS="Moved file to default folder"
-            FAILED="Move file to default folder failed"
-            mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
-            checkCritical
-
-            echo "Copy php file"
-            SUCCESS="Copied php"
-            FAILED="Copy php failed"
-            cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
-            checkCritical
-
-            showresult "WP-CLI for Apache Installed"
-            break
-            ;;
-        [nN]|[nN][oO])
-            break
-            ;;
-        *)
-            echo "Please anser with Yes or No"
-        ;;
-        esac
-    done
-}
-
-function InstallWordpressOLS
-{
-    while true;
-    do
-        read -p "Install Wordpress Now? [Y/N]: " WPOLS
-        case $WPOLS in 
-            [yY]|[yY][eE][sS])
-                SITELOC=/usr/local/lsws/sites
-                mkdir $SITELOC 2>>$ERRORFILE
-                cd $SITELOC 2>>$ERRORFILE
-
-                echo "Download wordpress"
-                SUCCESS="Downloaded wordpress"
-                FAILED="Download wordpress failed"
-                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
-                checkCritical
-
-                echo "Extract wordpress"
-                SUCCESS="Extracted wordpress"
-                FAILED="Extract wordpress failed"
-                unzip latest.zip 2>>$ERRORFILE
-                checkCritical
-
-                echo "Configure wordpress folder permission"
-                SUCCESS="Changed wordpress folder owner"
-                FAILED="Change wordpress folder owner failed"
-                chown -R nobody:nogroup wordpress 2>>$ERRORFILE
-                checkCritical
-
-                echo "Remove archive file"
-                SUCCESS="Removed archive file"
-                FAILED="Remove archive file failed"
-                rm latest.zip 2>>$ERRORFILE
-                checkCritical
-
-                showresult "Wordpress Installed at $SITELOC"
-
-                display "Install Wordpress CLI for Openlitespeed"
-                InstallOLSWPCLI
-                
-                break
-                ;;
-            [nN]|[nN][oO])
-                break
-                ;;
-            *) 
-                echo "Please, answer Yes or No"
-            ;;
-        esac
-    done
-}
-
-
 
 function InstallOpenLiteSpeed
 {
@@ -1779,8 +1614,6 @@ function InstallOpenLiteSpeed
         read -p "Install OpenLiteSpeed Web Server Now? [Y/N]: " OLS
         case $OLS in 
             [yY]|[yY][eE][sS])
-                display "Install MariaDB"
-                InstallMariadb
 
                 echo "Download and install Openlitespeed"
                 SUCCESS="Downloaded and installed Openlitespeed"
@@ -1810,8 +1643,8 @@ function InstallOpenLiteSpeed
                 cat /usr/local/lsws/password
                 cat /usr/local/lsws/password >> $RESULTFILE
                 
-                display "Install Wordpress for Openlitespeed"
-                InstallWordpressOLS
+
+
                 break
                 ;;
             [nN]|[nN][oO])
@@ -1823,6 +1656,154 @@ function InstallOpenLiteSpeed
         esac
     done
 }
+
+function InstallWordpress
+{
+
+    while true;
+    do
+        read -p "Install Wordpress Now? [Y/N]: " YN
+        case $YN in 
+            [yY]|[yY][eE][sS])
+
+                if [ ! -e $FILELOC ]
+                then
+                    SUCCESS="Created $FILELOC"
+                    FAILED="Create $FILELOC failed"
+                    mkdir $FILELOC 2>>$ERRORFILE
+                    checkCritical
+                fi
+                
+                cd $FILELOC 2>>$ERRORFILE
+
+                while [ -z $FILEDIR ] || [ -e $FILELOC/$FILEDIR ] || [ $FILEDIR == "wordpress" ]
+                do 
+                    echo
+                    echo "Specify New Website Folder, must not called 'wordpress' "
+                    read -p "Please specify new website directory: " FILEDIR
+                done
+
+                echo "Download wordpress"
+                SUCCESS="Downloaded wordpress"
+                FAILED="Download wordpress failed"
+                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
+                checkCritical
+
+                echo "Extract wordpress"
+                SUCCESS="Extracted wordpress"
+                FAILED="Extract wordpress failed"
+                unzip latest.zip 2>>$ERRORFILE
+                checkCritical
+
+                SUCCESS="moved $FILELOC/wordpress to $FILELOC/$FILEDIR"
+                FAILED="move $FILELOC/wordpress to $FILELOC/$FILEDIR failed"
+                move $FILELOC/wordpress $FILELOC/$FILEDIR
+                checkCritical
+
+                echo "Configure wordpress folder permission"
+                SUCCESS="Changed wordpress folder owner"
+                FAILED="Change wordpress folder owner failed"
+                chown -R nobody:nogroup $FILELOC/$FILEDIR 2>>$ERRORFILE
+                checkCritical
+
+                echo "Remove archive file"
+                SUCCESS="Removed archive file"
+                FAILED="Remove archive file failed"
+                rm latest.zip 2>>$ERRORFILE
+                checkCritical
+
+                showresult "Wordpress Installed at $FILELOC"
+
+                echo 
+                echo "Setting UP Database"
+
+                getNewDBNAME
+                getNewDBUSER
+
+                CreateDBUser
+                createDatabase
+
+                echo 
+                echo "Create wp-config.php"
+                SUCCESS="Created wp-config.php"
+                FAILED="Create wp-config.php failed"
+                wp config create --dbname=$DBNAME --dbuser=$DBUSER --dbpass=$DBPASS
+                checkCritical
+                
+                break
+                ;;
+            [nN]|[nN][oO])
+                break
+                ;;
+            *) 
+                echo "Please, answer Yes or No"
+            ;;
+        esac
+    done
+}
+
+function InstallWPCLI
+{
+    if [ -e /usr/bin/wp ]
+    then
+        echo "WP CLI already installed"
+        return 0
+    fi
+    while true;
+    do
+        read -p "Installing WP CLI for Openlitespeed continue? [Y/N]: " YN
+        case $YN in
+            [yY]|[yY][eE][sS])
+            echo "Installing Wordpress Console Line Interfacie (WP-CLI)"
+            SUCCESS="Downloaded wpcli"
+            FAILED="Download wpcli failed"
+            curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar 2>>$ERRORFILE
+            checkCritical
+
+            echo "Add execute permission to wpcli"
+            SUCCESS="Added execute permission to wpcli"
+            FAILED="Add execute permission to wpcli failed"
+            chmod +x wp-cli.phar 2>>$ERRORFILE
+            checkCritical
+
+            echo "Move file to default folder"
+            SUCCESS="Moved file to default folder"
+            FAILED="Move file to default folder failed"
+            if [ $WEBSERVER == "OLS" ]
+            then
+                mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+                checkCritical
+
+                echo "Copy php file"
+                SUCCESS="Copied php"
+                FAILED="Copy php failed"
+                cp /usr/local/lsws/lsphp74/bin/php /usr/bin/ 2>>$ERRORFILE
+                checkCritical
+
+            elif [ $WEBSERVER == "Apache" ]
+            then
+                mv wp-cli.phar /usr/local/bin/wp 2>>$ERRORFILE
+                checkCritical
+            fi
+
+            showresult "WP-CLI Installed"
+            break
+            ;;
+        [nN]|[nN][oO])
+            break
+            ;;
+        *)
+            echo "Please answer with Yes or No"
+        ;;
+        esac
+    done
+}
+
+
+
+
+
+
 
 function InstallCron
 {
@@ -1882,11 +1863,13 @@ function SelectVirtualHostServer
             [aA]|[aA][pP][aA][cC][hH][eE])
                 InstallApache
                 initialize
+
                 break
                 ;;
             [oO]|[oO][pP][eE][nN][lL][iI][tT][eE][sS][pP][eE][eE][dD])
                 InstallOpenLiteSpeed
                 initialize
+
                 break
                 ;;
             [cC]|[cC][aA][nN][cC][eE][lL])
@@ -1910,6 +1893,13 @@ function InstallWebServer
             [yY]|[yY][eE][sS])
                 display "Select Virtual Host server"
                 SelectVirtualHostServer
+
+                display "Install Wordpress"
+                InstallWPCLI
+
+                display "Install Wordpress"
+                InstallWordpress
+
                 InstallCron
                 break
                 ;;
@@ -1924,6 +1914,17 @@ function InstallWebServer
 }
 
 
+function CreateWebsite
+{
+
+    InstallWordpress
+    
+    
+
+
+}
+
+
 
 function Finalize
 {
@@ -1933,9 +1934,8 @@ function Finalize
 
 }
 
-function Backup
+function BackupWebsite
 {
-    clear
     getBackupInformation
     checkBackupVariables
     backupbackup
@@ -1946,9 +1946,8 @@ function Backup
     Finalize
 }
 
-function Restore
+function RestoreWebsite
 {
-    clear
     getRestoreInformation
     checkRestorevariables
     PrepareEnvironment
@@ -1971,7 +1970,7 @@ function Restore
 }
 
 
-function Remove
+function RemoveWebsite
 {
     clear
     getRemoveInformation
@@ -1983,8 +1982,11 @@ function Remove
 
 
 
+
+
 function Newsvr
 {
+
     CustomPrompt
     CustomMOTD
     UpdateUpgrade
@@ -1996,27 +1998,14 @@ function Newsvr
     InstallWebmin
     InstallNetDATA
     InstallWebServer
+    CreateWebsite
     
     Finalize
     echo "***************** WP INFO *****************"
     wp --info
 }
 
-function InstallWordpress
-{
-    if [ -e "/var/www" ]
-    then
-        InstallWordpressApache
-    fi
-    if [ -e "/usr/local/lsws" ]
-    then
-        if [ ! -e /usr/local/lsws/sites ]
-        then
-            mkdir /usr/local/lsws/sites
-        fi
-        InstallWordpressOLS
-    fi
-}
+
 
 function InstallWPCLI
 {
@@ -2079,47 +2068,58 @@ function main
         read -p "What is your action?: " ANS
         case $ANS in 
             [nN][eE][wW])
+                clear
                 display "Set New server"
                 Newsvr
                 ;;
             [rR][oO][lL][lL][bB][aA][cC][kK])
-                display "Rollback Backup"
+                clear
+                display "Rollback FInal Backup"
                 RollbackFinalBackup
                 
                 ;;
             [mM][oO][tT][dD])
+                clear
                 display "Install Login welcome"
                 CustomMOTD
                 ;;
             [pP][rR][oO][mM][pP][tT])
+                clear
                 display "Install custom prompt"
                 CustomPrompt
                 ;;
             [bB][aA][cC][kK][uU][pP])
+                clear
                 display "Backup website"
-                Backup
+                BackupWebsite
                 ;;
             [rR][eE][sS][tT][oO][rR][eE])
+                clear
                 display "Restore from Backup"
-                Restore
+                RestoreWebsite
                 ;;
             [rR][eE][mM][oO][vV][eE])
+                clear
                 display "Removing Webiste"
-                Remove
+                RemoveWebsite
                 ;;
             [dD][bB][sS][eE][rR][vV][eE][rR])
+                clear
                 display "Install MariaDB"
                 InstallMariadb
                 ;;
             [wW][eE][bB][sS][eE][rR][vV][eE][rR])
+                Clear
                 display "Install Virtual Host Server"
                 InstallWebServer
                 ;;
             [wW][eE][bB][mM][iI][nN])
+                clear
                 display "Install Webmin"
                 InstallWebmin
                 ;;
             [nN][eE][tT][dD][aA][tT][aA])
+                clear
                 display "Install NetDATA"
                 InstallNetDATA
                 ;;
@@ -2138,10 +2138,12 @@ function main
 
                 ;;
             [sS][hH][oO][wW][uU][rR][lL])
+                clear
                 display "This is current site URL/Home URL"
                 showURL
                 ;;
             [wW][pP][cC][lL][iI])
+                clear
                 display "Install Wordpress CLI"
                 InstallWPCLI
                 cat $RESULTFILE
@@ -2149,6 +2151,7 @@ function main
                 
                 ;;
             [uU][fF][wW])
+                clear
                 display "Install Firewall"
                 InstallFirewall
                 cat $RESULTFILE
@@ -2156,18 +2159,21 @@ function main
                 ;;
 
             [pP][lL][uU][gG][iI][nN][sS])
+                clear
                 display "Manage Plugins, WP CLI must already been installed"
                 ManagePlugins
                 wp --info
                 ;;
 
             [tT][hH][eE][mM][eE][sS])
+                clear
                 display "Manage Themes, WP CLI must already been installed"
                 ManageThemes
                 wp --info
                 ;;
 
             [dD][iI][sS][cC][oO][uU][rR][aA][gG][eE])
+                clear
                 display "Discourage Search Engine indexing site"
                 discourageSearchEnging
                 cat $RESULTFILE

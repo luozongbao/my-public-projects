@@ -1697,7 +1697,7 @@ function InstallWordpress
 
                 SUCCESS="moved $FILELOC/wordpress to $FILELOC/$FILEDIR"
                 FAILED="move $FILELOC/wordpress to $FILELOC/$FILEDIR failed"
-                move $FILELOC/wordpress $FILELOC/$FILEDIR
+                mv $FILELOC/wordpress $FILELOC/$FILEDIR
                 checkCritical
 
                 echo "Configure wordpress folder permission"
@@ -1918,7 +1918,7 @@ function CreateWebsite
 {
 
     InstallWordpress
-    
+
     
 
 
@@ -2006,23 +2006,6 @@ function Newsvr
 }
 
 
-
-function InstallWPCLI
-{
-    if [ -e "/var/www" ]
-    then
-        InstallApacheWPCLI
-    fi
-    if [ -e "/usr/local/lsws" ]
-    then
-        if [ ! -e /usr/local/lsws/sites ]
-        then
-            mkdir /usr/local/lsws/sites
-        fi
-        
-        InstallOLSWPCLI
-    fi
-}
 
 function main
 {

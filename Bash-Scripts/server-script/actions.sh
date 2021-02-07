@@ -19,6 +19,7 @@ FILEDIR=""
 DBNAME=""
 DBUSER=""
 DBPASS=""
+DBPREF=""
 URL=""
 CURDIR=$PWD
 FINAL=""
@@ -186,9 +187,9 @@ function RetrieveTablePrefix
     echo "Retrieve Table prefix"
     SUCCESS="Retrieved Table prefix"
     FAILED="Retrieving Table Prefix failed"
-    TABLEPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
+    DBPREF=$(cat $WPCONFIG | grep "\$table_prefix" | cut -d \' -f 2) 2>>$ERRORFILE
     checkCritical
-    echo "Table Prefix '$TABLEPREF'"
+    echo "Table Prefix '$DBPREF'"
 }
 
 function RetrieveOriginalURLFromDB
@@ -198,7 +199,7 @@ function RetrieveOriginalURLFromDB
     echo "Retrieve URL from database"
     SUCCESS="Retrieved URL from database"
     FAILED="Retrieve URL from database failed"
-    URLCOMMAND="SELECT option_value FROM ${TABLEPREF}options WHERE option_id=1;"
+    URLCOMMAND="SELECT option_value FROM ${DBPREF}options WHERE option_id=1;"
     ORIGINALURL=$(mysql -u root $DBNAME -e "$URLCOMMAND") 2>>$ERRORFILE
     checkCritical
     ORIGINALURL=$(echo $ORIGINALURL | grep -oP '\s(.*)$') 2>>$ERRORFILE
@@ -254,8 +255,6 @@ function getNewDBUSER
 
 
 }
-
-
 
 function RollbackFinalBackup
 {
@@ -493,7 +492,7 @@ function RemoveExistedDirectory
 
 function RetrieveFromWPConfig
 {
-    if [ -z $DBUSER ] || [ -z $DBPASS ] || [ -z $DBNAME ] || [ -z $TABLEPREF ]
+    if [ -z $DBUSER ] || [ -z $DBPASS ] || [ -z $DBNAME ] || [ -z $DBPREF ]
     then
 
         getWorkingFILEDIRFromUser
@@ -999,8 +998,8 @@ function showURL
     RetrieveFromWPConfig
 
 
-    display "homeurl and siteurl in table ${TABLEPREF}options is shown below"
-    SELECTCOMMAND="SELECT * FROM ${TABLEPREF}options WHERE option_id=1 OR option_id=2;"
+    display "homeurl and siteurl in table ${DBPREF}options is shown below"
+    SELECTCOMMAND="SELECT * FROM ${DBPREF}options WHERE option_id=1 OR option_id=2;"
 
     mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND"
     mysql -u $DBUSER --password="$DBPASS" $DBNAME -e "$SELECTCOMMAND" >> $RESULTFILE
@@ -1013,7 +1012,7 @@ function UpdateURL
 
     RetrieveFromWPConfig
 
-    DBCOMMAND="UPDATE ${TABLEPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
+    DBCOMMAND="UPDATE ${DBPREF}options SET option_value = '$URL' WHERE option_id =1 OR option_id=2;"
     
     echo "Updating homeURL/siteURL to $URL"
     SUCCESS="Updated homeurl/siteURL to $URL"
@@ -1723,16 +1722,24 @@ function InstallWordpress
 
                 getNewDBNAME
                 getNewDBUSER
+                getNewDBPREF
 
                 CreateDBUser
                 createDatabase
+
+                echo
+                read -p "Please specify Table Prefix: (Blank for default 'wp_') " DBPREF
+                if [ -z $DBPREF ]
+                then
+                    DBPREF="wp_"
+                fi
 
                 cd $FILELOC/$FILEDIR
                 echo 
                 echo "Create wp-config.php"
                 SUCCESS="Created wp-config.php"
                 FAILED="Create wp-config.php failed"
-                wp config create --dbname=$DBNAME --dbuser=$DBUSER --dbpass=$DBPASS
+                wp config create --dbname=$DBNAME --dbuser=$DBUSER --dbpass=$DBPASS --dbprefix=$DBPREF --alow-root
                 checkCritical
                 cd $CURDIR
 
@@ -2032,6 +2039,7 @@ function main
         DBUSER=""
         DBNAME=""
         DBPASS=""  
+        DBPREF=""
         echo
         echo "Select Actions"
         echo "=============="

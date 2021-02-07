@@ -229,19 +229,23 @@ function checkDB
 
 function getNewDBNAME
 {
-    while [ -z $DBNAME ] || [ $(checkDB $DBNAME) -eq 0 ]
+    checkDB $DBNAME
+    while [ -z $DBNAME ] || [ $? -eq 0 ]
     do
         echo
         read -p "Please specify New Database: " DBNAME
+        checkDB $DBNAME
     done
 }
 
 function getNewDBUSER
 {
-    while [ -z $DBUSER ] || [ $(checkDBUser $DBUSER) -eq 0 ]
+    checkDBUser $DBUSER
+    while [ -z $DBUSER ] || [ $? -eq 0 ]
     do
         echo
         read -p "Please specify New Database User: " DBUSER
+        checkDBUser $DBUSER
     done
 
     while [ -z $DBPASS ] 
@@ -576,7 +580,8 @@ function ImportDatabase
 function CreateDBUser
 {
     echo "Create Database User $DBUSER"
-    if [ $(checkDBUser $DBUSER) -eq 0 ]
+    checkDBUser $DBUSER
+    if [ $? -eq 0 ]
     then
         echo "$DBUSER already exist"
     else
@@ -598,8 +603,8 @@ function DropDatabase
 
 function createDatabase
 {
-    
-    while [ $(checkDB $DBNAME) -eq 0 ]
+    checkDB $DBNAME
+    while [ $? -eq 0 ]
     do
         echo "Database $DBNAME already exist"
         read -p "Do you want to drop and replace? [y/n]: " YN
@@ -615,8 +620,9 @@ function createDatabase
             while [ -z $DBNAME ]
             do
                 read -p "Please, specify new Database Name: " DBNAME
-                checkDB $DBNAME
+                
             done
+            checkDB $DBNAME
         fi
         
     done

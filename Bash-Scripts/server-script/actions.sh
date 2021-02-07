@@ -68,7 +68,6 @@ function display
     echo
 }
 
-
 function showresult
 {
     HLINE="****************************************************************************************************"
@@ -252,8 +251,6 @@ function getNewDBUSER
         echo
         read -p "Please specify password for $DBUSER: " DBPASS
     done
-
-
 }
 
 function RollbackFinalBackup
@@ -1739,7 +1736,7 @@ function InstallWordpress
                 echo "Create wp-config.php"
                 SUCCESS="Created wp-config.php"
                 FAILED="Create wp-config.php failed"
-                wp config create --dbname=$DBNAME --dbuser=$DBUSER --dbpass=$DBPASS --dbprefix=$DBPREF --alow-root
+                wp config create --dbname=$DBNAME --dbuser=$DBUSER --dbpass=$DBPASS --dbprefix=$DBPREF --allow-root
                 checkCritical
                 cd $CURDIR
 
@@ -1759,7 +1756,7 @@ function InstallWordpress
 
 function InstallWPCLI
 {
-    if [ -e /usr/bin/wp ]
+    if [ -e /usr/local/bin/wp ]
     then
         echo "WP CLI already installed"
         return 0
@@ -1984,7 +1981,6 @@ function RestoreWebsite
     wp --info
 }
 
-
 function RemoveWebsite
 {
     clear
@@ -1994,10 +1990,6 @@ function RemoveWebsite
     RemoveDatabaseUser
     Finalize
 }
-
-
-
-
 
 function Newsvr
 {
@@ -2019,8 +2011,6 @@ function Newsvr
     echo "***************** WP INFO *****************"
     wp --info
 }
-
-
 
 function main
 {
@@ -2123,7 +2113,7 @@ function main
                 InstallNetDATA
                 ;;
             [wW][oO][rR][dD][pP][rR][eE][sS][sS])
-                display 'Wordpress for Apache Server \n*   This will install Following \n*     - wordpress \n*     - wp-cli'
+                display "Wordpress for Apache Server \n*   This will install Following \n*     - wordpress \n*     - wp-cli"
                 InstallWordpress
                 cat $RESULTFILE
                 wp --info

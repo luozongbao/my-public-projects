@@ -229,7 +229,7 @@ function checkDB
 
 function getNewDBNAME
 {
-    while [ -z $DBNAME ] || [ $(checkDB $DBNAME) == 0 ]
+    while [ -z $DBNAME ] || [ $(checkDB $DBNAME) -eq 0 ]
     do
         echo
         read -p "Please specify New Database: " DBNAME
@@ -238,7 +238,7 @@ function getNewDBNAME
 
 function getNewDBUSER
 {
-    while [ -z $DBUSER ] || [ $(checkDBUser $DBUSER) == 0 ]
+    while [ -z $DBUSER ] || [ $(checkDBUser $DBUSER) -eq 0 ]
     do
         echo
         read -p "Please specify New Database User: " DBUSER
@@ -1686,7 +1686,7 @@ function InstallWordpress
                 echo "Download wordpress"
                 SUCCESS="Downloaded wordpress"
                 FAILED="Download wordpress failed"
-                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
+                wget -o https://wordpress.org/latest.zip 2>>$ERRORFILE
                 checkCritical
 
                 echo "Extract wordpress"

@@ -215,14 +215,12 @@ function RetrieveOriginalURLFromDB
 
 function checkDBUser
 {
-    echo "Check $1"
     mysql -u root mysql -e "SELECT user FROM user WHERE user='$1';" | grep $1 2>>$ERRORFILE
     return $?
 }
 
 function checkDB
 {
-    echo "Check Database"
     mysql -u root -e "USE $1;" 2>>$ERRORFILE
     return $?
 }
@@ -1692,7 +1690,7 @@ function InstallWordpress
                 echo "Download wordpress"
                 SUCCESS="Downloaded wordpress"
                 FAILED="Download wordpress failed"
-                wget -O https://wordpress.org/latest.zip 2>>$ERRORFILE
+                wget https://wordpress.org/latest.zip 2>>$ERRORFILE
                 checkCritical
 
                 echo "Extract wordpress"
@@ -1729,13 +1727,17 @@ function InstallWordpress
                 CreateDBUser
                 createDatabase
 
+                cd $FILELOC/$FILEDIR
                 echo 
                 echo "Create wp-config.php"
                 SUCCESS="Created wp-config.php"
                 FAILED="Create wp-config.php failed"
                 wp config create --dbname=$DBNAME --dbuser=$DBUSER --dbpass=$DBPASS
                 checkCritical
-                
+                cd $CURDIR
+
+                display "wpconfig created"
+
                 break
                 ;;
             [nN]|[nN][oO])
